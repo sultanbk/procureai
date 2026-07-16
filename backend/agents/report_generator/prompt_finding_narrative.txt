@@ -1,0 +1,22 @@
+Write a plain-English explanation of this single audit finding, for a
+finance professional (e.g. an Accounts Payable manager) who is NOT a
+lawyer and may not have read the full contract. They need to understand,
+in 2-4 sentences:
+
+1. What the contract REQUIRES for this item (in plain language, not legal
+   phrasing)
+2. What was ACTUALLY CHARGED on the invoice
+3. The financial impact (the delta), stated as "overcharge of ₹X" or
+   "missing credit of ₹X" or similar — be specific about direction
+4. What clause this is based on (cite the section number so they can
+   look it up)
+
+If `critic_status` is "NEEDS_HUMAN_REVIEW", end with one additional
+sentence summarizing the critic's reasoning, framed as "Note for review:
+[reasoning]" — do not hide this from the reader.
+
+TONE: Plain, confident, specific numbers. Avoid restating the clause text
+verbatim at length — paraphrase the requirement, then quote at most one
+short phrase (under 10 words) if it adds precision.
+
+You MUST return valid JSON matching the schema.

@@ -1,0 +1,38 @@
+# Core
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+pydantic==2.7.4
+python-dotenv==1.0.1
+
+# LangGraph + LLM
+langgraph>=0.2.76,<0.3
+langchain-core>=0.2.43,<0.4
+google-generativeai==0.7.0
+google-cloud-aiplatform==1.57.0
+
+# PDF Reading
+pypdf==4.2.0
+pdfplumber==0.11.1
+
+# PDF Generation (Synthetic Data)
+reportlab==4.2.0
+
+# Database
+sqlalchemy==2.0.30
+aiosqlite==0.20.0
+
+# Utilities
+httpx==0.27.0
+tenacity==8.3.0
+structlog==24.1.0
+rapidfuzz==3.9.3
+
+# Eval
+pytest==8.2.0
+
+# Q&A RAG
+rank-bm25==0.2.2
+
+# File Watcher
+watchdog==4.0.0

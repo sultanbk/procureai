@@ -1,0 +1,590 @@
+{
+  "nodes": [
+    {
+      "id": "c003_buildright_contractors_contract_pdf",
+      "label": "BuildRight Contractors Contract",
+      "file_type": "document",
+      "source_file": "data/synthetic/contracts/c003_buildright_contractors_contract.pdf"
+    },
+    {
+      "id": "c004_medisupply_contract_pdf",
+      "label": "MediSupply Contract",
+      "file_type": "document",
+      "source_file": "data/synthetic/contracts/c004_medisupply_contract.pdf"
+    },
+    {
+      "id": "c005_cloudhost_contract_pdf",
+      "label": "CloudHost Contract",
+      "file_type": "document",
+      "source_file": "data/synthetic/contracts/c005_cloudhost_contract.pdf"
+    },
+    {
+      "id": "c006_proservices_contract_pdf",
+      "label": "ProServices Contract",
+      "file_type": "document",
+      "source_file": "data/synthetic/contracts/c006_proservices_contract.pdf"
+    },
+    {
+      "id": "c001_invoice_i001_pdf",
+      "label": "Invoice I001 (Supplier C001)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c001_invoice_i001.pdf"
+    },
+    {
+      "id": "c001_invoice_i002_pdf",
+      "label": "Invoice I002 (Supplier C001)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c001_invoice_i002.pdf"
+    },
+    {
+      "id": "c002_invoice_i003_pdf",
+      "label": "Invoice I003 (Supplier C002)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c002_invoice_i003.pdf"
+    },
+    {
+      "id": "c002_invoice_i004_pdf",
+      "label": "Invoice I004 (Supplier C002)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c002_invoice_i004.pdf"
+    },
+    {
+      "id": "c003_invoice_i005_pdf",
+      "label": "Invoice I005 (Supplier C003)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c003_invoice_i005.pdf"
+    },
+    {
+      "id": "c003_invoice_i006_pdf",
+      "label": "Invoice I006 (Supplier C003)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c003_invoice_i006.pdf"
+    },
+    {
+      "id": "c004_invoice_i007_pdf",
+      "label": "Invoice I007 (Supplier C004)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c004_invoice_i007.pdf"
+    },
+    {
+      "id": "c004_invoice_i008_pdf",
+      "label": "Invoice I008 (Supplier C004)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c004_invoice_i008.pdf"
+    },
+    {
+      "id": "c005_invoice_i009_pdf",
+      "label": "Invoice I009 (Supplier C005)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c005_invoice_i009.pdf"
+    },
+    {
+      "id": "c005_invoice_i010_pdf",
+      "label": "Invoice I010 (Supplier C005)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c005_invoice_i010.pdf"
+    },
+    {
+      "id": "c006_invoice_i011_pdf",
+      "label": "Invoice I011 (Supplier C006)",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/c006_invoice_i011.pdf"
+    },
+    {
+      "id": "ippb_invoice_pdf",
+      "label": "IPPB Invoice",
+      "file_type": "document",
+      "source_file": "data/synthetic/invoices/ippb_invoice.pdf"
+    },
+    {
+      "id": "api_uploadcontract",
+      "label": "uploadContract",
+      "file_type": "code",
+      "source_file": "frontend/src/api.js"
+    },
+    {
+      "id": "api_uploadinvoice",
+      "label": "uploadInvoice",
+      "file_type": "code",
+      "source_file": "frontend/src/api.js"
+    },
+    {
+      "id": "api_runaudit",
+      "label": "runAudit",
+      "file_type": "code",
+      "source_file": "frontend/src/api.js"
+    },
+    {
+      "id": "api_getauditstatus",
+      "label": "getAuditStatus",
+      "file_type": "code",
+      "source_file": "frontend/src/api.js"
+    },
+    {
+      "id": "app_jsx",
+      "label": "App Component",
+      "file_type": "code",
+      "source_file": "frontend/src/App.jsx"
+    },
+    {
+      "id": "agentprogressbar_jsx",
+      "label": "AgentProgressBar Component",
+      "file_type": "code",
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "id": "contract_parser_agent",
+      "label": "Contract Parser Agent",
+      "file_type": "concept",
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "id": "invoice_extractor_agent",
+      "label": "Invoice Extractor Agent",
+      "file_type": "concept",
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "id": "compliance_checker_agent",
+      "label": "Compliance Checker Agent",
+      "file_type": "concept",
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "id": "report_generator_agent",
+      "label": "Report Generator Agent",
+      "file_type": "concept",
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "id": "tools_split_contract_to_sections",
+      "label": "split_contract_to_sections",
+      "file_type": "code",
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "tools_is_relevant_section",
+      "label": "is_relevant_section",
+      "file_type": "code",
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "tools_extract_contract_metadata",
+      "label": "extract_contract_metadata",
+      "file_type": "code",
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "tools_enrich_pricing_rule",
+      "label": "enrich_pricing_rule",
+      "file_type": "code",
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "tools_merge_rulebooks",
+      "label": "merge_rulebooks",
+      "file_type": "code",
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "schemas_contractrulebook",
+      "label": "ContractRulebook",
+      "file_type": "code",
+      "source_file": "backend/models/schemas.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "schemas_pricingrule",
+      "label": "PricingRule",
+      "file_type": "code",
+      "source_file": "backend/models/schemas.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contract_parser_prompt",
+      "label": "Contract Parser Prompt",
+      "file_type": "document",
+      "source_file": "backend/agents/contract_parser/prompt.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contract_parser_extract_chunk_prompt",
+      "label": "Extract Chunk Prompt",
+      "file_type": "document",
+      "source_file": "backend/agents/contract_parser/prompt_extract_chunk.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contract_qa_prompt",
+      "label": "Contract QA Prompt",
+      "file_type": "document",
+      "source_file": "backend/agents/contract_qa/prompt.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "dispute_generator_prompt",
+      "label": "Dispute Generator Prompt",
+      "file_type": "document",
+      "source_file": "backend/agents/dispute_generator/prompt.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "invoice_tools_extract_invoice_metadata",
+      "label": "extract_invoice_metadata",
+      "file_type": "code",
+      "source_file": "backend/agents/invoice_extractor/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "invoice_tools_validate_invoice_arithmetic",
+      "label": "validate_invoice_arithmetic",
+      "file_type": "code",
+      "source_file": "backend/agents/invoice_extractor/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "report_tools_calculate_aggregate_stats",
+      "label": "calculate_aggregate_stats",
+      "file_type": "code",
+      "source_file": "backend/agents/report_generator/tools.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "middleware_loggingmiddleware",
+      "label": "LoggingMiddleware",
+      "file_type": "code",
+      "source_file": "backend/api/middleware.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "routes_analytics_get_analytics_overview",
+      "label": "get_analytics_overview",
+      "file_type": "code",
+      "source_file": "backend/api/routes/analytics.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "routes_contracts_chat_with_contract",
+      "label": "chat_with_contract",
+      "file_type": "code",
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "routes_contracts_run_comparison_task",
+      "label": "run_comparison_task",
+      "file_type": "code",
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "services_contract_chunker_build_rag_context",
+      "label": "build_rag_context",
+      "file_type": "code",
+      "source_file": "backend/services/contract_chunker.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "services_contract_comparator_run_comparison",
+      "label": "run_comparison",
+      "file_type": "code",
+      "source_file": "backend/services/contract_comparator.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "core_llm_client_get_llm",
+      "label": "get_llm",
+      "file_type": "code",
+      "source_file": "backend/core/llm_client.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "core_pdf_extractor_extract_pdf_text",
+      "label": "extract_pdf_text",
+      "file_type": "code",
+      "source_file": "backend/core/pdf_extractor.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "app_jsx",
+      "target": "api_getauditstatus",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/App.jsx"
+    },
+    {
+      "source": "agentprogressbar_jsx",
+      "target": "contract_parser_agent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "source": "agentprogressbar_jsx",
+      "target": "invoice_extractor_agent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "source": "agentprogressbar_jsx",
+      "target": "compliance_checker_agent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "source": "agentprogressbar_jsx",
+      "target": "report_generator_agent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/components/AgentProgressBar.jsx"
+    },
+    {
+      "source": "c003_invoice_i005_pdf",
+      "target": "c003_buildright_contractors_contract_pdf",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "data/synthetic/invoices/c003_invoice_i005.pdf"
+    },
+    {
+      "source": "c004_invoice_i007_pdf",
+      "target": "c004_medisupply_contract_pdf",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "data/synthetic/invoices/c004_invoice_i007.pdf"
+    },
+    {
+      "source": "c005_invoice_i009_pdf",
+      "target": "c005_cloudhost_contract_pdf",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "data/synthetic/invoices/c005_invoice_i009.pdf"
+    },
+    {
+      "source": "c006_invoice_i011_pdf",
+      "target": "c006_proservices_contract_pdf",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "data/synthetic/invoices/c006_invoice_i011.pdf"
+    },
+    {
+      "source": "tools_merge_rulebooks",
+      "target": "tools_enrich_pricing_rule",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "tools_merge_rulebooks",
+      "target": "schemas_contractrulebook",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/agents/contract_parser/tools.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "routes_contracts_chat_with_contract",
+      "target": "services_contract_chunker_build_rag_context",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "routes_contracts_chat_with_contract",
+      "target": "core_llm_client_get_llm",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "routes_contracts_run_comparison_task",
+      "target": "core_pdf_extractor_extract_pdf_text",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "routes_contracts_run_comparison_task",
+      "target": "services_contract_comparator_run_comparison",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/api/routes/contracts.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "services_contract_comparator_run_comparison",
+      "target": "tools_split_contract_to_sections",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/services/contract_comparator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "services_contract_comparator_run_comparison",
+      "target": "tools_is_relevant_section",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/services/contract_comparator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "services_contract_comparator_run_comparison",
+      "target": "tools_merge_rulebooks",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/services/contract_comparator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "contract_parser_prompt",
+      "target": "schemas_contractrulebook",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "backend/agents/contract_parser/prompt.txt",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "dispute_generator_prompt",
+      "target": "dispute_generator_prompt",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.5,
+      "source_file": "backend/agents/dispute_generator/prompt.txt",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 139589,
+  "output_tokens": 4892,
+  "failed_chunks": 3
+}

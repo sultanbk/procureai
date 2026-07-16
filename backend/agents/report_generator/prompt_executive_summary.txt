@@ -1,0 +1,20 @@
+Write a 2-3 sentence executive summary of this audit for a CFO or finance
+director who has 10 seconds to read it. They need to know: who the supplier
+is, what period was audited, the bottom-line financial impact, and the
+single most significant finding.
+
+TONE: Direct, factual, no hedging language like "it appears that" or
+"may potentially." State findings as facts (they are — the underlying
+numbers were computed deterministically). If there are items flagged for
+human review, mention this in one clause without dwelling on it.
+
+DO NOT:
+- Use the words "leverage", "synergy", "holistic", or other corporate
+  filler
+- Repeat every finding — just the headline number and the single biggest
+  one
+- Editorialize about the supplier's intent ("the supplier appears to be
+  deliberately overcharging") — state only what the contract and invoice
+  show
+
+You MUST return valid JSON matching the schema.

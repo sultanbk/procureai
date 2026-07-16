@@ -1,0 +1,278 @@
+/*
+ * ProcureAI - File Summary
+ * 
+ * What it does:
+ * Defines custom styles, gradients, and font families.
+ * 
+ * What it means:
+ * Visual foundation layer implementing premium dark/light mode designs.
+ * 
+ * Importance in Project:
+ * High. Establishes the modern design aesthetic.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: 'Figtree', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f8fafc;
+    color: #0f172a;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Outfit', 'Figtree', sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #E0292A;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-slate-200 rounded-lg shadow-card;
+  }
+
+  .card-interactive {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:border-slate-300;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-md placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500;
+  }
+
+  .badge-critical {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200;
+  }
+
+  .badge-high {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  .badge-medium {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-50 text-sky-700 border border-sky-200;
+  }
+
+  .badge-low {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+
+  .badge-brand {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200;
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-150 hover:bg-slate-50;
+  }
+
+  .premium-card {
+    @apply card p-6;
+  }
+
+  .leakage-card {
+    @apply bg-white border border-rose-200 rounded-lg shadow-card p-6;
+  }
+
+  .compliance-card-success {
+    @apply bg-white border border-emerald-200 rounded-lg shadow-card p-6;
+  }
+
+  .compliance-card-warning {
+    @apply bg-white border border-amber-200 rounded-lg shadow-card p-6;
+  }
+
+  .premium-table-row {
+    @apply table-row-hover;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth scrolling for all containers */
+html, body, main, .overflow-y-auto, .overflow-auto {
+  scroll-behavior: smooth;
+}
+
+/* Premium Page transitions */
+@keyframes page-transition {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-transition {
+  animation: page-transition 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dispute Letter rich text layout fixes */
+.dispute-letter-rich-content ul {
+  list-style-type: disc !important;
+  margin-left: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  padding-left: 0.25rem !important;
+}
+
+.dispute-letter-rich-content ol {
+  list-style-type: decimal !important;
+  margin-left: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  padding-left: 0.25rem !important;
+}
+
+.dispute-letter-rich-content li {
+  margin-bottom: 0.35rem !important;
+  line-height: 1.5 !important;
+  font-size: 11px !important;
+}
+
+.dispute-letter-rich-content p {
+  margin-bottom: 0.75rem !important;
+  line-height: 1.5 !important;
+  font-size: 11px !important;
+}
+
+@media print {
+  html,
+  body,
+  #root,
+  .min-h-screen,
+  div[class*="min-h-screen"],
+  div[class*="flex-1"],
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 12pt !important;
+  }
+
+  aside,
+  nav,
+  button,
+  .print\:hidden,
+  [role="dialog"],
+  .toast-container {
+    display: none !important;
+  }
+
+  .card,
+  .premium-card,
+  .leakage-card,
+  .compliance-card-success,
+  .compliance-card-warning {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  .text-teal-600 {
+    color: #0d9488 !important;
+  }
+  .text-rose-600, .text-rose-700 {
+    color: #e11d48 !important;
+  }
+  .text-emerald-600 {
+    color: #059669 !important;
+  }
+
+  .print-page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

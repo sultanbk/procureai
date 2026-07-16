@@ -1,0 +1,70 @@
+You are extracting structured data from a single supplier invoice. You will
+NOT be told what the contract says — extract ONLY what is written on this
+invoice, exactly as written.
+
+EXTRACT THE FOLLOWING:
+
+1. HEADER:
+   - invoice_id: the invoice number as printed
+   - supplier_name: as printed on the invoice
+   - billing_period: the period this invoice covers (e.g. "October 2024",
+     "01-Oct-2024 to 31-Oct-2024"). If not explicitly stated, infer from
+     the invoice date and write "inferred: [your inference]"
+   - invoice_total: the final total amount due, as a number (no currency
+     symbols, no commas)
+
+2. LINE ITEMS (table rows):
+   For each line item:
+   - line_id: assign sequentially as "L001", "L002", etc. in the order
+     they appear
+   - raw_description: exactly as printed, including any item codes, grades,
+     specifications (e.g. "Portland Cement OPC 53 Grade - 50kg bags")
+   - quantity: numeric value only
+   - unit_price_charged: numeric value only (per-unit price as printed)
+   - line_total_charged: numeric value only (quantity × price as printed
+     on this row — do NOT calculate it yourself, use what's printed)
+
+3. CONDITIONAL-RULE SUPPORT DATA — search the ENTIRE invoice text
+   (not just the line items table) for any of the following, and attach
+   to the relevant line item if you can determine which item it relates
+   to, otherwise leave on the invoice level in `notes`:
+   - sla_actual_pct: any stated actual performance/uptime/service-level
+     percentage for this billing period (e.g. "Uptime achieved: 99.2%")
+   - milestone_date: any stated date a milestone was actually achieved
+     (e.g. "Foundation Completion: 15-Nov-2024")
+   - milestone_status: any sentence describing whether a milestone was
+     met on time, late, or not at all (e.g. "Foundation Completion
+     milestone achieved on-time. No delays recorded.")
+
+   THIS IS CRITICAL: invoices often contain footer text, notes sections,
+   or remarks that state whether penalties WERE OR WERE NOT applied, or
+   whether deadlines were met. Missing this text is a common and serious
+   extraction error. Read the ENTIRE document text provided, not just
+   the tabular section.
+
+4. NOTES AND PENALTY STATEMENTS:
+   - notes: any footer text, remarks, or comments section, copied verbatim
+   - milestone_statements: a list of every sentence found anywhere in the
+     document that describes milestone/delivery timing or status
+   - penalties_applied: if the invoice explicitly states an SLA or
+     milestone penalty amount already applied (e.g. "SLA Penalty
+     Applied: ₹0.00" or "Late Delivery Penalty: ₹5,000"), extract that
+     number. If the invoice states "₹0.00" or "None", extract 0.0 —
+     do NOT leave this null when the invoice explicitly addresses it,
+     since "₹0.00 penalty applied" is meaningfully different from
+     "penalties not mentioned at all" (null).
+
+5. extraction_confidence per line item (0.0-1.0):
+   - 1.0 if the row is clearly formatted and unambiguous
+   - below 0.7 if: numbers are blurry/uncertain, the row spans multiple
+     lines awkwardly, or the description is truncated
+
+DO NOT:
+- Calculate or correct any numbers — extract exactly what is printed,
+  even if it looks like it might be a typo or arithmetic error. Arithmetic
+  validation happens separately in Python.
+- Infer line items that aren't explicitly in the table
+- Guess at conditional-rule data that isn't stated anywhere in the document
+
+You MUST return valid JSON matching the following schema. Do not include any markdown formatting or surrounding explanation outside the JSON.
+{schema}

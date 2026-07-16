@@ -1,0 +1,158 @@
+[
+  {
+    "test_id": "TC001",
+    "description": "Volume discount tier 2 not applied on Apex Logistics Standard Delivery",
+    "contract_path": "data/synthetic/contracts/c001_apex_logistics_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c001_invoice_i001.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R001",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -1240.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 1240.0
+  },
+  {
+    "test_id": "TC002",
+    "description": "Missed logistics uptime SLA penalty credit for November on Apex Logistics",
+    "contract_path": "data/synthetic/contracts/c001_apex_logistics_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c001_invoice_i002.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -2940.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 2940.0
+  },
+  {
+    "test_id": "TC003",
+    "description": "Unapplied volume bundle discount on TechSoft QA testing services",
+    "contract_path": "data/synthetic/contracts/c002_techsoft_solutions_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c002_invoice_i003.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -19200.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 19200.0
+  },
+  {
+    "test_id": "TC004",
+    "description": "Consulting project management monthly cap rate exceeded on TechSoft",
+    "contract_path": "data/synthetic/contracts/c002_techsoft_solutions_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c002_invoice_i004.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -6000.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 6000.0
+  },
+  {
+    "test_id": "TC005",
+    "description": "Cement Supply per bag price cap exceeded on BuildRight contract",
+    "contract_path": "data/synthetic/contracts/c003_buildright_contractors_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c003_invoice_i005.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -10000.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 10000.0
+  },
+  {
+    "test_id": "TC006",
+    "description": "Delayed Foundation Completion milestone daily penalty credit on BuildRight",
+    "contract_path": "data/synthetic/contracts/c003_buildright_contractors_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c003_invoice_i006.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -25000.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 25000.0
+  },
+  {
+    "test_id": "TC007",
+    "description": "Surgical consumable volume tier overcharge and regulatory surcharge cap breach on MediSupply",
+    "contract_path": "data/synthetic/contracts/c004_medisupply_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c004_invoice_i007.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R001",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -36000.0,
+        "severity": "CRITICAL"
+      },
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -13000.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 49000.0
+  },
+  {
+    "test_id": "TC008",
+    "description": "Regulatory surcharge invoice cap limit exceeded on MediSupply",
+    "contract_path": "data/synthetic/contracts/c004_medisupply_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c004_invoice_i008.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -8000.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 8000.0
+  },
+  {
+    "test_id": "TC009",
+    "description": "VM hosting hours commitment discount missed on CloudHost",
+    "contract_path": "data/synthetic/contracts/c005_cloudhost_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c005_invoice_i009.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -18000.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 18000.0
+  },
+  {
+    "test_id": "TC010",
+    "description": "Missed VM service uptime availability SLA penalty credit on CloudHost",
+    "contract_path": "data/synthetic/contracts/c005_cloudhost_contract.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c005_invoice_i010.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -16000.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 16000.0
+  }
+]

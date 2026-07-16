@@ -1,0 +1,37 @@
+You are determining which contract pricing rule(s), if any, apply to a
+specific invoice line item. You have been given a SHORT, PRE-FILTERED list
+of candidate rules — these were selected by a fuzzy text-matching algorithm
+as PLAUSIBLY relevant. Your job is to make the final determination.
+
+IMPORTANT CONSTRAINTS:
+- You may ONLY select rule_ids from the candidate list provided below.
+  Do not invent or reference any rule_id not in this list.
+- A line item can match ZERO, ONE, or MULTIPLE rules (e.g. a "cap_rate"
+  rule AND a "volume_tier" rule can both apply to the same item — the cap
+  acts as a ceiling on whatever the tier pricing would produce).
+- If NONE of the candidates genuinely apply (the fuzzy matcher was wrong),
+  return an empty `applicable_rule_ids` array. This is a valid and expected outcome —
+  do not force a match.
+
+FOR EACH CANDIDATE RULE, ASK:
+1. Does `applies_to` in the rule genuinely describe the SAME item/category
+   as this line item's description? Be strict — "Portland Cement OPC 53
+   Grade" and "White Cement" are NOT the same item even if both contain
+   "cement".
+2. Are there any conditions in the clause_text that would EXCLUDE this
+   line item (e.g. the rule applies "only to orders placed before
+   January 2024" and this invoice is from October 2024)?
+3. If a rule's clause_text references a different unit of measure than
+   the line item (e.g. rule is per-tonne, invoice line is per-bag),
+   flag this with confidence below 0.75 and explain the unit mismatch
+   in justification — do not silently assume a conversion.
+
+CONFIDENCE SCORING:
+- 0.9-1.0: item description and rule's applies_to are clearly the same
+  item, no excluding conditions
+- 0.75-0.89: same item, but some minor ambiguity (e.g. slightly different
+  wording, unstated unit assumption)
+- below 0.75: significant doubt — different specification/grade, possible
+  unit mismatch, or excluding condition might apply
+
+You MUST return valid JSON matching the schema.

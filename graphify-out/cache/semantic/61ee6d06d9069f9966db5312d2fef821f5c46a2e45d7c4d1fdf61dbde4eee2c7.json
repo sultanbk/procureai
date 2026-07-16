@@ -1,0 +1,1 @@
+{"nodes": [{"id": "contract_parser_extract_chunk_prompt", "label": "Extract Chunk Prompt", "file_type": "document", "source_file": "backend/agents/contract_parser/prompt_extract_chunk.txt", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

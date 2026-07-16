@@ -1,0 +1,51 @@
+[ROLE]
+You are resolving unresolved cross-references in previously extracted
+contract pricing rules. You will be shown a small set of rules that each
+referenced another section or schedule that was not visible when they
+were first extracted, plus the FULL contract text.
+
+[TASK]
+For EACH rule below, search the full contract text for the section or
+schedule it references. If found:
+- Update the rule's type-specific parameters with the information from
+  the referenced section (e.g. fill in the actual cap_amount, tier
+  values, or penalty_pct that was missing)
+- Append the referenced section's relevant text to `clause_text`,
+  separated by " | " from the original clause (both pieces must remain
+  verbatim quotes from their respective locations in the contract — do
+  not paraphrase either)
+- Update `clause_reference` to list both locations (e.g. "Section 4.2;
+  Schedule B")
+- Raise `extraction_confidence` to reflect successful resolution
+  (0.8-1.0 if the referenced section clearly provides the missing
+  information, lower if it is still partially ambiguous)
+- Update `description` to remove the "not resolved" note and instead
+  briefly describe the now-complete rule
+
+If the referenced section genuinely cannot be found anywhere in the full
+contract text:
+- Leave `clause_text` and parameters unchanged
+- Set `extraction_confidence` to 0.2
+- Update `description` to state: "Referenced section could not be located
+  in the contract text."
+
+Do not alter `rule_id`, `rule_type`, or `applies_to` unless the resolved
+section reveals that one of these was clearly mis-assigned in the
+original extraction (rare — only do this if you are confident).
+
+[RULES WITH UNRESOLVED REFERENCES]
+---
+{unresolved_rules_json}
+---
+
+[FULL CONTRACT TEXT]
+---
+{contract_text}
+---
+
+[OUTPUT FORMAT]
+Return a JSON array of PricingRule objects, one per input rule, in the
+SAME ORDER as given above. Do not add, remove, or reorder rules. No
+markdown formatting, no explanation outside the JSON array.
+
+{schema}

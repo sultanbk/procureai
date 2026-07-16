@@ -1,0 +1,51 @@
+# ProcureAI Leakage Detection Architecture Review
+
+## Current Architecture Overview
+ProcureAI employs a hybrid **LLM + Deterministic Engine** pipeline via LangGraph:
+1. **Contract Parser (LLM):** Chunks contracts by section, extracts rules into a strict `PricingRule` Pydantic schema.
+2. **Invoice Extractor (LLM):** Reads raw invoice text, maps into `LineItem` objects, and attempts to link them to contract rules.
+3. **Compliance Checker (Python):** Uses deterministic math (`rule_engine.py`) to calculate discrepancies based on the structured data.
+4. **Report Generator (LLM):** Synthesizes findings into an executive report.
+
+---
+
+## ⚠️ Where We Can Go Wrong (Vulnerabilities)
+
+### 1. Lossy Translation into Rigid Schemas (The "Procrustean Bed" Problem)
+Our `PricingRule` schema forces infinitely complex legal language into 6 rigid buckets (`flat_rate`, `volume_tier`, `sla_penalty`, etc.). 
+- **What goes wrong:** If a rule is a hybrid (e.g., *"Tiered pricing up to 500 units, then a flat rate, but a 5% SLA penalty applies only to the tiered portion"*), the Contract Parser LLM is forced to oversimplify or drop the nuance entirely to fit the schema. 
+- **The Result:** We completely miss complex leakages. If the LLM marks `rule_type = "unknown"`, our rule engine currently just returns the charged amount—guaranteeing we miss the leakage.
+
+### 2. Disconnected, Context-Blind Extraction
+Currently, the Contract Parser runs in isolation, creating a "Rulebook" without knowing what the invoice looks like. 
+- **What goes wrong:** Contracts often have cross-referencing clauses (e.g., Section 2 defines the base rate, but an obscure Section 11 defines an overarching volume discount across multiple services). Because we parse section-by-section, the LLM fails to synthesize these cross-references.
+- **The Result:** The Invoice Extractor maps a line item to Section 2, but completely misses the discount from Section 11, resulting in missed leakages.
+
+### 3. The Fragility of Deterministic Regex
+Our `rule_engine.py` relies heavily on deterministic Python logic to execute the rules, which means we often use Regex to bridge the gap between unstructured text and math.
+- **What goes wrong:** As we saw with the `MilestonePenaltyEvaluator`, we rely on `DATE_PATTERN.finditer()` and currency regexes to parse unstructured notes. 
+- **The Result:** If an invoice says "10/15/24" instead of "October 15, 2024", or "Fifteen thousand" instead of "15,000", our deterministic engine silently fails, returning a `0.00` penalty.
+
+### 4. Fuzzy Mapping Failures (Line Item -> Contract Rule)
+The Invoice Extractor LLM is responsible for mapping an extracted `LineItem` to the correct contract rule.
+- **What goes wrong:** Suppliers rarely use the exact same terminology on their invoices as the contract. If the invoice says "Server Rack B" and the contract says "Infrastructure Hosting Tier 2", the LLM might map it to the wrong rule or fail to map it entirely.
+- **The Result:** False positive discrepancies (evaluating against the wrong price) or false negatives (failing to evaluate).
+
+---
+
+## 🛠️ What We Are Doing Wrong (Architectural Flaws)
+
+### Flaw 1: LLMs are bad at math, but Python is bad at unstructured logic.
+We currently use LLMs to extract logic into data schemas, and Python to do the math. 
+**The better approach:** We should use the LLM to write executable logic. Instead of extracting a rigid schema, the Contract Parser should output **Code as Data** (e.g., generating an executable Python lambda function or JSONLogic snippet for each pricing rule). This allows the LLM to capture infinite nuance while still leveraging deterministic execution.
+
+### Flaw 2: One-Pass Pipeline instead of Agentic RAG
+We process the entire contract upfront. For a 200-page Master Service Agreement (MSA), this is expensive and lossy.
+**The better approach:** **Invoice-First Agentic RAG**. 
+1. Extract the invoice line items *first*.
+2. Use the line item descriptions as semantic queries to retrieve the specific, relevant clauses from the vector database.
+3. Have an LLM dynamically evaluate *that specific line item* against *those specific retrieved clauses*, rather than trying to build a universal "Rulebook" upfront.
+
+### Flaw 3: Zero-Shot Verification
+Our Compliance Checker accepts the LLM's mapping as absolute truth.
+**The better approach:** Implement a "Critic Agent" or "Reflection" step. Before finalizing a discrepancy, a secondary LLM prompt should be given the specific line item, the chosen contract clause, and the calculated math, and asked: *"Does this discrepancy calculation logically align with the strict text of the contract?"* This dramatically reduces false positives.

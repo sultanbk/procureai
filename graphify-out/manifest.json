@@ -1,0 +1,887 @@
+{
+  "D:\\SupplierGuard\\backend\\__init__.py": {
+    "mtime": 1780992462.245921,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\__init__.py": {
+    "mtime": 1780992480.4071984,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\__init__.py": {
+    "mtime": 1780992486.5900126,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\agent.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "700ba97d9fa6152508b06a4498bfa323",
+    "semantic_hash": "700ba97d9fa6152508b06a4498bfa323"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\rule_engine.py": {
+    "mtime": 1781299493.472253,
+    "ast_hash": "6bc10c917c78e1e8f9bbb757f8f76892",
+    "semantic_hash": "6bc10c917c78e1e8f9bbb757f8f76892"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\tools.py": {
+    "mtime": 1781283804.632763,
+    "ast_hash": "5044b9ca2f7a306ae1b0ea8da23c0cc3",
+    "semantic_hash": "5044b9ca2f7a306ae1b0ea8da23c0cc3"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_parser\\__init__.py": {
+    "mtime": 1780992482.8420918,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_parser\\agent.py": {
+    "mtime": 1781299493.4748578,
+    "ast_hash": "ee25bd86ad5299ca0f7874a958958dd6",
+    "semantic_hash": "ee25bd86ad5299ca0f7874a958958dd6"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_parser\\tools.py": {
+    "mtime": 1781283804.632763,
+    "ast_hash": "e37445f17a7d02252097df46d4b03aa6",
+    "semantic_hash": "e37445f17a7d02252097df46d4b03aa6"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_qa\\__init__.py": {
+    "mtime": 1780992490.8243911,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\cross_validator\\__init__.py": {
+    "mtime": 1781296014.9322207,
+    "ast_hash": "1878e61be0d69230b7eb8d2c29ff9786",
+    "semantic_hash": "1878e61be0d69230b7eb8d2c29ff9786"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\cross_validator\\validator.py": {
+    "mtime": 1781296016.9531069,
+    "ast_hash": "9cb7bc4d598c3024ecce47044e0d3554",
+    "semantic_hash": "9cb7bc4d598c3024ecce47044e0d3554"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\dispute_generator\\__init__.py": {
+    "mtime": 1780992492.834097,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\invoice_extractor\\__init__.py": {
+    "mtime": 1780992484.5260694,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\invoice_extractor\\agent.py": {
+    "mtime": 1781296838.621916,
+    "ast_hash": "b63b2b08f0a65137b74f55d375f330f8",
+    "semantic_hash": "b63b2b08f0a65137b74f55d375f330f8"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\invoice_extractor\\tools.py": {
+    "mtime": 1781283804.632763,
+    "ast_hash": "484bd7d79fb73c28fe69e00e64650c63",
+    "semantic_hash": "484bd7d79fb73c28fe69e00e64650c63"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\pipeline.py": {
+    "mtime": 1781296171.4337673,
+    "ast_hash": "bd11ac7bd3f33a8d06c62cca230d25a3",
+    "semantic_hash": "bd11ac7bd3f33a8d06c62cca230d25a3"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\__init__.py": {
+    "mtime": 1780992488.6799939,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\agent.py": {
+    "mtime": 1781299493.4748578,
+    "ast_hash": "7024b8e939b1dd551089346e56fe5ff0",
+    "semantic_hash": "7024b8e939b1dd551089346e56fe5ff0"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\tools.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "58a74b8a8a46224b099c086f50f67b42",
+    "semantic_hash": "58a74b8a8a46224b099c086f50f67b42"
+  },
+  "D:\\SupplierGuard\\backend\\api\\__init__.py": {
+    "mtime": 1780992476.2040553,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\api\\middleware.py": {
+    "mtime": 1781283804.649438,
+    "ast_hash": "bc8ace2c5ae6233583d95b14e0e81b76",
+    "semantic_hash": "bc8ace2c5ae6233583d95b14e0e81b76"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\__init__.py": {
+    "mtime": 1780992478.3120828,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\analytics.py": {
+    "mtime": 1781283804.649438,
+    "ast_hash": "59c153da9dd4ada913b96693e45b9825",
+    "semantic_hash": "59c153da9dd4ada913b96693e45b9825"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\audit.py": {
+    "mtime": 1781283804.6544573,
+    "ast_hash": "608d265bb7f5d701dcf5f6c774110196",
+    "semantic_hash": "608d265bb7f5d701dcf5f6c774110196"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\contracts.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "b6cd88a2d3d8627d1ba1182d5d184164",
+    "semantic_hash": "b6cd88a2d3d8627d1ba1182d5d184164"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\disputes.py": {
+    "mtime": 1781283804.6544573,
+    "ast_hash": "af6e84674b17425d2ee86921b3951e76",
+    "semantic_hash": "af6e84674b17425d2ee86921b3951e76"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\health.py": {
+    "mtime": 1781283804.6599376,
+    "ast_hash": "47c9543a476acbbc0b5e03532a93d58a",
+    "semantic_hash": "47c9543a476acbbc0b5e03532a93d58a"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\settings.py": {
+    "mtime": 1781283804.6599376,
+    "ast_hash": "12e77d5768c85b845173dec29319cf88",
+    "semantic_hash": "12e77d5768c85b845173dec29319cf88"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\suppliers.py": {
+    "mtime": 1781299493.4773383,
+    "ast_hash": "66aa552c6a6769bc3f96030bfe17942b",
+    "semantic_hash": "66aa552c6a6769bc3f96030bfe17942b"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\upload.py": {
+    "mtime": 1781283804.6648333,
+    "ast_hash": "b10abdc6065159b8bed707d47b70a533",
+    "semantic_hash": "b10abdc6065159b8bed707d47b70a533"
+  },
+  "D:\\SupplierGuard\\backend\\api\\routes\\watcher.py": {
+    "mtime": 1781299493.472253,
+    "ast_hash": "6bce2a6e57fc039911067a7431a2fdc9",
+    "semantic_hash": "6bce2a6e57fc039911067a7431a2fdc9"
+  },
+  "D:\\SupplierGuard\\backend\\core\\__init__.py": {
+    "mtime": 1780992472.145852,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\core\\audit_logger.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "6e2c8bca8d86f2639badf791f08f4596",
+    "semantic_hash": "6e2c8bca8d86f2639badf791f08f4596"
+  },
+  "D:\\SupplierGuard\\backend\\core\\config.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "29ef91169c835b2a3452defae0b2cc99",
+    "semantic_hash": "29ef91169c835b2a3452defae0b2cc99"
+  },
+  "D:\\SupplierGuard\\backend\\core\\db.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "f3fe775cea37ab8fd0b9be1322d61d9b",
+    "semantic_hash": "f3fe775cea37ab8fd0b9be1322d61d9b"
+  },
+  "D:\\SupplierGuard\\backend\\core\\llm_client.py": {
+    "mtime": 1781298878.4361534,
+    "ast_hash": "fc058a0eda75097391fecf92017fe9b2",
+    "semantic_hash": "fc058a0eda75097391fecf92017fe9b2"
+  },
+  "D:\\SupplierGuard\\backend\\core\\logging_config.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "af478e2ed4f14d17496efba958d81e4e",
+    "semantic_hash": "af478e2ed4f14d17496efba958d81e4e"
+  },
+  "D:\\SupplierGuard\\backend\\core\\mock_data.py": {
+    "mtime": 1781164545.2692876,
+    "ast_hash": "7349ba5002611a4497a52b6cc247c252",
+    "semantic_hash": "7349ba5002611a4497a52b6cc247c252"
+  },
+  "D:\\SupplierGuard\\backend\\core\\mock_router.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "3cd20178c0893bb123966d9a93818233",
+    "semantic_hash": "3cd20178c0893bb123966d9a93818233"
+  },
+  "D:\\SupplierGuard\\backend\\core\\pdf_extractor.py": {
+    "mtime": 1781283804.667255,
+    "ast_hash": "a3b66428202684b98e32a050edd27dbe",
+    "semantic_hash": "a3b66428202684b98e32a050edd27dbe"
+  },
+  "D:\\SupplierGuard\\backend\\core\\prompt_loader.py": {
+    "mtime": 1781296780.4020295,
+    "ast_hash": "897072becd75bb4d0abd39036143c1f8",
+    "semantic_hash": "897072becd75bb4d0abd39036143c1f8"
+  },
+  "D:\\SupplierGuard\\backend\\core\\schema_utils.py": {
+    "mtime": 1781164099.998177,
+    "ast_hash": "c2bc33a46a6140f20dd63dcec1499258",
+    "semantic_hash": "c2bc33a46a6140f20dd63dcec1499258"
+  },
+  "D:\\SupplierGuard\\backend\\core\\tasks.py": {
+    "mtime": 1781283804.6815736,
+    "ast_hash": "7b4410ac82040c652ac4b746c5952633",
+    "semantic_hash": "7b4410ac82040c652ac4b746c5952633"
+  },
+  "D:\\SupplierGuard\\backend\\core\\time.py": {
+    "mtime": 1781283804.6830165,
+    "ast_hash": "e51d8aaa48327c711a57d5c493baf5ae",
+    "semantic_hash": "e51d8aaa48327c711a57d5c493baf5ae"
+  },
+  "D:\\SupplierGuard\\backend\\eval\\__init__.py": {
+    "mtime": 1780992497.172036,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\eval\\harness.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "e9804dc8ab328467da2db7e6190da075",
+    "semantic_hash": "e9804dc8ab328467da2db7e6190da075"
+  },
+  "D:\\SupplierGuard\\backend\\eval\\metrics.py": {
+    "mtime": 1781283804.6830165,
+    "ast_hash": "60aa2093c0cbbca9db9432fdf0d65ce1",
+    "semantic_hash": "60aa2093c0cbbca9db9432fdf0d65ce1"
+  },
+  "D:\\SupplierGuard\\backend\\main.py": {
+    "mtime": 1781284131.3907757,
+    "ast_hash": "e945cd50694beee576e6dade93d570d0",
+    "semantic_hash": "e945cd50694beee576e6dade93d570d0"
+  },
+  "D:\\SupplierGuard\\backend\\models\\__init__.py": {
+    "mtime": 1780992474.1712787,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\models\\audit.py": {
+    "mtime": 1781283804.68923,
+    "ast_hash": "41fbb79df0ec8b0dbfa80f9f6825bc8c",
+    "semantic_hash": "41fbb79df0ec8b0dbfa80f9f6825bc8c"
+  },
+  "D:\\SupplierGuard\\backend\\models\\schemas.py": {
+    "mtime": 1781296214.785642,
+    "ast_hash": "cb0b209ae14e05eb4475c7d4deac9188",
+    "semantic_hash": "cb0b209ae14e05eb4475c7d4deac9188"
+  },
+  "D:\\SupplierGuard\\backend\\services\\__init__.py": {
+    "mtime": 1780992495.0481951,
+    "ast_hash": "68b329da9893e34099c7d8ad5cb9c940",
+    "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
+  },
+  "D:\\SupplierGuard\\backend\\services\\analytics.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "6fc22e7a857796e018f3f2d852870bbf",
+    "semantic_hash": "6fc22e7a857796e018f3f2d852870bbf"
+  },
+  "D:\\SupplierGuard\\backend\\services\\contract_chunker.py": {
+    "mtime": 1781283804.68923,
+    "ast_hash": "2686ca283dfd7471c2015510741d9eec",
+    "semantic_hash": "2686ca283dfd7471c2015510741d9eec"
+  },
+  "D:\\SupplierGuard\\backend\\services\\contract_comparator.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "8e99d593c4a67a4a2bc1775fd5f80870",
+    "semantic_hash": "8e99d593c4a67a4a2bc1775fd5f80870"
+  },
+  "D:\\SupplierGuard\\backend\\services\\dispute_generator.py": {
+    "mtime": 1781283804.699181,
+    "ast_hash": "dcace61dcde86e5fac6b74b6e967c9ac",
+    "semantic_hash": "dcace61dcde86e5fac6b74b6e967c9ac"
+  },
+  "D:\\SupplierGuard\\backend\\services\\file_watcher.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "c1c0be69215331e1aa7c9a4aab8241dc",
+    "semantic_hash": "c1c0be69215331e1aa7c9a4aab8241dc"
+  },
+  "D:\\SupplierGuard\\backend\\services\\notifier.py": {
+    "mtime": 1781299493.4732606,
+    "ast_hash": "3c625e515a94fffb4b68c7a301bd9357",
+    "semantic_hash": "3c625e515a94fffb4b68c7a301bd9357"
+  },
+  "D:\\SupplierGuard\\backend\\services\\scoring.py": {
+    "mtime": 1781283804.7048104,
+    "ast_hash": "be0b4d7ae66857ec22e5f59f4b19ec5a",
+    "semantic_hash": "be0b4d7ae66857ec22e5f59f4b19ec5a"
+  },
+  "D:\\SupplierGuard\\buildright_debug.json": {
+    "mtime": 1781283804.598149,
+    "ast_hash": "c97f18d6242de00f05cdfc3351f0d011",
+    "semantic_hash": "c97f18d6242de00f05cdfc3351f0d011"
+  },
+  "D:\\SupplierGuard\\data\\eval\\test_cases.json": {
+    "mtime": 1780753679.179062,
+    "ast_hash": "a72d37d1724f1acb464a02207088cf0f",
+    "semantic_hash": "a72d37d1724f1acb464a02207088cf0f"
+  },
+  "D:\\SupplierGuard\\frontend\\eslint.config.js": {
+    "mtime": 1780933771.1172135,
+    "ast_hash": "3aa4b57d7f08181d86bde52a4dcb7f22",
+    "semantic_hash": "3aa4b57d7f08181d86bde52a4dcb7f22"
+  },
+  "D:\\SupplierGuard\\frontend\\package.json": {
+    "mtime": 1781183816.2868266,
+    "ast_hash": "8c239f898590f373af98a610d7b25c10",
+    "semantic_hash": "8c239f898590f373af98a610d7b25c10"
+  },
+  "D:\\SupplierGuard\\frontend\\postcss.config.js": {
+    "mtime": 1780752498.7707946,
+    "ast_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\App.jsx": {
+    "mtime": 1781283804.7188444,
+    "ast_hash": "48f8cbea2bf08cc622a2d7015151ea17",
+    "semantic_hash": "48f8cbea2bf08cc622a2d7015151ea17"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\App.test.jsx": {
+    "mtime": 1781283804.719846,
+    "ast_hash": "22df7c4b20142ddf6c58dbaac025b7d9",
+    "semantic_hash": "22df7c4b20142ddf6c58dbaac025b7d9"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\api.js": {
+    "mtime": 1781283804.7168508,
+    "ast_hash": "15166e1083d888895def7caa9e021caa",
+    "semantic_hash": "15166e1083d888895def7caa9e021caa"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\AgentProgressBar.jsx": {
+    "mtime": 1781283804.7204537,
+    "ast_hash": "94870c89db9ed26459fb17f44b145d47",
+    "semantic_hash": "94870c89db9ed26459fb17f44b145d47"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\AuditDocumentPanel.jsx": {
+    "mtime": 1781299614.5815437,
+    "ast_hash": "2f4965df4c68d80b493a931f05faf9f6",
+    "semantic_hash": "2f4965df4c68d80b493a931f05faf9f6"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\AuditLogConsole.jsx": {
+    "mtime": 1781283804.73036,
+    "ast_hash": "5b9600cc7b3b4d7232cd18c53f82bff8",
+    "semantic_hash": "5b9600cc7b3b4d7232cd18c53f82bff8"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ContractQADrawer.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "a522b4c7c85248345a6a18eb8c4aa455",
+    "semantic_hash": "a522b4c7c85248345a6a18eb8c4aa455"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\DiscrepancyTable.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "2b80feba50a6f19ff5d526b68339e81f",
+    "semantic_hash": "2b80feba50a6f19ff5d526b68339e81f"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\DisputeLetterModal.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "4c25972fbb645e0508202fbc62e4a0c7",
+    "semantic_hash": "4c25972fbb645e0508202fbc62e4a0c7"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\EvidenceBlock.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "9bf9244ddee405eb96409091ebf47c3e",
+    "semantic_hash": "9bf9244ddee405eb96409091ebf47c3e"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ExportButton.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "680c039c9121c1d2f6906df78261e0e6",
+    "semantic_hash": "680c039c9121c1d2f6906df78261e0e6"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\SummaryCard.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "717778ea02894d42dad9fa8232fd794e",
+    "semantic_hash": "717778ea02894d42dad9fa8232fd794e"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\layout\\AppLayout.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "4d635519af52a7458781bbaa8055746d",
+    "semantic_hash": "4d635519af52a7458781bbaa8055746d"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\layout\\PageHeader.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "4850371a3aa2e620e2ca4b46c7af058f",
+    "semantic_hash": "4850371a3aa2e620e2ca4b46c7af058f"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\layout\\Sidebar.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "37ea5ca2f14198483c5aacd8e6bcf239",
+    "semantic_hash": "37ea5ca2f14198483c5aacd8e6bcf239"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Badge.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "d53f86cbce8450c3191187093b1b5137",
+    "semantic_hash": "d53f86cbce8450c3191187093b1b5137"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Button.jsx": {
+    "mtime": 1781283804.7324061,
+    "ast_hash": "621ae3302fa3d572378e430b774f48de",
+    "semantic_hash": "621ae3302fa3d572378e430b774f48de"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Card.jsx": {
+    "mtime": 1781283804.7462654,
+    "ast_hash": "e4ca424ddadde9ebd589d3b246124017",
+    "semantic_hash": "e4ca424ddadde9ebd589d3b246124017"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\ConfirmDialog.jsx": {
+    "mtime": 1781283804.7476625,
+    "ast_hash": "af940c1049742cbd2b69b8d4ee19f631",
+    "semantic_hash": "af940c1049742cbd2b69b8d4ee19f631"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Drawer.jsx": {
+    "mtime": 1781283804.748669,
+    "ast_hash": "5994c34ec205fd34765a2258d1feccee",
+    "semantic_hash": "5994c34ec205fd34765a2258d1feccee"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\EmptyState.jsx": {
+    "mtime": 1781283804.748669,
+    "ast_hash": "4cf2805bf3236ec4c8bbb44d595c91c0",
+    "semantic_hash": "4cf2805bf3236ec4c8bbb44d595c91c0"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Input.jsx": {
+    "mtime": 1781283804.748669,
+    "ast_hash": "0f31329a010f60521d5d1bc5bd69acb1",
+    "semantic_hash": "0f31329a010f60521d5d1bc5bd69acb1"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Modal.jsx": {
+    "mtime": 1781283804.748669,
+    "ast_hash": "bde7d1303c5891cd1f64a19180465e74",
+    "semantic_hash": "bde7d1303c5891cd1f64a19180465e74"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Select.jsx": {
+    "mtime": 1781283804.748669,
+    "ast_hash": "b032870079095e09368619bcefee52c6",
+    "semantic_hash": "b032870079095e09368619bcefee52c6"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Spinner.jsx": {
+    "mtime": 1781283804.7541578,
+    "ast_hash": "cb462085afea0a96df35c118ffc67edf",
+    "semantic_hash": "cb462085afea0a96df35c118ffc67edf"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\StatCard.jsx": {
+    "mtime": 1781283804.7541578,
+    "ast_hash": "0161ae4d704cae2a99e4d03050403b4d",
+    "semantic_hash": "0161ae4d704cae2a99e4d03050403b4d"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Table.jsx": {
+    "mtime": 1781283804.7541578,
+    "ast_hash": "762178b0bccd521465646d0db5e4746c",
+    "semantic_hash": "762178b0bccd521465646d0db5e4746c"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\Tabs.jsx": {
+    "mtime": 1781283804.7541578,
+    "ast_hash": "ced14503fc1b9b9e16ac74b04a998aa1",
+    "semantic_hash": "ced14503fc1b9b9e16ac74b04a998aa1"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\components\\ui\\ToastProvider.jsx": {
+    "mtime": 1781283804.7541578,
+    "ast_hash": "80f296bf88760d8fa60977c90695d732",
+    "semantic_hash": "80f296bf88760d8fa60977c90695d732"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\main.jsx": {
+    "mtime": 1781283804.7204537,
+    "ast_hash": "cf01f22db416e9ec54113d85919079ad",
+    "semantic_hash": "cf01f22db416e9ec54113d85919079ad"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\Analytics.jsx": {
+    "mtime": 1781283804.7605996,
+    "ast_hash": "6b18b2f84f1ff5f1e39781957a1985ce",
+    "semantic_hash": "6b18b2f84f1ff5f1e39781957a1985ce"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\AuditList.jsx": {
+    "mtime": 1781283804.7629092,
+    "ast_hash": "185d3ee434c1e001b86f77355c9676e4",
+    "semantic_hash": "185d3ee434c1e001b86f77355c9676e4"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\AuditReport.jsx": {
+    "mtime": 1781296984.894563,
+    "ast_hash": "e53ebd4141d6ea2b81f7af63eb5d5823",
+    "semantic_hash": "e53ebd4141d6ea2b81f7af63eb5d5823"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\AuditRunning.jsx": {
+    "mtime": 1781283804.7649875,
+    "ast_hash": "9ecf59a059929cebffc9821dffc324a1",
+    "semantic_hash": "9ecf59a059929cebffc9821dffc324a1"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\AutoAudit.jsx": {
+    "mtime": 1781283804.7649875,
+    "ast_hash": "d6937138d258ab4792fbbeb655cf52bb",
+    "semantic_hash": "d6937138d258ab4792fbbeb655cf52bb"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\Compare.jsx": {
+    "mtime": 1781299616.6635447,
+    "ast_hash": "3aa955e7db8a492117faaba388f95958",
+    "semantic_hash": "3aa955e7db8a492117faaba388f95958"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\ContractLibrary.jsx": {
+    "mtime": 1781299618.733401,
+    "ast_hash": "50e24c2abb16e2728edd055362369cd1",
+    "semantic_hash": "50e24c2abb16e2728edd055362369cd1"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\Settings.jsx": {
+    "mtime": 1781283804.7649875,
+    "ast_hash": "d465059d63cff5d7fd2a6ba63fd65582",
+    "semantic_hash": "d465059d63cff5d7fd2a6ba63fd65582"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\SupplierHistory.jsx": {
+    "mtime": 1781299620.8097484,
+    "ast_hash": "69cedd71ed470d469fffc9f83d462dcc",
+    "semantic_hash": "69cedd71ed470d469fffc9f83d462dcc"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\SupplierScorecard.jsx": {
+    "mtime": 1781299622.9015565,
+    "ast_hash": "3881c86e18d14e15368ba0a17b372a8b",
+    "semantic_hash": "3881c86e18d14e15368ba0a17b372a8b"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\pages\\Upload.jsx": {
+    "mtime": 1781283804.7649875,
+    "ast_hash": "161c6b7f846b97c73cce1297d159c26c",
+    "semantic_hash": "161c6b7f846b97c73cce1297d159c26c"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\setupTests.js": {
+    "mtime": 1781183798.9858756,
+    "ast_hash": "00e47f7b9836e8f731101981fa2bb2de",
+    "semantic_hash": "00e47f7b9836e8f731101981fa2bb2de"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\utils\\chartTheme.js": {
+    "mtime": 1781283804.7649875,
+    "ast_hash": "74ca2f1e35b2eb84512e8593362e1287",
+    "semantic_hash": "74ca2f1e35b2eb84512e8593362e1287"
+  },
+  "D:\\SupplierGuard\\frontend\\tailwind.config.js": {
+    "mtime": 1780984168.637889,
+    "ast_hash": "68f4d9f972cc7f0967ff8b013c0e3f00",
+    "semantic_hash": "68f4d9f972cc7f0967ff8b013c0e3f00"
+  },
+  "D:\\SupplierGuard\\frontend\\vite.config.js": {
+    "mtime": 1781183791.0529945,
+    "ast_hash": "3f2db6e7edc50c5a09df0573ff530657",
+    "semantic_hash": "3f2db6e7edc50c5a09df0573ff530657"
+  },
+  "D:\\SupplierGuard\\scripts\\generate_ippb_invoice.py": {
+    "mtime": 1780817855.5005257,
+    "ast_hash": "e8cf2e7d605028eae8620224f4bf149e",
+    "semantic_hash": "e8cf2e7d605028eae8620224f4bf149e"
+  },
+  "D:\\SupplierGuard\\scripts\\generate_manual_test_data.py": {
+    "mtime": 1780987695.7875504,
+    "ast_hash": "3aeed2d55bd04f0f4d3035a92a0be444",
+    "semantic_hash": "3aeed2d55bd04f0f4d3035a92a0be444"
+  },
+  "D:\\SupplierGuard\\scripts\\generate_synthetic_data.py": {
+    "mtime": 1781277235.4478745,
+    "ast_hash": "64aac345e00135794a10d841ae57cda7",
+    "semantic_hash": "64aac345e00135794a10d841ae57cda7"
+  },
+  "D:\\SupplierGuard\\scripts\\read_discrepancy.py": {
+    "mtime": 1781283804.7821178,
+    "ast_hash": "b5b9dc7403d47db0c82985f429f3e1d1",
+    "semantic_hash": "b5b9dc7403d47db0c82985f429f3e1d1"
+  },
+  "D:\\SupplierGuard\\scripts\\seed_db.py": {
+    "mtime": 1781283804.7821178,
+    "ast_hash": "86d54ce680a96254930d922965bf4993",
+    "semantic_hash": "86d54ce680a96254930d922965bf4993"
+  },
+  "D:\\SupplierGuard\\scripts\\test_real_ippb_parser.py": {
+    "mtime": 1780817681.7464857,
+    "ast_hash": "4f071f83022bfecd2cd7d3dd0722a1c0",
+    "semantic_hash": "4f071f83022bfecd2cd7d3dd0722a1c0"
+  },
+  "D:\\SupplierGuard\\scripts\\test_real_ippb_pipeline.py": {
+    "mtime": 1780830033.6438458,
+    "ast_hash": "9beb5d69f735e100922ba48ddebc3d1f",
+    "semantic_hash": "9beb5d69f735e100922ba48ddebc3d1f"
+  },
+  "D:\\SupplierGuard\\test.py": {
+    "mtime": 1781187977.4796162,
+    "ast_hash": "582fc8d419f2c04ced8f19b363983727",
+    "semantic_hash": "582fc8d419f2c04ced8f19b363983727"
+  },
+  "D:\\SupplierGuard\\tests\\conftest.py": {
+    "mtime": 1781183734.4270577,
+    "ast_hash": "3296c1afe98f29c8ae5a249ac8a4bdca",
+    "semantic_hash": "3296c1afe98f29c8ae5a249ac8a4bdca"
+  },
+  "D:\\SupplierGuard\\tests\\unit\\test_billing_regressions.py": {
+    "mtime": 1781029364.1327846,
+    "ast_hash": "40c4f417a230eb717275e0cf3aad16eb",
+    "semantic_hash": "40c4f417a230eb717275e0cf3aad16eb"
+  },
+  "D:\\SupplierGuard\\AI_MUST_READ_FIRST.md": {
+    "mtime": 1781296894.6393993,
+    "ast_hash": "190e7624149985cbbcf867a76be499ea",
+    "semantic_hash": "190e7624149985cbbcf867a76be499ea"
+  },
+  "D:\\SupplierGuard\\ARCHITECTURE.md": {
+    "mtime": 1781295481.334124,
+    "ast_hash": "b9a9d91feb154c2d218b349a1ef54c90",
+    "semantic_hash": "b9a9d91feb154c2d218b349a1ef54c90"
+  },
+  "D:\\SupplierGuard\\ARCHITECTURE_v3.md": {
+    "mtime": 1781295481.334124,
+    "ast_hash": "b9a9d91feb154c2d218b349a1ef54c90",
+    "semantic_hash": "b9a9d91feb154c2d218b349a1ef54c90"
+  },
+  "D:\\SupplierGuard\\DATA_SCHEMAS.md": {
+    "mtime": 1781296616.0615134,
+    "ast_hash": "650394d25600a68c55a17381eae5a0cb",
+    "semantic_hash": "650394d25600a68c55a17381eae5a0cb"
+  },
+  "D:\\SupplierGuard\\Layer1_Implementation_Prompts.md": {
+    "mtime": 1781283804.6041107,
+    "ast_hash": "f70145fc1f38bdbbeeb246b1146cb8ed",
+    "semantic_hash": "f70145fc1f38bdbbeeb246b1146cb8ed"
+  },
+  "D:\\SupplierGuard\\Layer2_Implementation_Prompts.md": {
+    "mtime": 1781283804.6041107,
+    "ast_hash": "3e5209b40be831ebe6bce480bde6968c",
+    "semantic_hash": "3e5209b40be831ebe6bce480bde6968c"
+  },
+  "D:\\SupplierGuard\\PROGRESS_TRACKER.md": {
+    "mtime": 1781296896.7388055,
+    "ast_hash": "c23486da6361bd35fc3207d890c81c97",
+    "semantic_hash": "c23486da6361bd35fc3207d890c81c97"
+  },
+  "D:\\SupplierGuard\\PROJECT_CONVENTIONS.md": {
+    "mtime": 1781283804.6138246,
+    "ast_hash": "3bda6b5885e1ccf5f40c2a1f30985cd7",
+    "semantic_hash": "3bda6b5885e1ccf5f40c2a1f30985cd7"
+  },
+  "D:\\SupplierGuard\\PROMPTS.md": {
+    "mtime": 1781295484.4900842,
+    "ast_hash": "b72d95ab0a6175e8ff020cd37d345d1f",
+    "semantic_hash": "b72d95ab0a6175e8ff020cd37d345d1f"
+  },
+  "D:\\SupplierGuard\\README.md": {
+    "mtime": 1781283804.616619,
+    "ast_hash": "ba21abf391e1ea35ff1ce083b1d9a098",
+    "semantic_hash": "ba21abf391e1ea35ff1ce083b1d9a098"
+  },
+  "D:\\SupplierGuard\\TESTING.md": {
+    "mtime": 1781283804.622751,
+    "ast_hash": "19ac480cf75dcb8d34b548c00fb6ea54",
+    "semantic_hash": "19ac480cf75dcb8d34b548c00fb6ea54"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\prompt.txt": {
+    "mtime": 1781296050.8358397,
+    "ast_hash": "2606456c7ad36ec27c0714fce1513177",
+    "semantic_hash": "2606456c7ad36ec27c0714fce1513177"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\prompt_critic.txt": {
+    "mtime": 1781296809.9979143,
+    "ast_hash": "008b31e52be02793f18f8ececace5c4a",
+    "semantic_hash": "008b31e52be02793f18f8ececace5c4a"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\compliance_checker\\prompt_match_rules.txt": {
+    "mtime": 1781296807.9175372,
+    "ast_hash": "d8766580cc6612c5285f182c693e7a13",
+    "semantic_hash": "d8766580cc6612c5285f182c693e7a13"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_parser\\prompt.txt": {
+    "mtime": 1781295897.6378572,
+    "ast_hash": "3e9e45909c96a9fe405ab63ec6d0791d",
+    "semantic_hash": "3e9e45909c96a9fe405ab63ec6d0791d"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_parser\\prompt_extract_chunk.txt": {
+    "mtime": 1781296802.9196355,
+    "ast_hash": "0d3a5385646fd12fed873c35e68763b3",
+    "semantic_hash": "0d3a5385646fd12fed873c35e68763b3"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\contract_qa\\prompt.txt": {
+    "mtime": 1781283804.632763,
+    "ast_hash": "e5ab99b205b02ef01bace24f4194de7e",
+    "semantic_hash": "e5ab99b205b02ef01bace24f4194de7e"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\dispute_generator\\prompt.txt": {
+    "mtime": 1781260383.7112856,
+    "ast_hash": "cc35c5812964ceee36194fccb34b9391",
+    "semantic_hash": "cc35c5812964ceee36194fccb34b9391"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\invoice_extractor\\prompt.txt": {
+    "mtime": 1781295899.663037,
+    "ast_hash": "84bc779bafc3f10d7de9f6bd63df31e2",
+    "semantic_hash": "84bc779bafc3f10d7de9f6bd63df31e2"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\invoice_extractor\\prompt_extract_invoice.txt": {
+    "mtime": 1781296805.891138,
+    "ast_hash": "23de920917aa27ca5d5f6a73b6b977f4",
+    "semantic_hash": "23de920917aa27ca5d5f6a73b6b977f4"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\prompt.txt": {
+    "mtime": 1781283804.6486206,
+    "ast_hash": "7cb12b414f8c61b1f7e134fd32b65f53",
+    "semantic_hash": "7cb12b414f8c61b1f7e134fd32b65f53"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\prompt_executive_summary.txt": {
+    "mtime": 1781296812.0526567,
+    "ast_hash": "11ea2d7be08fd56b439a62fcd446c26a",
+    "semantic_hash": "11ea2d7be08fd56b439a62fcd446c26a"
+  },
+  "D:\\SupplierGuard\\backend\\agents\\report_generator\\prompt_finding_narrative.txt": {
+    "mtime": 1781296814.1301904,
+    "ast_hash": "0d695358159e85d8e52a9fe8c09909fd",
+    "semantic_hash": "0d695358159e85d8e52a9fe8c09909fd"
+  },
+  "D:\\SupplierGuard\\backend\\requirements.txt": {
+    "mtime": 1781296001.2492363,
+    "ast_hash": "2bc62372bb39f400dba708d23e41911e",
+    "semantic_hash": "2bc62372bb39f400dba708d23e41911e"
+  },
+  "D:\\SupplierGuard\\frontend\\README.md": {
+    "mtime": 1778578808.774283,
+    "ast_hash": "a28dc4cb878325f3e9e5649f3e1469ac",
+    "semantic_hash": "a28dc4cb878325f3e9e5649f3e1469ac"
+  },
+  "D:\\SupplierGuard\\frontend\\index.html": {
+    "mtime": 1781283804.7123318,
+    "ast_hash": "f662921ce0872e944eb11c2524a4be68",
+    "semantic_hash": "f662921ce0872e944eb11c2524a4be68"
+  },
+  "D:\\SupplierGuard\\layer3.md": {
+    "mtime": 1781283804.6041107,
+    "ast_hash": "ea7d1b9fc4449574166ac240a6017999",
+    "semantic_hash": "ea7d1b9fc4449574166ac240a6017999"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c001_apex_logistics_contract.pdf": {
+    "mtime": 1781277280.1819582,
+    "ast_hash": "5e7fba5a235be8d2188c6da94a43de6a",
+    "semantic_hash": "5e7fba5a235be8d2188c6da94a43de6a"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c001_apex_logistics_contract_v2.pdf": {
+    "mtime": 1781277280.19016,
+    "ast_hash": "2d7e5860b0c9346e7ca7e51bd76f146d",
+    "semantic_hash": "2d7e5860b0c9346e7ca7e51bd76f146d"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c002_techsoft_solutions_contract.pdf": {
+    "mtime": 1781277280.1979034,
+    "ast_hash": "532bf3c3a1814d772b9669c272fb0cb5",
+    "semantic_hash": "532bf3c3a1814d772b9669c272fb0cb5"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c003_buildright_contractors_contract.pdf": {
+    "mtime": 1781277280.215953,
+    "ast_hash": "1b9212f3f8804baffc3af0fd1a04582e",
+    "semantic_hash": "1b9212f3f8804baffc3af0fd1a04582e"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c004_medisupply_contract.pdf": {
+    "mtime": 1781277280.2174838,
+    "ast_hash": "6fd57a3b8de4dd1c58cfe496a7a2ed35",
+    "semantic_hash": "6fd57a3b8de4dd1c58cfe496a7a2ed35"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c005_cloudhost_contract.pdf": {
+    "mtime": 1781277280.2340205,
+    "ast_hash": "5d3e0b7f6f701e4fe06f1b66441211be",
+    "semantic_hash": "5d3e0b7f6f701e4fe06f1b66441211be"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\contracts\\c006_proservices_contract.pdf": {
+    "mtime": 1781277280.241285,
+    "ast_hash": "819f93af226b4b28b6c942e368281c0a",
+    "semantic_hash": "819f93af226b4b28b6c942e368281c0a"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c001_invoice_i001.pdf": {
+    "mtime": 1781277280.2485113,
+    "ast_hash": "1a76842937f72adc7e6b24f0e30a4b02",
+    "semantic_hash": "1a76842937f72adc7e6b24f0e30a4b02"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c001_invoice_i002.pdf": {
+    "mtime": 1781277280.2604587,
+    "ast_hash": "3679ee4a8522300730d265485cf8788e",
+    "semantic_hash": "3679ee4a8522300730d265485cf8788e"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c002_invoice_i003.pdf": {
+    "mtime": 1781277280.2650988,
+    "ast_hash": "2bf865e6ac6e48a5209a9154b947d3ac",
+    "semantic_hash": "2bf865e6ac6e48a5209a9154b947d3ac"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c002_invoice_i004.pdf": {
+    "mtime": 1781277280.2778103,
+    "ast_hash": "927c496061f4820df897d37e050fcdf7",
+    "semantic_hash": "927c496061f4820df897d37e050fcdf7"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c003_invoice_i005.pdf": {
+    "mtime": 1781277280.2817,
+    "ast_hash": "2e079150dda639400339291e759bf1b7",
+    "semantic_hash": "2e079150dda639400339291e759bf1b7"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c003_invoice_i006.pdf": {
+    "mtime": 1781277280.2928257,
+    "ast_hash": "ff761abaf5d5dd4ff9029885a302f5fd",
+    "semantic_hash": "ff761abaf5d5dd4ff9029885a302f5fd"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c004_invoice_i007.pdf": {
+    "mtime": 1781277280.2982483,
+    "ast_hash": "383aefbb31ac92a09f9277bbed87eb03",
+    "semantic_hash": "383aefbb31ac92a09f9277bbed87eb03"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c004_invoice_i008.pdf": {
+    "mtime": 1781277280.3093257,
+    "ast_hash": "2fdc0143dbe63501db54bd54cf5bb744",
+    "semantic_hash": "2fdc0143dbe63501db54bd54cf5bb744"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c005_invoice_i009.pdf": {
+    "mtime": 1781277280.317161,
+    "ast_hash": "30e53bb8a545b93b9768e467733b6ed4",
+    "semantic_hash": "30e53bb8a545b93b9768e467733b6ed4"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c005_invoice_i010.pdf": {
+    "mtime": 1781277280.3203201,
+    "ast_hash": "627b7e0764fbe1e64650dd5f406bb119",
+    "semantic_hash": "627b7e0764fbe1e64650dd5f406bb119"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\c006_invoice_i011.pdf": {
+    "mtime": 1781277280.3252337,
+    "ast_hash": "5bf53c1e96a03922830b8f4023867297",
+    "semantic_hash": "5bf53c1e96a03922830b8f4023867297"
+  },
+  "D:\\SupplierGuard\\data\\synthetic\\invoices\\ippb_invoice.pdf": {
+    "mtime": 1780817864.9117954,
+    "ast_hash": "7c307875845de8534061d8fd146f99d0",
+    "semantic_hash": "7c307875845de8534061d8fd146f99d0"
+  },
+  "D:\\SupplierGuard\\watched_invoices\\unmatched\\c003_invoice_i005.pdf": {
+    "mtime": 1781277280.2817,
+    "ast_hash": "2e079150dda639400339291e759bf1b7",
+    "semantic_hash": "2e079150dda639400339291e759bf1b7"
+  },
+  "D:\\SupplierGuard\\watched_invoices\\unmatched\\c003_invoice_i006.pdf": {
+    "mtime": 1781277280.2928257,
+    "ast_hash": "ff761abaf5d5dd4ff9029885a302f5fd",
+    "semantic_hash": "ff761abaf5d5dd4ff9029885a302f5fd"
+  },
+  "D:\\SupplierGuard\\Prodapt-icon-logo.png": {
+    "mtime": 1780930326.1146462,
+    "ast_hash": "34a3812761243ff73a0049fc77ff564b",
+    "semantic_hash": "34a3812761243ff73a0049fc77ff564b"
+  },
+  "D:\\SupplierGuard\\frontend\\Prodapt-icon-logo.png": {
+    "mtime": 1780930326.1146462,
+    "ast_hash": "34a3812761243ff73a0049fc77ff564b",
+    "semantic_hash": "34a3812761243ff73a0049fc77ff564b"
+  },
+  "D:\\SupplierGuard\\frontend\\public\\Prodapt-icon-logo.png": {
+    "mtime": 1780930326.1146462,
+    "ast_hash": "34a3812761243ff73a0049fc77ff564b",
+    "semantic_hash": "34a3812761243ff73a0049fc77ff564b"
+  },
+  "D:\\SupplierGuard\\frontend\\public\\favicon.svg": {
+    "mtime": 1780933771.1444013,
+    "ast_hash": "fddca0a89ec3d9488e676d9972dc6dc8",
+    "semantic_hash": "fddca0a89ec3d9488e676d9972dc6dc8"
+  },
+  "D:\\SupplierGuard\\frontend\\public\\icons.svg": {
+    "mtime": 1778578808.8848271,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\assets\\Prodapt-icon-logo.png": {
+    "mtime": 1780930326.1146462,
+    "ast_hash": "34a3812761243ff73a0049fc77ff564b",
+    "semantic_hash": "34a3812761243ff73a0049fc77ff564b"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\assets\\hero.png": {
+    "mtime": 1778578808.8051958,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\assets\\react.svg": {
+    "mtime": 1778578808.9107554,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "D:\\SupplierGuard\\frontend\\src\\assets\\vite.svg": {
+    "mtime": 1778578808.93238,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  }
+}

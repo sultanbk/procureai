@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment and secrets
+.env
+*.env
+!.env.example
+!backend/.env.example
+
+# Local databases and runtime files
+*.db
+*.sqlite
+*.sqlite3
+data/uploads/
+tmp/
+logs/
+*.log
+
+# Generated / local scratch artifacts
+scratch/
+contract_text.txt
+MSA_*.pdf
+SupplierGuard_Architecture_Diagram.html
+suppliergaurd_feature_expansion.html
+data/eval/evaluation_report.md
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.sw?
