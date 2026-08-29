@@ -1,4 +1,4 @@
-# ARCHITECTURE.md — SupplierGuard System Design (v3)
+# ARCHITECTURE.md — ProcureAI System Design (v3)
 # Canonical reference — supersedes v1 and v2 master context architecture sections
 # Core principle: independent extraction → deterministic cross-validation → bounded LLM judgment → Python-only arithmetic
 
@@ -19,7 +19,7 @@
 
 ## 1. SYSTEM OVERVIEW
 
-SupplierGuard is a 6-node LangGraph pipeline. Nodes 1–2 run in parallel (fan-out/fan-in).
+ProcureAI is a 6-node LangGraph pipeline. Nodes 1–2 run in parallel (fan-out/fan-in).
 Node 3 is pure Python (no LLM). Nodes 4–6 are sequential.
 
 ```

@@ -10,7 +10,7 @@ I've read every agent file, schema, pipeline, rule engine, prompt, config, and t
 
 **PROBLEM 1: Pipeline is SEQUENTIAL, not parallel (violates core v3 principle)**
 
-The architecture says *"Nodes 1–2 run in parallel (fan-out/fan-in)"* — this is the #1 design change from v1/v2. But [pipeline.py](file:///d:/SupplierGuard/backend/agents/pipeline.py) runs them **sequentially**: `invoice_extractor → contract_parser → cross_validator → ...`
+The architecture says *"Nodes 1–2 run in parallel (fan-out/fan-in)"* — this is the #1 design change from v1/v2. But [pipeline.py](file:///d:/ProcureAI/backend/agents/pipeline.py) runs them **sequentially**: `invoice_extractor → contract_parser → cross_validator → ...`
 
 ```python
 # Current (WRONG):
@@ -27,7 +27,7 @@ This means if invoice extraction fails, contract parsing never runs — but the 
 
 **PROBLEM 2: Invoice Extractor reads `state["rulebook"]` — violates independence rule**
 
-[invoice_extractor/agent.py line 30](file:///d:/SupplierGuard/backend/agents/invoice_extractor/agent.py#L30) docstring says:
+[invoice_extractor/agent.py line 30](file:///d:/ProcureAI/backend/agents/invoice_extractor/agent.py#L30) docstring says:
 ```
 Input: state["invoice_texts"], state["rulebook"]
 ```
@@ -40,7 +40,7 @@ Architecture v3 Rule #1 says: *"Contract Parser and Invoice Extractor run indepe
 
 **PROBLEM 3: `AnnualAdjustmentEvaluator` is missing from the rule engine**
 
-Architecture v3 Section 6 ([ARCHITECTURE_v3.md line 347](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L347)) lists 8 evaluators that "ALL must be implemented before go-live":
+Architecture v3 Section 6 ([ARCHITECTURE_v3.md line 347](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L347)) lists 8 evaluators that "ALL must be implemented before go-live":
 
 | Evaluator | In rule_engine.py? |
 |---|---|
@@ -53,7 +53,7 @@ Architecture v3 Section 6 ([ARCHITECTURE_v3.md line 347](file:///d:/SupplierGuar
 | `AnnualAdjustmentEvaluator` | ❌ **MISSING** |
 | `MilestonePenaltyEvaluator` | ✅ (exists but NOT in EVALUATOR_MAP) |
 
-[rule_engine.py line 213-220](file:///d:/SupplierGuard/backend/agents/compliance_checker/rule_engine.py#L213-L220) — `EVALUATOR_MAP` has only 6 entries. `AnnualAdjustmentEvaluator` doesn't exist at all, and `MilestonePenaltyEvaluator` is implemented but reached only via the string-matching fallback at line 226, not through the proper dispatch map.
+[rule_engine.py line 213-220](file:///d:/ProcureAI/backend/agents/compliance_checker/rule_engine.py#L213-L220) — `EVALUATOR_MAP` has only 6 entries. `AnnualAdjustmentEvaluator` doesn't exist at all, and `MilestonePenaltyEvaluator` is implemented but reached only via the string-matching fallback at line 226, not through the proper dispatch map.
 
 **Impact:** Any contract with annual price adjustment clauses or milestone penalties routed through the normal map will silently return `line_total_charged` (no discrepancy found), even if the supplier is overcharging.
 
@@ -63,7 +63,7 @@ Architecture v3 Section 6 ([ARCHITECTURE_v3.md line 347](file:///d:/SupplierGuar
 
 **PROBLEM 4: `MilestonePenaltyEvaluator` returns `Decimal("0.00")` when no data — should be flagged, not silently compliant**
 
-[rule_engine.py line 178](file:///d:/SupplierGuard/backend/agents/compliance_checker/rule_engine.py#L178): When `milestone_date` is `None`, it returns `Decimal("0.00")`. This means a line charged at ₹50,000 with no milestone data will compute `delta = 0 - 50000 = -50000` and flag a false ₹50,000 "discrepancy." Or if it's evaluated against a dummy line (charged = 0), delta = 0, no finding. Either way, **wrong**.
+[rule_engine.py line 178](file:///d:/ProcureAI/backend/agents/compliance_checker/rule_engine.py#L178): When `milestone_date` is `None`, it returns `Decimal("0.00")`. This means a line charged at ₹50,000 with no milestone data will compute `delta = 0 - 50000 = -50000` and flag a false ₹50,000 "discrepancy." Or if it's evaluated against a dummy line (charged = 0), delta = 0, no finding. Either way, **wrong**.
 
 Architecture v3 Rule #5 says these should become `DataRequiredFlag` at Node 3, never reaching the evaluator. But the evaluator is still called for cases that slip through, and its return value is nonsensical.
 
@@ -73,13 +73,13 @@ Architecture v3 Rule #5 says these should become `DataRequiredFlag` at Node 3, n
 
 **PROBLEM 5: Per-line arithmetic check uses `float` instead of `Decimal`**
 
-[invoice_extractor/agent.py lines 109-110](file:///d:/SupplierGuard/backend/agents/invoice_extractor/agent.py#L109-L110):
+[invoice_extractor/agent.py lines 109-110](file:///d:/ProcureAI/backend/agents/invoice_extractor/agent.py#L109-L110):
 ```python
 expected_line_total = round(float(item.quantity) * float(item.unit_price_charged), 2)
 if abs(expected_line_total - float(item.line_total_charged)) > 0.01:
 ```
 
-Architecture v3 Rule #8: *"All monetary values: Python Decimal, never float."* This code converts to `float` for arithmetic — introducing floating-point rounding errors that could cause false arithmetic flags (e.g., `0.1 + 0.2 ≠ 0.3` in float). Meanwhile, [tools.py](file:///d:/SupplierGuard/backend/agents/invoice_extractor/tools.py#L66-L75) `validate_invoice_arithmetic` correctly uses `Decimal`.
+Architecture v3 Rule #8: *"All monetary values: Python Decimal, never float."* This code converts to `float` for arithmetic — introducing floating-point rounding errors that could cause false arithmetic flags (e.g., `0.1 + 0.2 ≠ 0.3` in float). Meanwhile, [tools.py](file:///d:/ProcureAI/backend/agents/invoice_extractor/tools.py#L66-L75) `validate_invoice_arithmetic` correctly uses `Decimal`.
 
 **Fix:** Replace with `Decimal` arithmetic matching what `tools.py` already does. This is a **duplicate** of the same check — both run, potentially giving conflicting results.
 
@@ -90,7 +90,7 @@ Architecture v3 Rule #8: *"All monetary values: Python Decimal, never float."* T
 Architecture v3 Section 6 says:
 > *"If ALL candidates score < RULE_MATCH_CONFIDENCE_THRESHOLD (0.75): line item → review_flags"*
 
-But [compliance_checker/agent.py](file:///d:/SupplierGuard/backend/agents/compliance_checker/agent.py#L222-L230) processes every mapping the LLM returns without checking `mapping.confidence >= 0.75`. The threshold from config is `COMPLIANCE_CONFIDENCE_THRESHOLD = 0.60`, not 0.75 as architecture specifies.
+But [compliance_checker/agent.py](file:///d:/ProcureAI/backend/agents/compliance_checker/agent.py#L222-L230) processes every mapping the LLM returns without checking `mapping.confidence >= 0.75`. The threshold from config is `COMPLIANCE_CONFIDENCE_THRESHOLD = 0.60`, not 0.75 as architecture specifies.
 
 **Fix:** After LLM returns mappings, filter: if all rule confidences for a line are < 0.75, send that line to `review_flags` instead of proceeding to evaluation.
 
@@ -102,7 +102,7 @@ But [compliance_checker/agent.py](file:///d:/SupplierGuard/backend/agents/compli
 
 **PROBLEM 7: Schema mismatch — `PricingRule` field naming divergence**
 
-Architecture v3 uses `clause_section` (line 152), but [schemas.py](file:///d:/SupplierGuard/backend/models/schemas.py#L141) uses `clause_reference`. The cross_validator ([validator.py line 80](file:///d:/SupplierGuard/backend/agents/cross_validator/validator.py#L80)) uses `getattr(rule, "clause_reference", "Unknown")` to work around this, but the `DataRequiredFlag` schema and the architecture spec both use `clause_section`. This creates inconsistency in the output JSON — some places say `clause_section`, others `clause_reference`.
+Architecture v3 uses `clause_section` (line 152), but [schemas.py](file:///d:/ProcureAI/backend/models/schemas.py#L141) uses `clause_reference`. The cross_validator ([validator.py line 80](file:///d:/ProcureAI/backend/agents/cross_validator/validator.py#L80)) uses `getattr(rule, "clause_reference", "Unknown")` to work around this, but the `DataRequiredFlag` schema and the architecture spec both use `clause_section`. This creates inconsistency in the output JSON — some places say `clause_section`, others `clause_reference`.
 
 **Fix:** Pick one name and use it everywhere. Since `clause_reference` is already in the Pydantic schema and database, keep `clause_reference` and update the architecture doc. Or alias the field in Pydantic.
 
@@ -110,9 +110,9 @@ Architecture v3 uses `clause_section` (line 152), but [schemas.py](file:///d:/Su
 
 **PROBLEM 8: `PricingRule.parameters` dict is missing from the schema**
 
-Architecture v3 ([line 153](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L153)) defines `parameters: dict # type-specific (tiers, cap_amount, etc.)`. But [schemas.py](file:///d:/SupplierGuard/backend/models/schemas.py#L137-L172) doesn't have a `parameters` field — instead it uses individual typed fields (`tiers`, `flat_unit_price`, `sla_threshold_pct`, etc.).
+Architecture v3 ([line 153](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L153)) defines `parameters: dict # type-specific (tiers, cap_amount, etc.)`. But [schemas.py](file:///d:/ProcureAI/backend/models/schemas.py#L137-L172) doesn't have a `parameters` field — instead it uses individual typed fields (`tiers`, `flat_unit_price`, `sla_threshold_pct`, etc.).
 
-The typed approach is **better** than a generic `dict` (more Pydantic validation). But the architecture doc references `rule.parameters["cap_amount"]` in the `CapRateEvaluator` pseudocode ([line 355](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L355)), which doesn't exist. The actual code correctly uses `rule.cap_amount`.
+The typed approach is **better** than a generic `dict` (more Pydantic validation). But the architecture doc references `rule.parameters["cap_amount"]` in the `CapRateEvaluator` pseudocode ([line 355](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L355)), which doesn't exist. The actual code correctly uses `rule.cap_amount`.
 
 **Fix:** Update the architecture document to reflect the actual typed fields approach. This is a doc-vs-code sync issue.
 
@@ -121,8 +121,8 @@ The typed approach is **better** than a generic `dict` (more Pydantic validation
 **PROBLEM 9: Duplicate arithmetic validation — conflicting tolerances**
 
 The invoice extractor runs arithmetic checks **twice**:
-1. `validate_invoice_arithmetic()` in [tools.py](file:///d:/SupplierGuard/backend/agents/invoice_extractor/tools.py#L54-L91) — uses `Decimal`, tolerance ₹0.05/line and ₹1.00/invoice
-2. Inline code in [agent.py lines 107-117](file:///d:/SupplierGuard/backend/agents/invoice_extractor/agent.py#L107-L117) — uses `float`, tolerance ₹0.01/line
+1. `validate_invoice_arithmetic()` in [tools.py](file:///d:/ProcureAI/backend/agents/invoice_extractor/tools.py#L54-L91) — uses `Decimal`, tolerance ₹0.05/line and ₹1.00/invoice
+2. Inline code in [agent.py lines 107-117](file:///d:/ProcureAI/backend/agents/invoice_extractor/agent.py#L107-L117) — uses `float`, tolerance ₹0.01/line
 
 These can produce **contradicting** results: `tools.py` says "valid" (within ₹0.05), inline says "invalid" (beyond ₹0.01). The architecture says tolerance should be `₹0.01` per line and `₹1` per invoice.
 
@@ -132,7 +132,7 @@ These can produce **contradicting** results: `tools.py` says "valid" (within ₹
 
 **PROBLEM 10: `unmapped_lines` stores dicts in cross_validator but architecture says `list[str]`**
 
-[validator.py line 57](file:///d:/SupplierGuard/backend/agents/cross_validator/validator.py#L57):
+[validator.py line 57](file:///d:/ProcureAI/backend/agents/cross_validator/validator.py#L57):
 ```python
 unmapped_lines.append({"line_id": item.line_id, "desc": item.raw_description})
 ```
@@ -145,12 +145,12 @@ But the `CrossValidationResult` schema says `unmapped_lines: List[str]`. The cod
 
 **PROBLEM 11: Cross-validator uses `raw_description` but architecture says use `description`**
 
-Architecture v3 ([line 248](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L248)):
+Architecture v3 ([line 248](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L248)):
 ```python
 fuzzy_score(item.description, rule.applies_to) >= 60
 ```
 
-But the actual `LineItem` schema has `raw_description`, not `description`. The [validator.py](file:///d:/SupplierGuard/backend/agents/cross_validator/validator.py#L51) correctly uses `item.raw_description`. Architecture doc needs updating, or `mapped_contract_item` should also be matched against (since it's the LLM's mapping of the raw description to contract terminology).
+But the actual `LineItem` schema has `raw_description`, not `description`. The [validator.py](file:///d:/ProcureAI/backend/agents/cross_validator/validator.py#L51) correctly uses `item.raw_description`. Architecture doc needs updating, or `mapped_contract_item` should also be matched against (since it's the LLM's mapping of the raw description to contract terminology).
 
 **Fix:** Also fuzzy-match against `item.mapped_contract_item` — this is the LLM's best guess of what contract item this line refers to, and will produce much better candidate matches than raw invoice text.
 
@@ -170,10 +170,10 @@ Every agent uses `llm.generate_content(...)` which calls `self.real_model.genera
 
 **PROBLEM 13: No LLM call for cross-reference resolution (architecture step 4)**
 
-Architecture v3 Node 1 step 4 ([line 123-127](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L123-L127)):
+Architecture v3 Node 1 step 4 ([line 123-127](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L123-L127)):
 > *"Resolution pass (1 additional LLM call, given the FULL contract_text): For any rule with an unresolved cross-reference, re-extract..."*
 
-This is **not implemented**. [contract_parser/agent.py](file:///d:/SupplierGuard/backend/agents/contract_parser/agent.py) goes straight from per-section extraction → merge → verify. Cross-references like "see Schedule B" are never resolved.
+This is **not implemented**. [contract_parser/agent.py](file:///d:/ProcureAI/backend/agents/contract_parser/agent.py) goes straight from per-section extraction → merge → verify. Cross-references like "see Schedule B" are never resolved.
 
 **Fix:** After merging, scan rules for unresolved references (e.g., `clause_text` containing "see Section", "as defined in", "per Schedule"). For those rules, make one additional LLM call with the full contract text for resolution. The prompt file `prompt_resolve_refs.txt` already exists but is **never used** in the code.
 
@@ -181,7 +181,7 @@ This is **not implemented**. [contract_parser/agent.py](file:///d:/SupplierGuard
 
 **PROBLEM 14: `is_relevant_section()` filter function exists but is NEVER CALLED**
 
-[contract_parser/tools.py](file:///d:/SupplierGuard/backend/agents/contract_parser/tools.py#L60-L81) defines `is_relevant_section()`, and `split_contract_to_sections()` also exists. But the agent uses `split_by_sections` from `backend.services.contract_chunker`, and `is_relevant_section` is never imported or called.
+[contract_parser/tools.py](file:///d:/ProcureAI/backend/agents/contract_parser/tools.py#L60-L81) defines `is_relevant_section()`, and `split_contract_to_sections()` also exists. But the agent uses `split_by_sections` from `backend.services.contract_chunker`, and `is_relevant_section` is never imported or called.
 
 Architecture v3 says *"Extract ALL pricing-relevant rules found in this chunk"* — full extraction means we should NOT filter sections. But having dead code causes confusion.
 
@@ -191,7 +191,7 @@ Architecture v3 says *"Extract ALL pricing-relevant rules found in this chunk"* 
 
 **PROBLEM 15: Pipeline singleton is not async-safe**
 
-[pipeline.py lines 58-67](file:///d:/SupplierGuard/backend/agents/pipeline.py#L58-L67):
+[pipeline.py lines 58-67](file:///d:/ProcureAI/backend/agents/pipeline.py#L58-L67):
 ```python
 _pipeline = None
 def get_pipeline():
@@ -209,7 +209,7 @@ No locking. If two FastAPI requests hit `get_pipeline()` simultaneously, you cou
 
 **PROBLEM 16: `compliance_score` is never computed**
 
-Architecture v3 ([line 407](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L407)):
+Architecture v3 ([line 407](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L407)):
 > `compliance_score = (compliant_lines / total_lines) * 100`
 
 This field doesn't exist in `AuditSummary` schema and is never calculated. The `AuditSummary` has `compliant_lines` and `total_lines_audited` as raw counts, but no `compliance_score` percentage field. The frontend would need to compute this itself.
@@ -220,7 +220,7 @@ This field doesn't exist in `AuditSummary` schema and is never calculated. The `
 
 **PROBLEM 17: Conditional edges and regular edges conflict in the architecture's graph definition**
 
-The architecture doc ([lines 456-470](file:///d:/SupplierGuard/ARCHITECTURE_v3.md#L456-L470)) adds BOTH conditional edges (for halt checking) AND regular edges for the same nodes:
+The architecture doc ([lines 456-470](file:///d:/ProcureAI/ARCHITECTURE_v3.md#L456-L470)) adds BOTH conditional edges (for halt checking) AND regular edges for the same nodes:
 ```python
 graph.add_conditional_edges("cross_validator", ...)
 graph.add_edge("cross_validator", "compliance_checker")  # conflicts!
@@ -234,7 +234,7 @@ LangGraph doesn't allow both conditional and regular edges from the same node. T
 
 **PROBLEM 18: `DATA_SCHEMAS.md` is stale — doesn't match v3 schemas**
 
-[DATA_SCHEMAS.md](file:///d:/SupplierGuard/DATA_SCHEMAS.md) still shows v1/v2 schemas:
+[DATA_SCHEMAS.md](file:///d:/ProcureAI/DATA_SCHEMAS.md) still shows v1/v2 schemas:
 - `PipelineState` is missing `cross_validation`, `candidate_map`, `data_required_flags`, `review_flags` fields
 - `LineItem` is missing `extraction_confidence`, `arithmetic_valid`, `milestone_date`, `milestone_status` v3 fields
 - `Discrepancy` is missing `critic_status`, `critic_reasoning`, `narrative` v3 fields
@@ -247,7 +247,7 @@ LangGraph doesn't allow both conditional and regular edges from the same node. T
 
 **PROBLEM 19: `hallucinated_clause` error type is not in `AgentError.error_type` enum**
 
-[contract_parser/agent.py line 112](file:///d:/SupplierGuard/backend/agents/contract_parser/agent.py#L112) creates an error with `"error_type": "hallucinated_clause"`, but this is appended as a raw dict, not an `AgentError` instance. The `AgentError` schema's `error_type` Literal doesn't include `"hallucinated_clause"`.
+[contract_parser/agent.py line 112](file:///d:/ProcureAI/backend/agents/contract_parser/agent.py#L112) creates an error with `"error_type": "hallucinated_clause"`, but this is appended as a raw dict, not an `AgentError` instance. The `AgentError` schema's `error_type` Literal doesn't include `"hallucinated_clause"`.
 
 **Fix:** Either add `"hallucinated_clause"` to the `AgentError.error_type` Literal, or use the existing `"validation_failed"` type with a descriptive message. Use `AgentError()` instances, not raw dicts.
 

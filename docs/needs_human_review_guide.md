@@ -2,7 +2,7 @@
 
 **Audience:** End users and business reviewers.
 
-`NEEDS_HUMAN_REVIEW` means SupplierGuard found a possible issue, kept the finding visible, and is asking a human to make the final judgment.
+`NEEDS_HUMAN_REVIEW` means ProcureAI found a possible issue, kept the finding visible, and is asking a human to make the final judgment.
 
 ## What It Means
 

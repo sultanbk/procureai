@@ -1,4 +1,4 @@
-# SupplierGuard — Problem Statement
+# ProcureAI — Problem Statement
 # WHO THIS FILE IS FOR: AI code assistants working on this project.
 # PURPOSE: Understand the business problem deeply before touching any code.
 # This file is intentionally non-technical. No schemas, no code, no architecture.
@@ -16,7 +16,7 @@ because the overcharges are subtle, the contracts are long, and the
 accounts payable team is too busy to cross-check every line item against
 a 60-page legal document.
 
-SupplierGuard reads both documents and finds every discrepancy, automatically.
+ProcureAI reads both documents and finds every discrepancy, automatically.
 
 ---
 
@@ -292,17 +292,17 @@ the supplier was on time and no penalty applies — and the invoice is correct.
 If it happened on October 22, the supplier was 7 days late and a credit of
 INR 35,000 (7 × 5,000) should have been applied.
 
-This distinction is fundamental to how SupplierGuard works:
+This distinction is fundamental to how ProcureAI works:
 
 DOCUMENT-RESOLVABLE RULES: Can be verified from the contract + invoice alone.
   Volume tiers, flat rates, cap rates, bundle discounts, early payment discounts.
-  → SupplierGuard can produce a definitive finding.
+  → ProcureAI can produce a definitive finding.
 
 EXTERNALLY-DEPENDENT RULES: Require real-world data not in the documents.
   SLA performance metrics, milestone completion dates, delivery records.
-  → SupplierGuard flags the clause and asks for the data. It never invents the answer.
+  → ProcureAI flags the clause and asks for the data. It never invents the answer.
 
-This is the most important thing SupplierGuard must understand:
+This is the most important thing ProcureAI must understand:
 NEVER produce a financial finding for an externally-dependent rule
 without the external data to support it. A wrong finding is worse than
 no finding — it damages trust in the entire system.
@@ -333,9 +333,9 @@ Just because nobody reads the contract when the invoice arrives.
 
 ---
 
-## What SupplierGuard Does
+## What ProcureAI Does
 
-SupplierGuard reads both documents — the contract and the invoice —
+ProcureAI reads both documents — the contract and the invoice —
 and produces a precise audit report answering the question:
 
 "Does every line on this invoice match what the contract says it should be?"
@@ -362,33 +362,33 @@ supplier immediately. No further research needed. The evidence is complete.
 
 ---
 
-## What SupplierGuard Does NOT Do
+## What ProcureAI Does NOT Do
 
 Understanding the boundaries is as important as understanding the capability.
 
-**SupplierGuard does not make assumptions about real-world events.**
+**ProcureAI does not make assumptions about real-world events.**
 If a contract says "penalty if delivered late" and the invoice says "no
-penalties applied," SupplierGuard does not guess whether there was a delay.
+penalties applied," ProcureAI does not guess whether there was a delay.
 It flags the clause and requests the actual delivery data. Guessing is wrong.
 
-**SupplierGuard does not make legal interpretations.**
+**ProcureAI does not make legal interpretations.**
 If a contract clause is ambiguous — if two reasonable readings lead to
-different financial outcomes — SupplierGuard flags it for human review.
+different financial outcomes — ProcureAI flags it for human review.
 It does not pick an interpretation. That is legal territory.
 
-**SupplierGuard does not replace a contract analyst.**
+**ProcureAI does not replace a contract analyst.**
 It handles the 80% of cases that are clear-cut and deterministic, freeing
 the analyst to focus on the 20% that require judgment, negotiation, or
 legal interpretation.
 
-**SupplierGuard does not handle verbal agreements or email negotiations.**
+**ProcureAI does not handle verbal agreements or email negotiations.**
 It only works from the signed written contract. Side agreements, email
 commitments, and informal adjustments are outside its scope unless they
 appear as formal contract amendments in writing.
 
 ---
 
-## The Most Common Mistakes That SupplierGuard Must Never Make
+## The Most Common Mistakes That ProcureAI Must Never Make
 
 ### Mistake 1 — Inventing a finding without evidence
 The system must never report a discrepancy it cannot prove from the documents.
@@ -425,7 +425,7 @@ as uncertainty — not converted into a CRITICAL finding.
 
 ## How to Think About Confidence
 
-Every finding SupplierGuard produces has a confidence level. Think of it
+Every finding ProcureAI produces has a confidence level. Think of it
 like a dial from 0% to 100%.
 
 100% confidence: The contract says rate = INR 450/unit for Tier 2.
@@ -463,14 +463,14 @@ the fuel surcharge that exceeded the cap by 3%, the SLA credit that was
 never issued — these never get checked. Not because Priya doesn't care.
 Because there are not enough hours.
 
-SupplierGuard gives Priya her time back. It checks every single invoice,
+ProcureAI gives Priya her time back. It checks every single invoice,
 every single line item, against every applicable contract clause, in under
 2 minutes. It gives her a ranked list of what to dispute, with the evidence
 already assembled.
 
 She spends her time acting on findings — not hunting for them.
 
-That is the problem SupplierGuard solves. That is what every feature,
+That is the problem ProcureAI solves. That is what every feature,
 every agent, every schema, and every test case is ultimately in service of.
 
 ---
@@ -514,7 +514,7 @@ managing supplier relationships.
 match their contract terms across all audits. 100 = every line correct.
 0 = every line has a discrepancy.
 
-**DataRequiredFlag:** When SupplierGuard detects a contract clause that
+**DataRequiredFlag:** When ProcureAI detects a contract clause that
 could apply but cannot be verified without external data (actual delivery
 performance, milestone dates), it raises a flag instead of a finding.
 The flag says: "This clause exists. We need this specific information
@@ -523,4 +523,4 @@ to determine whether a discrepancy occurred."
 ---
 
 END OF PROBLEM STATEMENT
-Read ARCHITECTURE.md next to understand how SupplierGuard solves this problem technically.
+Read ARCHITECTURE.md next to understand how ProcureAI solves this problem technically.

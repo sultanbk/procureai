@@ -1,4 +1,4 @@
-# SupplierGuard — Layer 4 Implementation Prompts
+# ProcureAI — Layer 4 Implementation Prompts
 # Feature: Make it a Platform
 # Five prompts — paste each into a fresh AI session independently.
 # Build in order: Prompt 1 → Prompt 2 → Prompt 3 → Prompt 4 → Prompt 5
@@ -15,7 +15,7 @@
 # WHAT IT BUILDS: A kanban-style dispute lifecycle tracker per
 #                 finding. Tracks: Identified → Disputed → Acknowledged
 #                 → Credit Received → Closed. Shows actual ₹ recovered
-#                 vs. identified leakage. The ROI proof of SupplierGuard.
+#                 vs. identified leakage. The ROI proof of ProcureAI.
 # EFFORT: 2 days | DB extension + kanban UI + recovery KPI dashboard
 # WHY FIRST: Highest demo impact. "We identified ₹2.3M and recovered
 #            ₹1.8M (78%)" is the sentence that justifies this entire system.
@@ -25,7 +25,7 @@
 PASTE THIS ENTIRE BLOCK INTO YOUR AI ASSISTANT
 ---
 
-I am building SupplierGuard — a multi-agent AI system that audits supplier
+I am building ProcureAI — a multi-agent AI system that audits supplier
 contracts against invoices and finds financial leakage. Layers 1, 2, and 3
 are all complete. I am now adding the Recovery Tracker — Layer 4, Prompt 1.
 
@@ -33,7 +33,7 @@ are all complete. I am now adding the Recovery Tracker — Layer 4, Prompt 1.
 
 Every Discrepancy finding in every audit report has a lifecycle after it
 is identified. Right now that lifecycle exists only in email threads and
-spreadsheets. The Recovery Tracker brings it into SupplierGuard.
+spreadsheets. The Recovery Tracker brings it into ProcureAI.
 
 Per finding, the user can track:
   IDENTIFIED → DISPUTED → ACKNOWLEDGED → CREDIT_RECEIVED → CLOSED
@@ -380,7 +380,7 @@ END OF PROMPT 1
 PASTE THIS ENTIRE BLOCK INTO YOUR AI ASSISTANT
 ---
 
-I am building SupplierGuard — a multi-agent AI system that audits supplier
+I am building ProcureAI — a multi-agent AI system that audits supplier
 contracts against invoices and finds financial leakage. Layers 1, 2, 3,
 and Recovery Tracker (Layer 4 Prompt 1) are all complete.
 
@@ -388,7 +388,7 @@ I am now adding Role-Based Access Control — Layer 4, Prompt 2.
 
 ## WHAT THIS FEATURE DOES
 
-Currently SupplierGuard is single-user with no authentication. This adds:
+Currently ProcureAI is single-user with no authentication. This adds:
 
 Four roles:
   ADMIN    — full access, manage users, configure system
@@ -611,7 +611,7 @@ POST /api/approvals/{approval_id}/reject
 
 ```
 Centered card:
-  SupplierGuard logo/name
+  ProcureAI logo/name
   Email input
   Password input
   [Sign In] button
@@ -776,7 +776,7 @@ END OF PROMPT 2
 PASTE THIS ENTIRE BLOCK INTO YOUR AI ASSISTANT
 ---
 
-I am building SupplierGuard — a multi-agent AI system that audits supplier
+I am building ProcureAI — a multi-agent AI system that audits supplier
 contracts against invoices and finds financial leakage. Layers 1, 2, 3,
 Recovery Tracker, and RBAC are all complete.
 
@@ -1084,7 +1084,7 @@ END OF PROMPT 3
 #                 per-audit webhook delivery so findings flow into
 #                 SAP, Oracle, Notion, or any webhook endpoint.
 # EFFORT: 1–2 days | API key table + /v1/ router + webhook delivery
-# WHY FOURTH: Lowest complexity in Layer 4. Makes SupplierGuard
+# WHY FOURTH: Lowest complexity in Layer 4. Makes ProcureAI
 #             integrable. Enables enterprise adoption.
 # ═══════════════════════════════════════════════════════════════
 
@@ -1092,7 +1092,7 @@ END OF PROMPT 3
 PASTE THIS ENTIRE BLOCK INTO YOUR AI ASSISTANT
 ---
 
-I am building SupplierGuard — a multi-agent AI system that audits supplier
+I am building ProcureAI — a multi-agent AI system that audits supplier
 contracts against invoices and finds financial leakage. Layers 1–3, Recovery
 Tracker, RBAC, and Full Contract Library are all complete.
 
@@ -1103,7 +1103,7 @@ I am now adding API + Webhook Export — Layer 4, Prompt 4.
 Two separate integration mechanisms:
 
 1. PUBLIC REST API (/v1/)
-   External systems query SupplierGuard audit data using an API key.
+   External systems query ProcureAI audit data using an API key.
    No JWT — API keys only (simpler for server-to-server integration).
    Rate limited: 100 requests/hour per API key.
 
@@ -1287,8 +1287,8 @@ async def _post_webhook(
 
     headers = {
         "Content-Type":         "application/json",
-        "X-SupplierGuard-Event": event_type,
-        "X-SupplierGuard-Sig":   f"sha256={signature}"
+        "X-ProcureAI-Event": event_type,
+        "X-ProcureAI-Sig":   f"sha256={signature}"
     }
 
     try:
@@ -1439,7 +1439,7 @@ END OF PROMPT 4
 # WHAT IT BUILDS: A separate login for suppliers. They see their own
 #                 compliance score, view findings raised against them,
 #                 respond to disputes, and submit corrected invoices.
-#                 Turns SupplierGuard into a two-sided platform.
+#                 Turns ProcureAI into a two-sided platform.
 # EFFORT: 4–5 days | Supplier auth + read-only views + dispute response
 # WHY LAST: Depends on all other Layer 4 features (RBAC, recovery
 #           tracker, contract library) being in place first.
@@ -1449,7 +1449,7 @@ END OF PROMPT 4
 PASTE THIS ENTIRE BLOCK INTO YOUR AI ASSISTANT
 ---
 
-I am building SupplierGuard — a multi-agent AI system that audits supplier
+I am building ProcureAI — a multi-agent AI system that audits supplier
 contracts against invoices and finds financial leakage. All previous layers
 and Layer 4 Prompts 1–4 are complete (Recovery Tracker, RBAC, Contract Library,
 API + Webhook Export).
@@ -1459,7 +1459,7 @@ I am now adding the Supplier Self-Service Portal — the final feature.
 ## WHAT THIS FEATURE DOES
 
 A completely separate login and portal experience for suppliers. The main
-SupplierGuard app is for the buying company (internal users). The Supplier
+ProcureAI app is for the buying company (internal users). The Supplier
 Portal is for the suppliers themselves.
 
 When a dispute letter is approved and sent, the supplier receives an email
@@ -1561,7 +1561,7 @@ POST /api/supplier-portal/invite       [ADMIN, APPROVER]
   Generates invite_token (expires 48h).
   Sends invite email with portal link:
     "You have been invited to view your compliance dashboard on
-     SupplierGuard. Click here to set your password: {link}"
+     ProcureAI. Click here to set your password: {link}"
   Returns: {invite_sent: true, email: str}
 
 POST /api/supplier-portal/accept-invite

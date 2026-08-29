@@ -2,7 +2,7 @@
 
 **Audience:** Developers, auditors, and business reviewers.
 
-The human review loop lets SupplierGuard keep a finding visible while marking it as needing human judgment. This is used when the deterministic math finds a discrepancy but contract language, source data, or business context may require reviewer interpretation.
+The human review loop lets ProcureAI keep a finding visible while marking it as needing human judgment. This is used when the deterministic math finds a discrepancy but contract language, source data, or business context may require reviewer interpretation.
 
 ## Implementation Summary
 

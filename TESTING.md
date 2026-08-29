@@ -2,7 +2,7 @@
 
 **Audience:** Developers.
 
-SupplierGuard uses pytest for backend tests and Vitest with React Testing Library for frontend tests.
+ProcureAI uses pytest for backend tests and Vitest with React Testing Library for frontend tests.
 
 ## Backend Tests
 

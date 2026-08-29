@@ -2,7 +2,7 @@
 
 Imagine you are hired to be a detective, but instead of solving crimes, your job is to read bills from different companies and write down exactly what they are charging you for. You have to be super careful to write down every detail, check their math, and organize it so your boss can understand it.
 
-That is exactly what the **Invoice Extractor** agent does in the SupplierGuard system!
+That is exactly what the **Invoice Extractor** agent does in the ProcureAI system!
 
 ---
 

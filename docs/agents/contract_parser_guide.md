@@ -2,7 +2,7 @@
 
 Imagine playing a complicated board game where the rulebook is 50 pages long. Before you can check if a player is cheating, you first need to read the entire rulebook and write down every single rule about how points are scored or lost.
 
-That is exactly what the **Contract Parser** agent does in SupplierGuard!
+That is exactly what the **Contract Parser** agent does in ProcureAI!
 
 ---
 

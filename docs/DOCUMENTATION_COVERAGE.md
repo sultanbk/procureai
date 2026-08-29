@@ -35,6 +35,36 @@
 - Production deployment guidance is advisory because no production deployment manifests exist.
 - Historical docs under `docs/archive/` are not current references.
 
+## Required Versus Optional Documents
+
+The following documents are the maintained documentation set and should remain linked from `README.md`:
+
+| Document | Keep? | Reason |
+|---|---|---|
+| `README.md` | Required | Entry point, documentation map, quick start, and current capability summary |
+| `ARCHITECTURE.md` | Required | Runtime components and pipeline ownership |
+| `DATA_SCHEMAS.md` | Required | Pydantic contracts and persistence reference |
+| `docs/API.md` | Required | Integration contract for frontend and API consumers |
+| `docs/CONFIGURATION.md` | Required | Runtime environment and feature switches |
+| `docs/DEVELOPER_GUIDE.md` | Required | Contributor setup and extension workflow |
+| `docs/USER_GUIDE.md` | Required | User-facing workflows and limitations |
+| `docs/DATABASE.md` | Required | Local database lifecycle and retention behavior |
+| `docs/SECURITY.md` | Required | Security boundary and production caveats |
+| `docs/TROUBLESHOOTING.md` | Required | Recovery guidance for common failures |
+| `docs/DEPLOYMENT.md` | Required | Local deployment and explicit production gaps |
+| `TESTING.md` | Required | Backend, frontend, and evaluation commands |
+| `frontend/README.md` | Required | Frontend-specific setup and scripts |
+| `PROJECT_CONVENTIONS.md` | Required | Code and documentation conventions |
+| `PROGRESS_TRACKER.md` | Optional history | Useful build/session log, but not an architecture specification |
+| `ONE_PAGER.md`, `ARCHITECTURE_PITCH.md`, `CONTEST_PITCH.md`, `DEMO_PITCH.md`, and `pcf_demo_package.md` | Optional | Contest, approval, demo, or presentation material rather than operating documentation |
+| `architecture_v4.md` | Optional planning note | Retain only as design history; the implemented workflow is documented in `ARCHITECTURE.md` |
+| `PROMPTS.md` | Optional reference | Prompt/design reference; source prompt files under `backend/agents/` are authoritative |
+| `docs/human_review_guide.md` and `docs/needs_human_review_guide.md` | Optional | Keep only if the team actively uses the longer human-review process; otherwise consolidate into `docs/USER_GUIDE.md` |
+| `docs/archive/` | Archive only | Historical plans and audits; do not link as current behavior |
+| `docs/visuals/` | Optional artifacts | Generated visuals, not required for setup or operation |
+
+No current operational document is redundant enough to delete. The clearest consolidation candidate is the pair of human-review guides, but that should be done only after confirming which one the team uses.
+
 ## Maintenance Checklist
 
 Before merging documentation changes:

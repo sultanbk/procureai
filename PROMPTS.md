@@ -1,5 +1,6 @@
-# PROMPTS.md — All Gemini Prompts for SupplierGuard v3
-# Each prompt below corresponds to one LLM call site in ARCHITECTURE_v3.md
+# PROMPTS.md — All Gemini Prompts for ProcureAI v3
+# Each prompt below corresponds to an LLM call site in the current ARCHITECTURE.md.
+# Prompt files under backend/agents/ are authoritative at runtime.
 # All calls use response_mime_type="application/json" with a Pydantic-derived
 # response_schema. These prompts focus on INSTRUCTIONS, not schema —
 # the schema is enforced separately.
@@ -445,7 +446,7 @@ belong to which finding.
                          # tasks, not creative tasks; consistency matters
    )
 
-2. Wrap every call in try/except per Rule 6 of ARCHITECTURE_v3.md —
+2. Wrap every call in try/except per the error-handling rules in ARCHITECTURE.md —
    on failure, AgentError is recorded, never raised, and the pipeline
    either retries (extraction prompts) or routes to review_flags
    (judgment prompts like 4a/4c, where a failed call should default to

@@ -11,7 +11,7 @@ This document contains the complete details and verification for the **Premium C
 * **Client / Buyer**: `Sysco Corporation`
 * **Contract Ref**: `CTR-SYSCO-PCF-2026-002`
 * **Length**: 18 pages (satisfying the 15+ pages requirement).
-* **Location**: [c008_premium_cold_foods_contract.pdf](file:///d:/SupplierGuard/data/synthetic/contracts/c008_premium_cold_foods_contract.pdf)
+* **Location**: [c008_premium_cold_foods_contract.pdf](file:///d:/ProcureAI/data/synthetic/contracts/c008_premium_cold_foods_contract.pdf)
 * **Key Pricing Rules & SLAs**:
   * **Rule R004 (Flat Rate)**: Standard produce boxes at flat rate USD 4.50 per box.
   * **Rule R005 (Flat Rate)**: Standard frozen food cases at flat rate USD 5.80 per case.
@@ -22,7 +22,7 @@ This document contains the complete details and verification for the **Premium C
   * **Rule R011 (Prompt Payment Discount)**: 3.0% discount on standard produce box charges if paid within 12 days.
 
 ### B. Invoices
-* **Location**: [data/synthetic/invoices/](file:///d:/SupplierGuard/data/synthetic/invoices/)
+* **Location**: [data/synthetic/invoices/](file:///d:/ProcureAI/data/synthetic/invoices/)
 * **Invoice 1: `INV-PCF-202611` (November 2026)**
   * Standard Produce Boxes: 12,000 boxes @ USD 4.50
   * Fuel Surcharge: Charged USD 2,500.00 (Exceeds contract cap of USD 2,000.00)

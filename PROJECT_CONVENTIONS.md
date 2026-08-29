@@ -340,7 +340,7 @@ docs: update PROGRESS_TRACKER after Day 3
 3. **Never parse free-text LLM output** — always use structured JSON mode
 4. **Never let an LLM compute arithmetic** — rule_engine.py does all math
 5. **Never hardcode a prompt in a Python file** — always load from prompt.txt
-6. **Never invent a new agent** — the 4-agent architecture is fixed
+6. **Never invent a new agent or pipeline stage casually** — update `ARCHITECTURE.md`, `DATA_SCHEMAS.md`, and tests when the workflow changes
 7. **Never skip Pydantic validation** between agents
 8. **Never use relative imports** — always absolute (`from backend.models...`)
 9. **Never forget to update PROGRESS_TRACKER.md** at session end

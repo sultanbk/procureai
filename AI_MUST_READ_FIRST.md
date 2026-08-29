@@ -1,34 +1,31 @@
-# 🤖 AI ASSISTANT — READ THIS FILE FIRST, EVERY SESSION
 # ProcureAI — Agentic Contract Compliance & Invoice Auditor
+
+## AI Assistant Context — Read First
 
 ---
 
-## CRITICAL INSTRUCTIONS FOR ANY AI ASSISTANT
+## Current Source Of Truth
+
+The implementation is authoritative. Read these documents in order before making a code change:
+
+1. `AI_MUST_READ_FIRST.md` (this file)
+2. `ARCHITECTURE.md`
+3. `PROJECT_CONVENTIONS.md`
+4. `DATA_SCHEMAS.md`
+5. `PROGRESS_TRACKER.md`
+
+Historical design notes are under `docs/archive/` and are not specifications for current behavior.
+
+## Critical Instructions For Any AI Assistant
 
 You are helping build **ProcureAI**, a production-grade multi-agent AI system.
-Before writing a single line of code, you MUST read these files in this exact order:
-
-```
-1. AI_MUST_READ_FIRST.md        ← YOU ARE HERE
-2. ARCHITECTURE.md              ← Full system design (read completely)
-3. PROJECT_CONVENTIONS.md       ← Naming, style, patterns (non-negotiable)
-4. PROGRESS_TRACKER.md          ← What is done, what is next (update after every session)
-5. DATA_SCHEMAS.md              ← All Pydantic models and JSON contracts
-```
-
-**Do not write code that contradicts ARCHITECTURE.md.**
-**Do not invent conventions not defined in PROJECT_CONVENTIONS.md.**
-**Always update PROGRESS_TRACKER.md at the end of every session.**
+Do not write code that contradicts `ARCHITECTURE.md` or the Pydantic contracts in `DATA_SCHEMAS.md`. Keep API and frontend changes synchronized, and update `PROGRESS_TRACKER.md` when a meaningful implementation change is made.
 
 ---
 
 ## PROJECT IN ONE PARAGRAPH
 
-ProcureAI is a FastAPI + LangGraph + React system that accepts a supplier contract PDF
-and invoice PDFs, runs them through a 6-node pipeline (Contract Parser → Invoice Extractor
-→ Cross-Validator → Compliance Checker → Report Generator), and produces a fully evidence-grounded
-audit report identifying every financial discrepancy with exact clause citations and dollar
-impact. The output is not a chatbot response. It is a structured, verifiable audit object.
+ProcureAI is a FastAPI + LangGraph + React system that accepts a supplier contract PDF and invoice PDFs, runs a multi-stage compliance pipeline, and produces an evidence-grounded audit report with deterministic financial calculations. It also supports a reusable contract library, automatic invoice intake, contract Q&A, contract comparison, supplier analytics, negotiation briefs, dispute letters, notifications, and human feedback.
 
 ---
 
@@ -37,109 +34,46 @@ impact. The output is not a chatbot response. It is a structured, verifiable aud
 | Layer            | Technology                        |
 |------------------|-----------------------------------|
 | Agent framework  | LangGraph (stateful pipeline)     |
-| LLM              | Google Gemini 2.5 flash(Vertex AI)|
+| LLM              | Gemini Developer API, Vertex AI, or mock |
 | API              | FastAPI + uvicorn                 |
 | PDF parsing      | pypdf + pdfplumber                |
 | Structured output| Pydantic v2 (strict mode)         |
-| Database         | SQLite → PostgreSQL               |
+| Database         | SQLite by default                 |
 | Frontend         | React + Vite + Tailwind CSS       |
-| Storage          | Local filesystem → GCS            |
+| Storage          | Local filesystem                  |
 | Evaluation       | Custom Python eval harness        |
 --------------------------------------------------------
 ---
 
-## FOLDER STRUCTURE (DO NOT DEVIATE)
+## Current Folder Structure
 
 ```
-suppliergaurd/
-├── AI_MUST_READ_FIRST.md       ← AI reads this first
-├── ARCHITECTURE.md             ← Full architecture spec
-├── PROJECT_CONVENTIONS.md      ← All coding conventions
-├── PROGRESS_TRACKER.md         ← Session-by-session progress log
-├── DATA_SCHEMAS.md             ← All data contracts
-│
-├── backend/
-│   ├── main.py                 ← FastAPI app entry point
-│   ├── requirements.txt
-│   ├── .env.example
-│   ├── api/
-│   │   ├── routes/
-│   │   │   ├── audit.py        ← POST /audit/run, GET /audit/{id}
-│   │   │   ├── upload.py       ← POST /upload/contract, /upload/invoice
-│   │   │   └── health.py       ← GET /health
-│   │   ├── schemas.py          ← FastAPI request/response models
-│   │   └── middleware.py       ← Request ID, logging
-│   ├── agents/
-│   │   ├── pipeline.py         ← LangGraph graph definition (MASTER ORCHESTRATOR)
-│   │   ├── contract_parser/
-│   │   │   ├── agent.py        ← Agent 1 definition
-│   │   │   ├── tools.py        ← Extraction tools
-│   │   │   └── prompt.txt      ← Agent 1 system prompt
-│   │   ├── invoice_extractor/
-│   │   │   ├── agent.py        ← Agent 2 definition
-│   │   │   ├── tools.py
-│   │   │   └── prompt.txt
-│   │   ├── compliance_checker/
-│   │   │   ├── agent.py        ← Agent 3 definition
-│   │   │   ├── tools.py        ← Rule application logic
-│   │   │   ├── rule_engine.py  ← Deterministic rule evaluator
-│   │   │   └── prompt.txt
-│   │   └── report_generator/
-│   │       ├── agent.py        ← Agent 4 definition
-│   │       ├── tools.py
-│   │       └── prompt.txt
-│   ├── core/
-│   │   ├── pdf_extractor.py    ← PDF text + structure extraction
-│   │   ├── llm_client.py       ← Gemini client singleton
-│   │   ├── db.py               ← SQLAlchemy setup
-│   │   └── storage.py          ← File storage abstraction
-│   ├── models/
-│   │   ├── audit.py            ← SQLAlchemy ORM models
-│   │   └── schemas.py          ← Pydantic schemas (= DATA_SCHEMAS.md)
-│   └── eval/
-│       ├── harness.py          ← Evaluation runner
-│       ├── test_cases/         ← JSON test cases with expected outputs
-│       └── metrics.py          ← Precision, recall, delta accuracy
-│
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
-│       ├── App.jsx
-│       ├── pages/
-│       │   ├── Upload.jsx      ← Step 1: Upload contract + invoices
-│       │   ├── AuditRunning.jsx← Step 2: Live agent progress
-│       │   └── AuditReport.jsx ← Step 3: Full audit report display
-│       └── components/
-│           ├── DiscrepancyTable.jsx
-│           ├── EvidenceBlock.jsx
-│           ├── SummaryCard.jsx
-│           └── AgentProgressBar.jsx
-│
-├── data/
-│   ├── synthetic/
-│   │   ├── contracts/          ← 5 synthetic contract PDFs
-│   │   └── invoices/           ← 10 synthetic invoice PDFs
-│   └── eval/
-│       └── test_cases.json     ← Ground truth for evaluation
-│
-└── scripts/
-    ├── generate_synthetic_data.py ← Creates all test PDFs
-    ├── seed_db.py              ← Initialises database
-    └── run_eval.py             ← Runs full evaluation suite
+supplierguard/
+├── backend/                    # FastAPI app, routes, agents, services, models, core
+├── frontend/                   # React/Vite client and UI
+├── scripts/                    # Database, migration, data, and diagnostic scripts
+├── tests/                      # Backend unit, integration, and evaluation tests
+├── data/                       # Local database, uploads, synthetic and evaluation data
+├── watched_invoices/           # Automatic invoice intake directory
+├── docs/                       # Current guides and archived historical notes
+├── ARCHITECTURE.md
+├── DATA_SCHEMAS.md
+├── PROJECT_CONVENTIONS.md
+└── PROGRESS_TRACKER.md
 ```
 
 ---
 
-## THE 4 AGENTS — ONE-LINE EACH
+## Pipeline Stages — One-Line Each
 
 | Node | Input | Output |
 |-------|-------|--------|
-| Contract Parser | Contract PDF text | `ContractRulebook` (structured pricing rules JSON) |
-| Invoice Extractor | Invoice PDF text | `InvoiceData` (structured line items JSON) |
-| Cross-Validator | Rulebook + InvoiceData | `candidate_map` (pre-filtered rule candidates) |
-| Compliance Checker | Candidates + Invoices | `DiscrepancyList` (findings with evidence and Critic approval) |
-| Report Generator | DiscrepancyList | `AuditReport` (ranked, cited, human-readable) |
+| Extractors | Contract and invoice PDF text | `ContractRulebook` and `InvoiceData` |
+| Cross Validator | Rulebook + invoice data | Candidate mappings and data-required flags |
+| Compliance Checker | Candidates + invoices | `DiscrepancyList` using Python rule evaluators |
+| Reverse Sweep | Contract rules + invoice evidence | Missing-credit findings |
+| Cross-Invoice Analyzer | Multiple invoice records | Price-drift findings |
+| Report Generator | All findings and flags | `AuditReport` |
 
 ---
 
@@ -163,4 +97,12 @@ suppliergaurd/
 6. **Error handling:** Every agent wraps its LLM call in try/except. On failure, it returns a
    `AgentError` object with agent name, error type, and partial results — never raises unhandled.
 
-7. **Update PROGRESS_TRACKER.md at the end of every working session.**
+7. **Update the tracker when implementation work changes project status; do not treat its historical build log as a current architecture specification.**
+
+## Current Runtime Facts
+
+- `backend/main.py` mounts health, upload, audit, supplier, analytics, dispute, settings, contract, comparison, and watcher routers.
+- The compiled pipeline is `parallel_extractors` (logically independent extractors executed in one node), then cross validation, compliance checking, reverse sweep, cross-invoice analysis, and report generation.
+- `frontend/src/App.jsx` uses local React state for views; it does not use URL-based routing or deep links.
+- SQLite is the verified default. PostgreSQL deployment is not turnkey because the async PostgreSQL driver is not included in the checked-in requirements.
+- CORS is currently permissive (`allow_origins=["*"]`); API-key and rate-limit middleware exists but is not mounted.

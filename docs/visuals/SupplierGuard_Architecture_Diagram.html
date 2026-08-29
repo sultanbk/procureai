@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcureAI — System Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0B0D14;
+    --surface: #12151F;
+    --surface2: #1A1E2E;
+    --border: #252A3D;
+    --border2: #2E3450;
+    --purple: #7C6FCD;
+    --purple-dim: #3D3670;
+    --purple-glow: rgba(124,111,205,0.15);
+    --teal: #2DD4BF;
+    --teal-dim: #134E4A;
+    --coral: #F87171;
+    --amber: #FBBF24;
+    --green: #34D399;
+    --blue: #60A5FA;
+    --text: #E2E8F0;
+    --text2: #94A3B8;
+    --text3: #4B5563;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); }
+
+  body {
+    min-height: 100vh;
+    padding: 40px 32px 80px;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(124,111,205,0.12) 0%, transparent 70%),
+      var(--bg);
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    color: var(--purple);
+    border: 1px solid var(--purple-dim);
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .sub {
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  /* ── Section labels ── */
+  .sec-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+
+  /* ── Row layout ── */
+  .layer-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0;
+    color: var(--border2);
+    font-size: 18px;
+  }
+  .arrow-right {
+    display: flex;
+    align-items: center;
+    color: var(--border2);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ── Box base ── */
+  .box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    flex: 1;
+  }
+  .box-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .box-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Color variants ── */
+  .box-purple { border-color: var(--purple-dim); background: var(--purple-glow); }
+  .box-purple .box-title { color: var(--purple); }
+  .box-teal { border-color: #134E4A; background: rgba(45,212,191,0.07); }
+  .box-teal .box-title { color: var(--teal); }
+  .box-coral { border-color: #7F1D1D; background: rgba(248,113,113,0.07); }
+  .box-coral .box-title { color: var(--coral); }
+  .box-amber { border-color: #78350F; background: rgba(251,191,36,0.07); }
+  .box-amber .box-title { color: var(--amber); }
+  .box-blue { border-color: #1E3A5F; background: rgba(96,165,250,0.07); }
+  .box-blue .box-title { color: var(--blue); }
+  .box-green { border-color: #064E3B; background: rgba(52,211,153,0.07); }
+  .box-green .box-title { color: var(--green); }
+
+  /* ── Agent pipeline ── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: 1fr 32px 1fr 32px 1fr 32px 1fr;
+    gap: 0;
+    align-items: start;
+    margin: 0 0 12px;
+  }
+  .agent-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .agent-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .agent-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .agent-io {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .agent-io span { display: block; }
+  .agent-io .in { color: var(--blue); }
+  .agent-io .out { color: var(--green); }
+  .agent-io .crit { color: var(--amber); }
+  .agent-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--border2);
+    padding-top: 30px;
+  }
+
+  /* ── State strip ── */
+  .state-strip {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .state-field {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    color: var(--text2);
+  }
+  .state-field.filled { border-color: var(--purple-dim); color: var(--purple); }
+
+  /* ── API table ── */
+  .api-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .api-row { display: contents; }
+  .api-cell {
+    background: var(--surface);
+    padding: 8px 12px;
+    color: var(--text2);
+  }
+  .api-method { font-weight: 600; }
+  .api-method.post { color: var(--green); }
+  .api-method.get  { color: var(--blue);  }
+  .api-method.del  { color: var(--coral); }
+  .api-path { color: var(--text); }
+  .api-desc { color: var(--text3); font-size: 10px; }
+
+  /* ── Status flow ── */
+  .status-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 12px;
+  }
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 5px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    border-radius: 4px;
+  }
+  .status-pill.active { border-color: var(--purple-dim); color: var(--purple); background: var(--purple-glow); }
+  .status-pill.fail   { border-color: #7F1D1D; color: var(--coral); background: rgba(248,113,113,0.07); }
+  .status-arrow { font-size: 14px; color: var(--border2); padding: 0 4px; }
+
+  /* ── Schema block ── */
+  .schema-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .schema-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .schema-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .schema-fields {
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.8;
+    color: var(--text2);
+  }
+  .schema-fields .field-name { color: var(--blue); }
+  .schema-fields .field-type { color: var(--purple); }
+  .schema-fields .field-note { color: var(--text3); }
+
+  /* ── Rule engine ── */
+  .rule-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .rule-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .rule-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+  .rule-desc {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  /* ── Frontend pages ── */
+  .pages-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .page-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .page-step {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+  .page-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .page-items {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+
+  /* ── Eval ── */
+  .eval-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .eval-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .eval-metric {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  .eval-label {
+    font-size: 10px;
+    color: var(--text2);
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* ── Warning box ── */
+  .warn-box {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid #78350F;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">SYSTEM ARCHITECTURE v1.0</div>
+  <h1>ProcureAI</h1>
+  <p class="sub">Agentic Contract Compliance & Invoice Auditor — High-Level Architecture</p>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LAYER 1 — USER ENTRY                                   -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Layer 1 — User Interaction (React Frontend)</div>
+<div class="pages-row">
+  <div class="page-box">
+    <div class="page-step">Page 1 · /upload</div>
+    <div class="page-name">Upload.jsx</div>
+    <div class="page-items">
+      → Drag-drop contract PDF (1)<br>
+      → Drag-drop invoice PDFs (1–10)<br>
+      → File validation client-side<br>
+      → POST /api/upload/contract<br>
+      → POST /api/upload/invoice<br>
+      → POST /api/audit/run<br>
+      → Redirect to /audit/{id}
+    </div>
+  </div>
+  <div class="page-box">
+    <div class="page-step">Page 2 · /audit/{id}</div>
+    <div class="page-name">AuditRunning.jsx</div>
+    <div class="page-items">
+      → Poll GET /api/audit/{id} ×2s<br>
+      → AgentProgressBar (4 steps)<br>
+      → Show partial_results live<br>
+      → rulebook_rule_count<br>
+      → invoice_line_count<br>
+      → On COMPLETE → render report<br>
+      → On FAILED → error display
+    </div>
+  </div>
+  <div class="page-box">
+    <div class="page-step">Page 3 · inline on COMPLETE</div>
+    <div class="page-name">AuditReport.jsx</div>
+    <div class="page-items">
+      → &lt;SummaryCard /&gt;<br>
+      → &lt;DiscrepancyTable /&gt;<br>
+      → &lt;EvidenceBlock /&gt; (expandable)<br>
+      → Severity badges (CRITICAL/HIGH/MED)<br>
+      → Recommendation per finding<br>
+      → &lt;ExportButton /&gt; → PDF download<br>
+      → Past audits list
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LAYER 2 — API                                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Layer 2 — FastAPI Backend</div>
+<div class="api-grid">
+  <div class="api-cell api-method post">POST</div>
+  <div class="api-cell api-path">/api/upload/contract</div>
+  <div class="api-cell api-desc">Accepts contract PDF → stores → returns {file_id}</div>
+
+  <div class="api-cell api-method post">POST</div>
+  <div class="api-cell api-path">/api/upload/invoice</div>
+  <div class="api-cell api-desc">Accepts invoice PDF → stores → returns {file_id}</div>
+
+  <div class="api-cell api-method post">POST</div>
+  <div class="api-cell api-path">/api/audit/run</div>
+  <div class="api-cell api-desc">Creates audit record → launches pipeline (BackgroundTask) → 202 {audit_id}</div>
+
+  <div class="api-cell api-method get">GET</div>
+  <div class="api-cell api-path">/api/audit/{audit_id}</div>
+  <div class="api-cell api-desc">Poll: returns {status, progress_pct, current_agent, partial_results, report}</div>
+
+  <div class="api-cell api-method get">GET</div>
+  <div class="api-cell api-path">/api/audits</div>
+  <div class="api-cell api-desc">List all past audits with summary stats</div>
+
+  <div class="api-cell api-method del">DELETE</div>
+  <div class="api-cell api-path">/api/audit/{audit_id}</div>
+  <div class="api-cell api-desc">Delete audit + uploaded files</div>
+</div>
+
+<!-- Audit Status Flow -->
+<div class="sec-label">Audit Status Lifecycle</div>
+<div class="status-flow">
+  <span class="status-pill">PENDING</span><span class="status-arrow">→</span>
+  <span class="status-pill">EXTRACTING_PDF</span><span class="status-arrow">→</span>
+  <span class="status-pill active">PARSING_CONTRACT</span><span class="status-arrow">→</span>
+  <span class="status-pill active">EXTRACTING_INVOICES</span><span class="status-arrow">→</span>
+  <span class="status-pill active">CHECKING_COMPLIANCE</span><span class="status-arrow">→</span>
+  <span class="status-pill active">GENERATING_REPORT</span><span class="status-arrow">→</span>
+  <span class="status-pill" style="border-color:#064E3B;color:var(--green);background:rgba(52,211,153,0.07)">COMPLETE</span>
+  <span class="status-arrow" style="padding-left:16px">⤷</span>
+  <span class="status-pill fail">FAILED</span>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LAYER 3 — LANGGRAPH SHARED STATE                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Layer 3 — LangGraph Shared Pipeline State (PipelineState)</div>
+<div class="state-strip">
+  <span class="state-field">audit_id: str</span>
+  <span class="state-field">contract_path: str</span>
+  <span class="state-field">invoice_paths: list[str]</span>
+  <span class="state-field">contract_text: str</span>
+  <span class="state-field">invoice_texts: list[str]</span>
+  <span class="state-field filled">rulebook: dict | None</span>
+  <span class="state-field filled">invoice_data: list[dict] | None</span>
+  <span class="state-field filled">discrepancies: list[dict] | None</span>
+  <span class="state-field filled">audit_report: dict | None</span>
+  <span class="state-field">errors: list[dict]</span>
+  <span class="state-field">current_agent: str</span>
+  <span class="state-field">halt: bool</span>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LAYER 4 — THE 4 AGENTS                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Layer 4 — Multi-Agent LangGraph Pipeline (Sequential)</div>
+<div class="pipeline">
+
+  <!-- Agent 1 -->
+  <div class="agent-box" style="border-color:#3D3670">
+    <div class="agent-num">AGENT 1</div>
+    <div class="agent-title" style="color:#7C6FCD">Contract Parser</div>
+    <div class="agent-io">
+      <span class="in">IN: contract_text</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span>1. Section detection</span>
+      <span>2. Pricing section filter</span>
+      <span>3. LLM extraction (JSON)</span>
+      <span>4. Pydantic validation</span>
+      <span>5. Retry if invalid</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span class="out">OUT: ContractRulebook</span>
+      <span class="out">→ state[rulebook]</span>
+      <span class="crit">⚠ halt if no rules found</span>
+    </div>
+  </div>
+
+  <div class="agent-arrow">→</div>
+
+  <!-- Agent 2 -->
+  <div class="agent-box" style="border-color:#134E4A">
+    <div class="agent-num">AGENT 2</div>
+    <div class="agent-title" style="color:#2DD4BF">Invoice Extractor</div>
+    <div class="agent-io">
+      <span class="in">IN: invoice_texts[]</span>
+      <span class="in">    + rulebook (context)</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span>1. Header extraction</span>
+      <span>2. Line item extraction</span>
+      <span>3. Arithmetic validation</span>
+      <span>4. Semantic mapping</span>
+      <span>5. Flag low confidence</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span class="out">OUT: InvoiceData[]</span>
+      <span class="out">→ state[invoice_data]</span>
+      <span class="crit">⚠ flag unmapped lines</span>
+    </div>
+  </div>
+
+  <div class="agent-arrow">→</div>
+
+  <!-- Agent 3 -->
+  <div class="agent-box" style="border-color:#78350F">
+    <div class="agent-num">AGENT 3</div>
+    <div class="agent-title" style="color:#FBBF24">Compliance Checker</div>
+    <div class="agent-io">
+      <span class="in">IN: rulebook + invoice_data</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span>1. LLM: rule matching</span>
+      <span class="crit">2. rule_engine.py: math</span>
+      <span>3. Delta computation</span>
+      <span>4. Severity assignment</span>
+      <span>5. Evidence assembly</span>
+      <span>6. Pydantic validation</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span class="out">OUT: DiscrepancyList</span>
+      <span class="out">→ state[discrepancies]</span>
+      <span class="crit">⚠ CORE — most critical</span>
+    </div>
+  </div>
+
+  <div class="agent-arrow">→</div>
+
+  <!-- Agent 4 -->
+  <div class="agent-box" style="border-color:#064E3B">
+    <div class="agent-num">AGENT 4</div>
+    <div class="agent-title" style="color:#34D399">Report Generator</div>
+    <div class="agent-io">
+      <span class="in">IN: discrepancies</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span>1. Aggregate stats</span>
+      <span>2. Sort by severity</span>
+      <span>3. Executive summary (LLM)</span>
+      <span>4. Per-finding narrative</span>
+      <span>5. Recommendations</span>
+      <span>6. Pydantic validation</span>
+      <span>7. DB persist → COMPLETE</span>
+      <span style="color:#4B5563">─────────────</span>
+      <span class="out">OUT: AuditReport</span>
+      <span class="out">→ state[audit_report]</span>
+      <span class="out">→ DB + status=COMPLETE</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  RULE ENGINE                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label" style="margin-top:16px">Rule Engine (compliance_checker/rule_engine.py) — Deterministic Python, No LLM</div>
+<div class="rule-grid">
+  <div class="rule-box">
+    <div class="rule-name">VolumeTierEvaluator</div>
+    <div class="rule-desc">Finds matching tier by quantity, returns tier unit_price × quantity. Uses Decimal.</div>
+  </div>
+  <div class="rule-box">
+    <div class="rule-name">SLAPenaltyEvaluator</div>
+    <div class="rule-desc">If actual_pct &lt; threshold → credit = invoice_total × penalty_pct. Returns negative (credit owed).</div>
+  </div>
+  <div class="rule-box">
+    <div class="rule-name">EarlyPaymentEvaluator</div>
+    <div class="rule-desc">If paid within window_days → expected = total × (1 - discount_pct). Else no discount.</div>
+  </div>
+  <div class="rule-box">
+    <div class="rule-name">FlatRateEvaluator</div>
+    <div class="rule-desc">expected = quantity × flat_unit_price. Simplest evaluator. Baseline for all rate checks.</div>
+  </div>
+  <div class="rule-box">
+    <div class="rule-name">BundleDiscountEvaluator</div>
+    <div class="rule-desc">Units above bundle_threshold → bundle_price. Units below → standard rate. Split calculation.</div>
+  </div>
+  <div class="rule-box">
+    <div class="rule-name">CapRateEvaluator</div>
+    <div class="rule-desc">If charged &gt; cap_amount → overcharge = charged − cap. Returns cap_amount as expected.</div>
+  </div>
+</div>
+
+<div class="warn-box">
+  ⚠ CRITICAL RULE: The LLM (Agent 3) identifies WHICH rule applies to WHICH line item.<br>
+  rule_engine.py computes ALL arithmetic. Financial figures are NEVER computed by an LLM.<br>
+  All monetary values use Python Decimal — never float.
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LAYER 5 — DATABASE + STORAGE                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Layer 5 — Persistence</div>
+<div class="layer-row">
+  <div class="box box-blue">
+    <div class="box-title"><div class="dot" style="background:var(--blue)"></div>SQLite Database</div>
+    <div class="box-sub">
+      audits table: id, status, supplier_name,<br>
+      contract_file, invoice_files (JSON),<br>
+      rulebook (JSON), invoice_data (JSON),<br>
+      discrepancies (JSON), audit_report (JSON),<br>
+      total_leakage, created_at, completed_at,<br>
+      error_detail
+    </div>
+  </div>
+  <div class="box box-purple">
+    <div class="box-title"><div class="dot" style="background:var(--purple)"></div>File Storage</div>
+    <div class="box-sub">
+      /tmp/suppliergaurd/{audit_id}/<br>
+      ├── contract.pdf<br>
+      ├── invoice_001.pdf<br>
+      ├── invoice_002.pdf<br>
+      └── ...<br>
+      Cleaned after 24 hours
+    </div>
+  </div>
+  <div class="box" style="border-color:#1E3A5F">
+    <div class="box-title" style="color:var(--text2)"><div class="dot" style="background:#374151"></div>Upgrade Path</div>
+    <div class="box-sub">
+      SQLite → PostgreSQL (change DATABASE_URL)<br>
+      Local files → GCS (change storage.py)<br>
+      No other code changes required.<br>
+      Storage abstraction layer handles both.
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  DATA FLOW SCHEMAS                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Data Contracts — Output Schema Per Agent</div>
+<div class="schema-grid">
+  <div class="schema-box">
+    <div class="schema-title" style="color:#7C6FCD">📄 ContractRulebook (Agent 1 output)</div>
+    <div class="schema-fields">
+      <span><span class="field-name">supplier_name</span>: <span class="field-type">str</span></span>
+      <span><span class="field-name">contract_id</span>:   <span class="field-type">str</span></span>
+      <span><span class="field-name">rules</span>:          <span class="field-type">list[PricingRule]</span></span>
+      <span style="padding-left:10px"><span class="field-name">rule_id</span>:       <span class="field-type">str</span>  <span class="field-note"># "R001"</span></span>
+      <span style="padding-left:10px"><span class="field-name">rule_type</span>:     <span class="field-type">Literal[6 types]</span></span>
+      <span style="padding-left:10px"><span class="field-name">clause_text</span>:   <span class="field-type">str</span>  <span class="field-note"># exact quote</span></span>
+      <span style="padding-left:10px"><span class="field-name">tiers</span>:          <span class="field-type">list[VolumeTier]?</span></span>
+      <span style="padding-left:10px"><span class="field-name">confidence</span>:    <span class="field-type">float</span> <span class="field-note"># 0.0–1.0</span></span>
+    </div>
+  </div>
+  <div class="schema-box">
+    <div class="schema-title" style="color:#2DD4BF">📋 InvoiceData (Agent 2 output)</div>
+    <div class="schema-fields">
+      <span><span class="field-name">invoice_id</span>:     <span class="field-type">str</span></span>
+      <span><span class="field-name">billing_period</span>:  <span class="field-type">str</span></span>
+      <span><span class="field-name">invoice_total</span>:   <span class="field-type">Decimal</span></span>
+      <span><span class="field-name">line_items</span>:      <span class="field-type">list[LineItem]</span></span>
+      <span style="padding-left:10px"><span class="field-name">line_id</span>:        <span class="field-type">str</span>  <span class="field-note"># "L001"</span></span>
+      <span style="padding-left:10px"><span class="field-name">quantity</span>:        <span class="field-type">Decimal</span></span>
+      <span style="padding-left:10px"><span class="field-name">unit_price_charged</span>: <span class="field-type">Decimal</span></span>
+      <span style="padding-left:10px"><span class="field-name">mapped_to</span>:      <span class="field-type">str</span>  <span class="field-note"># contract item</span></span>
+      <span><span class="field-name">validation</span>:     <span class="field-type">InvoiceValidation</span></span>
+    </div>
+  </div>
+  <div class="schema-box">
+    <div class="schema-title" style="color:#FBBF24">🔍 Discrepancy (Agent 3 output)</div>
+    <div class="schema-fields">
+      <span><span class="field-name">finding_id</span>:     <span class="field-type">str</span>  <span class="field-note"># "F001"</span></span>
+      <span><span class="field-name">rule_id</span>:         <span class="field-type">str</span>  <span class="field-note"># links to rulebook</span></span>
+      <span><span class="field-name">line_id</span>:         <span class="field-type">str</span>  <span class="field-note"># links to invoice</span></span>
+      <span><span class="field-name">discrepancy_type</span>: <span class="field-type">Literal[6 types]</span></span>
+      <span><span class="field-name">clause_text</span>:    <span class="field-type">str</span>  <span class="field-note"># exact contract quote</span></span>
+      <span><span class="field-name">unit_price_charged</span>: <span class="field-type">Decimal</span></span>
+      <span><span class="field-name">unit_price_expected</span>: <span class="field-type">Decimal</span></span>
+      <span><span class="field-name">delta</span>:           <span class="field-type">Decimal</span> <span class="field-note"># negative=overcharge</span></span>
+      <span><span class="field-name">severity</span>:        <span class="field-type">CRITICAL|HIGH|MEDIUM</span></span>
+      <span><span class="field-name">recommendation</span>:  <span class="field-type">DISPUTE|ESCALATE|...</span></span>
+    </div>
+  </div>
+  <div class="schema-box">
+    <div class="schema-title" style="color:#34D399">📊 AuditReport (Agent 4 output)</div>
+    <div class="schema-fields">
+      <span><span class="field-name">summary</span>:         <span class="field-type">AuditSummary</span></span>
+      <span style="padding-left:10px"><span class="field-name">total_leakage</span>:  <span class="field-type">Decimal</span> <span class="field-note"># INR</span></span>
+      <span style="padding-left:10px"><span class="field-name">discrepancy_count</span>: <span class="field-type">int</span></span>
+      <span style="padding-left:10px"><span class="field-name">executive_summary</span>: <span class="field-type">str</span></span>
+      <span><span class="field-name">discrepancies</span>:   <span class="field-type">list[Discrepancy]</span></span>
+      <span style="padding-left:10px"><span class="field-note"># sorted CRITICAL→MED</span></span>
+      <span><span class="field-name">recommendations</span>: <span class="field-type">list[str]</span></span>
+      <span><span class="field-name">report_generated_at</span>: <span class="field-type">str</span></span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  EVALUATION                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="sec-label">Evaluation System — Targets (measured on Day 7)</div>
+<div class="eval-grid">
+  <div class="eval-box">
+    <div class="eval-metric">≥90%</div>
+    <div class="eval-label">Discrepancy Detection Rate<br>(true positives caught)</div>
+  </div>
+  <div class="eval-box">
+    <div class="eval-metric">≥85%</div>
+    <div class="eval-label">Precision<br>(no false alarms)</div>
+  </div>
+  <div class="eval-box">
+    <div class="eval-metric">≥95%</div>
+    <div class="eval-label">Delta Accuracy<br>(within ₹10 of true delta)</div>
+  </div>
+  <div class="eval-box">
+    <div class="eval-metric">≤120s</div>
+    <div class="eval-label">End-to-End Time<br>(60-page contract + 3 invoices)</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  LEGEND                                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Agent 1 — Contract Parser</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Agent 2 — Invoice Extractor</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Agent 3 — Compliance Checker</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Agent 4 — Report Generator</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>API / Database layer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Error / failure path</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--text3)"></div>Out of scope (MVP)</div>
+</div>
+
+</body>
+</html>

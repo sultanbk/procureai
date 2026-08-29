@@ -11,6 +11,9 @@ langchain-core>=0.2.43,<0.4
 google-generativeai==0.7.0
 google-cloud-aiplatform==1.57.0
 
+# Groq LLM (free/fast alternative)
+groq>=0.13.0
+
 # PDF Reading
 pypdf==4.2.0
 pdfplumber==0.11.1

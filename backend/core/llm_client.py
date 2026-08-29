@@ -1,20 +1,51 @@
 """
 FILE CANONICAL IDENTIFIER: backend/core/llm_client.py
-MODULE ROLE: Interfaces with Google Gemini via Vertex AI API or returns local mock data if enabled.
+MODULE ROLE: Interfaces with LLM providers (Google Gemini, Groq, etc.) for all contract parsing, invoice extraction, and compliance checking.
 SYSTEM BOUNDARY: The cognitive LLM driver for all contract parsing, invoice extraction, and compliance checking.
 STATE DEPENDENCY / DATA CONTRACTS: Imports get_mock_response from backend.core.mock_router and clean_vertex_schema from backend.core.schema_utils.
-CRITICAL LOGIC: Manages LLM client initialization, rate limits, retries, and test mock configurations.
+CRITICAL LOGIC: Manages LLM client initialization, rate limits, retries, and test mock configurations. Supports multiple providers: gemini (Vertex/GCP), groq (free/fast), and mock mode.
 """
 
 import os
 import time
-import google.generativeai as genai
+import json
 import structlog
+from typing import Optional
+
+import google.generativeai as genai
+
 from backend.core.config import LLM_RETRY_ATTEMPTS, LLM_RETRY_DELAY_SECONDS
 from backend.core.mock_router import get_mock_response
 from backend.core.schema_utils import clean_vertex_schema
 
 logger = structlog.get_logger()
+
+
+class GroqResponseWrapper:
+    """Wrapper to make Groq response compatible with Gemini response format."""
+    def __init__(self, response):
+        self._response = response
+
+    @property
+    def text(self) -> str:
+        """Extract text content from Groq response."""
+        if self._response and hasattr(self._response, 'choices') and self._response.choices:
+            return self._response.choices[0].message.content or "{}"
+        return "{}"
+
+    @property
+    def usage_metadata(self):
+        """Extract usage metadata from Groq response."""
+        class UsageMetadata:
+            def __init__(self, prompt_tokens, response_tokens):
+                self.prompt_token_count = prompt_tokens
+                self.candidates_token_count = response_tokens
+        if hasattr(self._response, 'usage'):
+            return UsageMetadata(
+                self._response.usage.prompt_tokens,
+                self._response.usage.completion_tokens
+            )
+        return None
 
 
 def is_mock_llm_enabled() -> bool:
@@ -37,6 +68,8 @@ class SmartGenerativeModel:
         if self.real_model:
             if self.provider == "vertex":
                 return f"Vertex AI Gemini ({self.model_name}, project={self.project}, location={self.location})"
+            elif self.provider == "groq":
+                return f"Groq ({self.model_name})"
             return f"Gemini Developer API ({self.model_name})"
         return "No live LLM configured"
 
@@ -45,8 +78,13 @@ class SmartGenerativeModel:
             if is_mock_llm_enabled():
                 logger.info("MOCK_LLM is set to true. Forcing mock LLM response.")
                 return get_mock_response(contents, generation_config)
-                
+
             if self.real_model:
+                # Handle Groq provider (OpenAI-compatible API)
+                if self.provider == "groq":
+                    return self._groq_generate_content(contents, generation_config)
+
+                # Handle Google providers
                 # If generation_config is a google.generativeai.GenerationConfig, convert it to a dictionary
                 # to prevent type mismatch issues when using the Vertex SDK client.
                 if generation_config is not None and not isinstance(generation_config, dict):
@@ -56,10 +94,10 @@ class SmartGenerativeModel:
                         if val is not None:
                             config_dict[key] = val
                     generation_config = config_dict
-                
+
                 if isinstance(generation_config, dict) and "response_schema" in generation_config:
                     generation_config["response_schema"] = clean_vertex_schema(generation_config["response_schema"])
-                    
+
                 last_error = None
                 for attempt in range(1, max(LLM_RETRY_ATTEMPTS, 1) + 1):
                     try:
@@ -88,6 +126,108 @@ class SmartGenerativeModel:
             logger.warning("GenerativeModel call failed. Falling back to mock response.", error=str(e))
             return get_mock_response(contents, generation_config)
 
+    def _groq_generate_content(self, contents, generation_config=None):
+        """Generate content using Groq's OpenAI-compatible API."""
+        # Build messages from contents
+        messages = self._build_groq_messages(contents)
+
+        # Build Groq parameters
+        params = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": 0.0,
+        }
+
+        # Map generation_config to Groq parameters
+        response_schema = None
+        if generation_config:
+            if isinstance(generation_config, dict):
+                if "temperature" in generation_config:
+                    params["temperature"] = generation_config["temperature"]
+                if "max_output_tokens" in generation_config:
+                    params["max_tokens"] = generation_config["max_output_tokens"]
+                if "top_p" in generation_config:
+                    params["top_p"] = generation_config["top_p"]
+                response_schema = generation_config.get("response_schema")
+            else:
+                # Handle GenerationConfig object
+                for key in ["temperature", "max_output_tokens", "top_p"]:
+                    val = getattr(generation_config, key, None)
+                    if val is not None:
+                        if key == "max_output_tokens":
+                            params["max_tokens"] = val
+                        else:
+                            params[key] = val
+                response_schema = getattr(generation_config, "response_schema", None)
+
+        # Make the API call
+        last_error = None
+        for attempt in range(1, max(LLM_RETRY_ATTEMPTS, 1) + 1):
+            try:
+                # For structured JSON output, Groq expects response_format
+                if response_schema:
+                    # Use JSON mode for structured output
+                    params["response_format"] = {"type": "json_object"}
+
+                response = self.real_model.chat.completions.create(**params)
+                return GroqResponseWrapper(response)
+            except Exception as exc:
+                last_error = exc
+                if attempt >= max(LLM_RETRY_ATTEMPTS, 1):
+                    raise
+                logger.warning(
+                    "Groq API call failed; retrying.",
+                    attempt=attempt,
+                    max_attempts=LLM_RETRY_ATTEMPTS,
+                    error=str(exc),
+                )
+                time.sleep(LLM_RETRY_DELAY_SECONDS)
+        raise last_error
+
+    def _build_groq_messages(self, contents):
+        """Convert contents to Groq/OpenAI message format."""
+        messages = []
+        system_prompt = None
+        user_content = None
+
+        for content in contents:
+            if hasattr(content, 'parts'):
+                # Handle Gemini-style content objects with parts
+                for part in content.parts:
+                    if hasattr(part, 'text'):
+                        if system_prompt is None:
+                            system_prompt = part.text
+                        else:
+                            if user_content:
+                                user_content += part.text
+                            else:
+                                user_content = part.text
+            elif isinstance(content, str):
+                if system_prompt is None and not messages:
+                    # First string is likely the system prompt
+                    system_prompt = content
+                else:
+                    # Subsequent strings are user content
+                    if user_content:
+                        user_content += "\n" + content
+                    else:
+                        user_content = content
+            elif isinstance(content, dict) and "mime_type" in content:
+                # Handle inline document parts - just note them
+                pass
+
+        # Build messages list
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if user_content:
+            messages.append({"role": "user", "content": user_content})
+
+        # Ensure we have at least one message
+        if not messages:
+            messages.append({"role": "user", "content": ""})
+
+        return messages
+
     async def async_generate_content(self, contents, generation_config=None):
         """
         Non-blocking async wrapper around generate_content with timeout.
@@ -107,8 +247,12 @@ class SmartGenerativeModel:
             if is_mock_llm_enabled():
                 logger.info("MOCK_LLM is set to true. Forcing mock streaming response.")
                 return self._mock_stream(contents, generation_config)
-                
+
             if self.real_model:
+                # Handle Groq streaming
+                if self.provider == "groq":
+                    return self._groq_stream(contents, generation_config)
+
                 config = generation_config
                 if config is not None and not isinstance(config, dict):
                     config_dict = {}
@@ -117,10 +261,10 @@ class SmartGenerativeModel:
                         if val is not None:
                             config_dict[key] = val
                     config = config_dict
-                
+
                 if isinstance(config, dict) and "response_schema" in config:
                     config["response_schema"] = clean_vertex_schema(config["response_schema"])
-                
+
                 if hasattr(self.real_model, "generate_content_stream"):
                     return self.real_model.generate_content_stream(contents, generation_config=config)
                 else:
@@ -136,6 +280,30 @@ class SmartGenerativeModel:
                 raise e
             logger.warning("GenerativeModel streaming call failed. Falling back to mock stream.", error=str(e))
             return self._mock_stream(contents, generation_config)
+
+    def _groq_stream(self, contents, generation_config=None):
+        """Stream response from Groq API."""
+        messages = self._build_groq_messages(contents)
+        params = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": 0.0,
+            "stream": True,
+        }
+
+        if generation_config:
+            if isinstance(generation_config, dict):
+                if "temperature" in generation_config:
+                    params["temperature"] = generation_config["temperature"]
+                if "max_output_tokens" in generation_config:
+                    params["max_tokens"] = generation_config["max_output_tokens"]
+                if "top_p" in generation_config:
+                    params["top_p"] = generation_config["top_p"]
+
+        response = self.real_model.chat.completions.create(**params)
+        for chunk in response:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield type('MockChunk', (), {'text': chunk.choices[0].delta.content})()
 
     def _mock_stream(self, contents, generation_config=None):
         import time
@@ -172,12 +340,32 @@ _llm_instance = None
 def get_llm():
     """
     Returns a configured SmartGenerativeModel client instance (singleton).
-    Attempts standard SDK or Vertex AI. Mock mode requires MOCK_LLM=true and ALLOW_MOCK_LLM=true.
+    Supports multiple providers: groq, gemini (Vertex/Developer API).
+    Mock mode requires MOCK_LLM=true and ALLOW_MOCK_LLM=true.
     """
     global _llm_instance
     if _llm_instance is not None:
         return _llm_instance
 
+    # Check for Groq API key first (free/fast alternative)
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if groq_api_key:
+        logger.info("Initializing Groq client", model=os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile"))
+        try:
+            from groq import Groq as GroqClient
+            real_model = GroqClient(api_key=groq_api_key)
+            model_name = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+            _llm_instance = SmartGenerativeModel(
+                real_model,
+                provider="groq",
+                model_name=model_name,
+            )
+            logger.info("Groq client initialized successfully", model=model_name)
+            return _llm_instance
+        except Exception as e:
+            logger.error("Failed to initialize Groq client", error=str(e))
+
+    # Fallback to Gemini providers
     model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     api_key = os.getenv("GEMINI_API_KEY")
     real_model = None

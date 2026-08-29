@@ -2,7 +2,7 @@
 
 Imagine going to a doctor who runs 100 complex blood tests on you. You don't want the doctor to just hand you 50 pages of raw spreadsheets filled with numbers and chemical names. You want them to sit down and give you a simple, well-formatted summary: *"Here is what is healthy, here is what is wrong, and here is what you need to do next."*
 
-That is exactly what the **Report Generator** does in SupplierGuard!
+That is exactly what the **Report Generator** does in ProcureAI!
 
 ---
 
@@ -19,7 +19,7 @@ That is exactly what the **Report Generator** does in SupplierGuard!
 
 ## 🤖 What does the Report Generator do?
 
-The Report Generator is the final step (Node 5) in the SupplierGuard pipeline. By the time the data reaches this agent, all the hard work (reading the contract, doing the math, finding the discrepancies) is already finished. 
+The Report Generator is the final step (Node 5) in the ProcureAI pipeline. By the time the data reaches this agent, all the hard work (reading the contract, doing the math, finding the discrepancies) is already finished. 
 
 The Report Generator's job is purely about **communication and presentation**.
 
@@ -47,4 +47,4 @@ Finally, it packages all of this information into a beautiful, easy-to-read form
 
 ## 🎯 The Final Output
 
-The final output is the **Audit Report**. It is the polished, final product of the entire SupplierGuard system. Once this report is generated, the pipeline successfully ends, and the human team takes over to recover the funds!
+The final output is the **Audit Report**. It is the polished, final product of the entire ProcureAI system. Once this report is generated, the pipeline successfully ends, and the human team takes over to recover the funds!

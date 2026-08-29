@@ -1,5 +1,5 @@
-# Windows dev startup orchestrator for SupplierGuard / ProcureAI
-Write-Host "Starting SupplierGuard Services..." -ForegroundColor Green
+# Windows dev startup orchestrator for ProcureAI
+Write-Host "Starting ProcureAI Services..." -ForegroundColor Green
 
 # Ensure database exists/is seeded or ready before startup
 if (-not (Test-Path "data/procureai.db")) {

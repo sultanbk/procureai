@@ -1,6 +1,6 @@
 ﻿# Developer Guide
 
-**Audience:** Developers contributing to SupplierGuard.
+**Audience:** Developers contributing to ProcureAI.
 
 ## Local Setup
 

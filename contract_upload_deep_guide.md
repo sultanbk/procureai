@@ -40,7 +40,7 @@ sequenceDiagram
 
 ## Detailed Phase Breakdown
 
-### Phase 1: Frontend Ingestion ([ContractLibrary.jsx](file:///d:/SupplierGuard/frontend/src/pages/ContractLibrary.jsx))
+### Phase 1: Frontend Ingestion ([ContractLibrary.jsx](file:///d:/ProcureAI/frontend/src/pages/ContractLibrary.jsx))
 1. **User Action**: The user opens the **Contract Library** page, clicks **Add Contract**, inputs the supplier details (Supplier Name, Aliases, Validity Period), attaches a PDF file, and clicks **Register Contract**.
 2. **Form Assembly**: The React UI compiles a `Multipart/FormData` package containing:
    - `file`: The raw binary contract PDF.
@@ -51,7 +51,7 @@ sequenceDiagram
 
 ---
 
-### Phase 2: Endpoint Intake & Duplicate Checking ([contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py))
+### Phase 2: Endpoint Intake & Duplicate Checking ([contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py))
 1. **Physical File Save**: The API router invokes `save_pdf_upload` to asynchronously write the binary bytes to the uploads directory (`data/uploads/contract_<hash>_<name>.pdf`).
 2. **Deterministic Hashing**: The backend calculates the **SHA-256** checksum of the PDF's bytes.
 3. **Database Cache Check**: The system queries the `contracts` table:
@@ -63,7 +63,7 @@ sequenceDiagram
 
 ---
 
-### Phase 3: Versioning & DB Insertion ([contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py))
+### Phase 3: Versioning & DB Insertion ([contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py))
 1. **Version Assignment**: The system counts existing contracts for this supplier:
    ```sql
    SELECT MAX(version) FROM contracts WHERE LOWER(supplier_name) = :supplier_name;
@@ -80,7 +80,7 @@ sequenceDiagram
 
 ---
 
-### Phase 4: Background Term Extraction ([agent.py](file:///d:/SupplierGuard/backend/agents/contract_parser/agent.py))
+### Phase 4: Background Term Extraction ([agent.py](file:///d:/ProcureAI/backend/agents/contract_parser/agent.py))
 FastAPI spawns a non-blocking background task running `run_baseline_extraction`, which runs the **Multi-Agent Parsing Pipeline**:
 
 1. **PDF Text Extraction**: The parser reads the PDF document text in a background thread using `asyncio.to_thread`.

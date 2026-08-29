@@ -2,11 +2,11 @@
 
 **Audience:** Developers and solution architects.
 
-This document describes the current SupplierGuard / ProcureAI implementation. The source code is authoritative; historical architecture files in `docs/archive/` are retained for context only.
+This document describes the current ProcureAI implementation. The source code is authoritative; historical architecture files in `docs/archive/` are retained for context only.
 
 ## Purpose
 
-SupplierGuard audits supplier invoices against contract terms. Users upload contracts and invoices, or register contracts and drop invoices into a watched folder. The backend extracts PDF text, uses LLM-assisted agents to structure contracts and invoices, applies deterministic Python rule evaluation, stores results, and serves a React dashboard for reports, disputes, supplier analytics, contract Q&A, and contract comparison.
+ProcureAI audits supplier invoices against contract terms. Users upload contracts and invoices, or register contracts and drop invoices into a watched folder. The backend extracts PDF text, uses LLM-assisted agents to structure contracts and invoices, applies deterministic Python rule evaluation, stores results, and serves a React dashboard for reports, disputes, supplier analytics, contract Q&A, and contract comparison.
 
 ## Runtime Components
 

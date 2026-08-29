@@ -2,7 +2,7 @@
 
 Imagine you are about to grade a massive math test. Before you start doing complex calculations to see if the answers are right, you quickly scan the test to make sure the student actually filled out the answers, and that they didn't write an essay in the middle of a math test. 
 
-That is the job of the **Cross-Validator Gate** (Node 3) in SupplierGuard. It acts as a strict, high-speed bouncer at the door of a club.
+That is the job of the **Cross-Validator Gate** (Node 3) in ProcureAI. It acts as a strict, high-speed bouncer at the door of a club.
 
 ---
 

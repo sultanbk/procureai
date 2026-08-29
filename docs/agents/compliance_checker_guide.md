@@ -2,7 +2,7 @@
 
 If the Invoice Extractor and Contract Parser are the researchers, and the Cross-Validator is the bouncer, then the **Compliance Checker** is the judge and jury. 
 
-This is the core "brain" of the SupplierGuard system. Its job is to take the rules and the invoice, do the math, and officially declare whether the supplier is overcharging you.
+This is the core "brain" of the ProcureAI system. Its job is to take the rules and the invoice, do the math, and officially declare whether the supplier is overcharging you.
 
 ---
 

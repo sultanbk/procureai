@@ -1,8 +1,8 @@
-﻿# SupplierGuard Frontend
+﻿# ProcureAI Frontend
 
 **Audience:** Frontend developers.
 
-This is the React/Vite client for SupplierGuard / ProcureAI. It renders the audit portal, calls the FastAPI backend through `src/api.js`, and uses Tailwind CSS, Lucide icons, Recharts, jsPDF, and local component primitives.
+This is the React/Vite client for ProcureAI / ProcureAI. It renders the audit portal, calls the FastAPI backend through `src/api.js`, and uses Tailwind CSS, Lucide icons, Recharts, jsPDF, and local component primitives.
 
 ## Setup
 

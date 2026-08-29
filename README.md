@@ -1,8 +1,8 @@
-﻿# SupplierGuard / ProcureAI
+﻿# ProcureAI
 
 **Audience:** Developers, technical evaluators, and application users.
 
-SupplierGuard, branded in code as ProcureAI, is a local-first contract compliance and invoice audit application. It lets users upload supplier contract PDFs and invoice PDFs, runs a multi-agent analysis pipeline, detects billing leakage, and presents audit reports, supplier scorecards, analytics, dispute letters, contract library workflows, and automated invoice intake.
+ProcureAI is a local-first contract compliance and invoice audit application. It lets users upload supplier contract PDFs and invoice PDFs, runs a multi-agent analysis pipeline, detects billing leakage, and presents audit reports, supplier scorecards, analytics, dispute letters, contract library workflows, and automated invoice intake.
 
 The implementation is the source of truth for this documentation. Current code uses a FastAPI backend, a React/Vite frontend, SQLite by default, SQLAlchemy async sessions, LangGraph orchestration, Google Gemini/Vertex AI or a local mock LLM path, and deterministic Python rule evaluators for financial calculations.
 

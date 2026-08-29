@@ -2,7 +2,7 @@
 
 **Audience:** End users and business reviewers.
 
-SupplierGuard helps procurement, finance, and operations teams audit supplier invoices against contract terms.
+ProcureAI helps procurement, finance, and operations teams audit supplier invoices against contract terms.
 
 ## Run a Manual Audit
 

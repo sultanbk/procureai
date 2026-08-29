@@ -4,11 +4,21 @@
 
 ---
 
-## PROJECT STATUS: 🟢 COMPLETED
+## PROJECT STATUS: 🟢 FUNCTIONALLY COMPLETE / MAINTENANCE MODE
+
+The original seven-day build log below is historical. The current implementation includes the later features recorded in Sessions 8 onward; use `ARCHITECTURE.md`, `DATA_SCHEMAS.md`, and the source tree as the current reference.
+
+## Current Capability Snapshot
+
+- FastAPI API with audit, upload, supplier, analytics, dispute, settings, contract, comparison, watcher, and health routes.
+- LangGraph workflow: extractor stage, cross validation, compliance checking, reverse sweep, cross-invoice analysis, and report generation.
+- React views for audit history/upload/progress/report, supplier scorecards/history, analytics, settings, contract library, auto-audit, and comparison.
+- Human review feedback, contract Q&A, evidence document viewing, dispute letters, notifications, and negotiation briefs.
+- Ten synthetic evaluation cases plus unit/integration coverage; mock LLM mode supports offline tests.
 
 ---
 
-## 7-DAY BUILD PLAN
+## Historical 7-Day Build Plan
 
 | Day | Focus | Status |
 |-----|-------|--------|
@@ -508,7 +518,7 @@
 ### Session 28 — Self-Healing: Aborted Contract Baseline Recovery
 - Date: June 23, 2026
 - Work done:
-  - Implemented self-healing logic in the contract registration router `register_contract` in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py). 
+  - Implemented self-healing logic in the contract registration router `register_contract` in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py). 
   - If a contract exists in the database but its parsing was interrupted (detected by `rulebook` being `NULL`), re-registering/uploading the same file automatically deletes the aborted baseline audit, clears the database states, and schedules a fresh `run_baseline_extraction` background task to resume the rule parsing.
 - Verification:
   - Validated that the complete unit and integration test suite passes successfully.
@@ -518,7 +528,7 @@
 - Date: June 23, 2026
 - Work done:
   - Fixed a validation error in `AuditStatusResponse` where the status `"CROSS_VALIDATING"` was not included in the Literal type.
-  - Added `"CROSS_VALIDATING"` to `status` Literal list in [backend/models/schemas.py](file:///d:/SupplierGuard/backend/models/schemas.py#L344) to ensure Pydantic parsing succeeds when retrieving audit progress.
+  - Added `"CROSS_VALIDATING"` to `status` Literal list in [backend/models/schemas.py](file:///d:/ProcureAI/backend/models/schemas.py#L344) to ensure Pydantic parsing succeeds when retrieving audit progress.
 - Verification:
   - Ran backend test suite; all 5 tests passed successfully.
 - Blockers: None
@@ -526,7 +536,7 @@
 ### Session 30 — Filter Out Baseline Audits from Audit History Listing
 - Date: June 23, 2026
 - Work done:
-  - Excluded baseline contract parsing runs (audits starting with the `base_` ID prefix) from the general `/api/audits` list endpoint in [backend/api/routes/audit.py](file:///d:/SupplierGuard/backend/api/routes/audit.py#L464).
+  - Excluded baseline contract parsing runs (audits starting with the `base_` ID prefix) from the general `/api/audits` list endpoint in [backend/api/routes/audit.py](file:///d:/ProcureAI/backend/api/routes/audit.py#L464).
   - This keeps the main Audit History dashboard clean and prevents confusion, as contract registration runs do not represent actual invoice compliance checks.
 - Verification:
   - Ran tests and confirmed they all passed successfully.
@@ -535,8 +545,8 @@
 ### Session 31 — Add Parsing Status Indicators in Contract Library
 - Date: June 23, 2026
 - Work done:
-  - Updated the backend `list_contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py#L191) to perform an outer join with the `Audit` table, returning a `status` field (`PARSED`, `PROCESSING`, or `FAILED`) based on the baseline audit status and rulebook presence.
-  - Added a "Status" column to the Contract Library table in [frontend/src/pages/ContractLibrary.jsx](file:///d:/SupplierGuard/frontend/src/pages/ContractLibrary.jsx#L210) to display status badges (`success` for PARSED, `brand` for PROCESSING, and `critical` for FAILED).
+  - Updated the backend `list_contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py#L191) to perform an outer join with the `Audit` table, returning a `status` field (`PARSED`, `PROCESSING`, or `FAILED`) based on the baseline audit status and rulebook presence.
+  - Added a "Status" column to the Contract Library table in [frontend/src/pages/ContractLibrary.jsx](file:///d:/ProcureAI/frontend/src/pages/ContractLibrary.jsx#L210) to display status badges (`success` for PARSED, `brand` for PROCESSING, and `critical` for FAILED).
 - Verification:
   - Ran backend test suite; all 5 tests passed successfully.
 - Blockers: None
@@ -544,7 +554,7 @@
 ### Session 32 — Resolve Dispute Letter Concurrency Unique Constraint Failures
 - Date: June 23, 2026
 - Work done:
-  - Wrapped insertion/commit database logic in `api_generate_dispute_letter` and `api_revise_dispute_letter` in [backend/api/routes/disputes.py](file:///d:/SupplierGuard/backend/api/routes/disputes.py) with try-except blocks.
+  - Wrapped insertion/commit database logic in `api_generate_dispute_letter` and `api_revise_dispute_letter` in [backend/api/routes/disputes.py](file:///d:/ProcureAI/backend/api/routes/disputes.py) with try-except blocks.
   - On `sqlite3.IntegrityError` (caused by concurrent double-clicks or duplicates), the router performs an automatic rollback and returns the existing committed letter safely, preventing crash stack traces.
 - Verification:
   - Ran tests and confirmed they all passed successfully.
@@ -553,7 +563,7 @@
 ### Session 33 — Fix File Watcher De-duplication blocking repeated uploads
 - Date: June 23, 2026
 - Work done:
-  - Fixed a de-duplication bug in `process_new_invoice` in [backend/services/file_watcher.py](file:///d:/SupplierGuard/backend/services/file_watcher.py#L170-L180).
+  - Fixed a de-duplication bug in `process_new_invoice` in [backend/services/file_watcher.py](file:///d:/ProcureAI/backend/services/file_watcher.py#L170-L180).
   - The previous check blocked re-uploading or re-dropping files with the same filename if any previous record for that filename was in a `COMPLETE` status.
   - Updated the query to only de-duplicate if a file with the same name is currently active in the pipeline (`PENDING`, `MATCHING`, or `PROCESSING`).
 - Verification:
@@ -563,7 +573,7 @@
 ### Session 34 — Truncate Long Filenames in Contract Library Table
 - Date: June 23, 2026
 - Work done:
-  - Fixed table layout stretching issue on the Contract Library page by adding `max-w-[150px]` and `truncate` styling to the original filename table cell in [frontend/src/pages/ContractLibrary.jsx](file:///d:/SupplierGuard/frontend/src/pages/ContractLibrary.jsx#L275-L278).
+  - Fixed table layout stretching issue on the Contract Library page by adding `max-w-[150px]` and `truncate` styling to the original filename table cell in [frontend/src/pages/ContractLibrary.jsx](file:///d:/ProcureAI/frontend/src/pages/ContractLibrary.jsx#L275-L278).
   - Added a `title` hover tooltip attribute displaying the full filename when hovered.
 - Verification:
   - Confirmed the compilation of the frontend page and ran tests successfully.
@@ -572,7 +582,7 @@
 ### Session 35 — Enable HTML Prop Forwarding in Table Components
 - Date: June 23, 2026
 - Work done:
-  - Refactored `TableCell`, `TableRow`, `TableBody`, `TableHead`, and `Table` in [frontend/src/components/ui/Table.jsx](file:///d:/SupplierGuard/frontend/src/components/ui/Table.jsx) to spread extra properties (`...props`) down to the underlying native HTML tags.
+  - Refactored `TableCell`, `TableRow`, `TableBody`, `TableHead`, and `Table` in [frontend/src/components/ui/Table.jsx](file:///d:/ProcureAI/frontend/src/components/ui/Table.jsx) to spread extra properties (`...props`) down to the underlying native HTML tags.
   - This restores native browser tooltips (like `title`) on table cells, allowing truncated filenames in the Contract Library to display their full text on hover.
 - Verification:
   - Confirmed frontend compiles successfully and all backend tests pass.
@@ -582,8 +592,8 @@
 - Date: June 23, 2026
 - Work done:
   - Fixed a race condition where the Contract Library page continued showing a contract status as `PROCESSING` instead of `PARSED` after baseline contract parsing completed successfully.
-  - Refactored the `list_contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py) to check the baseline audit status: if the status is `"CROSS_VALIDATING"` (or any post-parsing status like `"CHECKING_COMPLIANCE"`, `"GENERATING_REPORT"`, `"COMPLETE"`), the contract status maps to `"PARSED"`, even if the contract's `rulebook` column is in the middle of being committed to the database.
-  - Added an integration test `test_list_contracts_status_mapping` in [tests/integration/test_contract_library.py](file:///d:/SupplierGuard/tests/integration/test_contract_library.py) to assert correct status labeling (`PARSED`, `FAILED`, `PROCESSING`) across these states.
+  - Refactored the `list_contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py) to check the baseline audit status: if the status is `"CROSS_VALIDATING"` (or any post-parsing status like `"CHECKING_COMPLIANCE"`, `"GENERATING_REPORT"`, `"COMPLETE"`), the contract status maps to `"PARSED"`, even if the contract's `rulebook` column is in the middle of being committed to the database.
+  - Added an integration test `test_list_contracts_status_mapping` in [tests/integration/test_contract_library.py](file:///d:/ProcureAI/tests/integration/test_contract_library.py) to assert correct status labeling (`PARSED`, `FAILED`, `PROCESSING`) across these states.
 - Verification:
   - Executed test suite (`python -m pytest`); all 6 tests (including the new integration test) pass successfully.
 - Blockers: None
@@ -592,8 +602,8 @@
 - Date: June 23, 2026
 - Work done:
   - Fixed an issue where re-uploading an archived contract file (which exists in the database with `is_active = 0`) failed to restore it in the Contract Library (since the library only lists contracts with `is_active = 1`).
-  - Refactored `register_contract` in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py) to set `is_active = 1` and update supplier name, aliases, and validity dates when re-registering an existing contract.
-  - Added an integration test `test_reactivate_archived_contract` in [tests/integration/test_contract_library.py](file:///d:/SupplierGuard/tests/integration/test_contract_library.py) to verify reactivation and metadata updates.
+  - Refactored `register_contract` in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py) to set `is_active = 1` and update supplier name, aliases, and validity dates when re-registering an existing contract.
+  - Added an integration test `test_reactivate_archived_contract` in [tests/integration/test_contract_library.py](file:///d:/ProcureAI/tests/integration/test_contract_library.py) to verify reactivation and metadata updates.
 - Verification:
   - Ran `python -m pytest` test suite; all 7 unit/integration tests passed successfully.
 - Blockers: None
@@ -601,7 +611,7 @@
 ### Session 38 — Remove Original Filename Column & Add Hover Tooltips in Contract Library
 - Date: June 23, 2026
 - Work done:
-  - Removed the dedicated "Original Filename" column from the Contract Library table in [frontend/src/pages/ContractLibrary.jsx](file:///d:/SupplierGuard/frontend/src/pages/ContractLibrary.jsx) to make the layout cleaner.
+  - Removed the dedicated "Original Filename" column from the Contract Library table in [frontend/src/pages/ContractLibrary.jsx](file:///d:/ProcureAI/frontend/src/pages/ContractLibrary.jsx) to make the layout cleaner.
   - Added a `title` hover tooltip attribute on the "Supplier / Vendor" name cell to show the original contract filename when hovered.
   - Updated the empty state table row's `colSpan` from 8 to 7 to match the new column count.
 - Verification:
@@ -612,10 +622,10 @@
 - Date: June 23, 2026
 - Work done:
   - Made the `supplier_name` field optional in both the backend registration route and frontend Contract Library form.
-  - Refactored `register_contract` in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py) to accept an optional `supplier_name` and default to `"Extracting..."` placeholder if not supplied.
-  - Updated the background `contract_parser` agent in [backend/agents/contract_parser/agent.py](file:///d:/SupplierGuard/backend/agents/contract_parser/agent.py) to automatically recalculate the contract version number once the actual supplier name is successfully resolved and updated from the placeholder name in the database.
-  - Relaxed frontend validations in [frontend/src/pages/ContractLibrary.jsx](file:///d:/SupplierGuard/frontend/src/pages/ContractLibrary.jsx) by removing the `required` validation from the supplier name input field and setting a descriptive placeholder.
-  - Added an integration test `test_register_contract_without_supplier_name` in [tests/integration/test_contract_library.py](file:///d:/SupplierGuard/tests/integration/test_contract_library.py) to assert correctness.
+  - Refactored `register_contract` in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py) to accept an optional `supplier_name` and default to `"Extracting..."` placeholder if not supplied.
+  - Updated the background `contract_parser` agent in [backend/agents/contract_parser/agent.py](file:///d:/ProcureAI/backend/agents/contract_parser/agent.py) to automatically recalculate the contract version number once the actual supplier name is successfully resolved and updated from the placeholder name in the database.
+  - Relaxed frontend validations in [frontend/src/pages/ContractLibrary.jsx](file:///d:/ProcureAI/frontend/src/pages/ContractLibrary.jsx) by removing the `required` validation from the supplier name input field and setting a descriptive placeholder.
+  - Added an integration test `test_register_contract_without_supplier_name` in [tests/integration/test_contract_library.py](file:///d:/ProcureAI/tests/integration/test_contract_library.py) to assert correctness.
 - Verification:
   - Executed tests (`python -m pytest`); all 8 tests pass successfully.
 - Blockers: None
@@ -624,7 +634,7 @@
 - Date: June 23, 2026
 - Work done:
   - Added a "Show Archived" checkbox toggle in the Contract Library page to show/hide soft-deleted contracts (`is_active = 0`).
-  - Updated the GET `/api/contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py) and `getContracts` API fetch wrapper in [frontend/src/api.js](file:///d:/SupplierGuard/frontend/src/api.js) to accept a `show_archived` parameter.
+  - Updated the GET `/api/contracts` endpoint in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py) and `getContracts` API fetch wrapper in [frontend/src/api.js](file:///d:/ProcureAI/frontend/src/api.js) to accept a `show_archived` parameter.
   - Implemented permanent (hard) deletion in the `delete_contract` endpoint and `deleteContract` wrapper: when `permanent=true` is requested, the contract and its baseline audit are completely deleted from the database.
   - Added a restoration endpoint `POST /api/contracts/{id}/restore` and `restoreContract` API fetch wrapper to reactivate archived contracts.
   - Updated row actions on the Contract Library page: archived contracts display a "Restore" button and a red permanently delete (trash) button with a confirmation popup warning the user that the operation cannot be undone.
@@ -636,8 +646,8 @@
 - Date: June 23, 2026
 - Work done:
   - Fixed a `500 (Internal Server Error)` on contract permanent deletion caused by SQLite foreign key constraint violations (browser reported as CORS block).
-  - Updated the permanent deletion block in `delete_contract` in [backend/api/routes/contracts.py](file:///d:/SupplierGuard/backend/api/routes/contracts.py) to delete all referencing records in `ContractChunk` and `AuditLog` tables before deleting the `Contract` and `Audit` rows.
-  - Added an integration test `test_permanent_delete_contract` in [tests/integration/test_contract_library.py](file:///d:/SupplierGuard/tests/integration/test_contract_library.py) to verify constraint integrity and successful cascading deletions.
+  - Updated the permanent deletion block in `delete_contract` in [backend/api/routes/contracts.py](file:///d:/ProcureAI/backend/api/routes/contracts.py) to delete all referencing records in `ContractChunk` and `AuditLog` tables before deleting the `Contract` and `Audit` rows.
+  - Added an integration test `test_permanent_delete_contract` in [tests/integration/test_contract_library.py](file:///d:/ProcureAI/tests/integration/test_contract_library.py) to verify constraint integrity and successful cascading deletions.
 - Verification:
   - Executed tests (`python -m pytest`); all 9 tests pass successfully.
 - Blockers: None
