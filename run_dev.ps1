@@ -7,12 +7,14 @@ if (-not (Test-Path "data/procureai.db")) {
     .venv\Scripts\python -m scripts.seed_db
 }
 
+$RootPath = (Get-Location).Path
+
 # Start backend in a new PowerShell console
 Write-Host "Launching Backend (FastAPI)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = 'ProcureAI Backend'; Write-Host 'Starting Backend...'; `$env:PYTHONPATH='.'; .venv\Scripts\python backend/main.py"
+Start-Process powershell -WorkingDirectory $RootPath -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = 'ProcureAI Backend'; Write-Host 'Starting Backend...'; `$env:PYTHONPATH='.'; .venv\Scripts\python backend/main.py"
 
 # Start frontend in a new PowerShell console
 Write-Host "Launching Frontend (Vite/React)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = 'ProcureAI Frontend'; cd frontend; npm run dev"
+Start-Process powershell -WorkingDirectory "$RootPath\frontend" -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = 'ProcureAI Frontend'; Write-Host 'Starting Frontend...'; npm run dev"
 
 Write-Host "Both services are now starting in separate terminal windows." -ForegroundColor Green

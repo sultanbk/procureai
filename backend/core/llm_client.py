@@ -21,21 +21,157 @@ from backend.core.schema_utils import clean_vertex_schema
 logger = structlog.get_logger()
 
 
+class OpenAICompatibleClient:
+    """Lightweight HTTP client for standard OpenAI-compatible endpoints (OmniRoute, vLLM, Ollama, etc.)."""
+    def __init__(self, api_key: str, base_url: str):
+        self.api_key = api_key
+        url = base_url.rstrip("/")
+        if not url.endswith("/v1"):
+            url = f"{url}/v1"
+        self.base_url = url
+        self.chat = self.Chat(self)
+
+    class Chat:
+        def __init__(self, client):
+            self.completions = self.Completions(client)
+
+        class Completions:
+            def __init__(self, client):
+                self.client = client
+
+            def create(self, **kwargs):
+                import httpx
+                endpoint = f"{self.client.base_url}/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {self.client.api_key}",
+                    "Content-Type": "application/json",
+                }
+                stream = kwargs.get("stream", False)
+                timeout = kwargs.get("timeout", 120.0)
+
+                payload = {k: v for k, v in kwargs.items() if k not in ("timeout",) and v is not None}
+
+                if stream:
+                    def stream_generator():
+                        with httpx.Client(timeout=timeout) as client:
+                            with client.stream("POST", endpoint, headers=headers, json=payload) as resp:
+                                resp.raise_for_status()
+                                for line in resp.iter_lines():
+                                    if line.startswith("data: "):
+                                        data_str = line[6:].strip()
+                                        if data_str == "[DONE]":
+                                            break
+                                        try:
+                                            chunk_data = json.loads(data_str)
+                                            choices = chunk_data.get("choices", [])
+                                            if choices:
+                                                delta = choices[0].get("delta", {})
+                                                content = delta.get("content", "")
+                                                if content:
+                                                    yield type("Chunk", (), {"choices": [type("Choice", (), {"delta": type("Delta", (), {"content": content})()})]})()
+                                        except Exception:
+                                            continue
+                    return stream_generator()
+                else:
+                    with httpx.Client(timeout=timeout) as client:
+                        resp = client.post(endpoint, headers=headers, json=payload)
+                        resp.raise_for_status()
+                        raw_text = resp.text.strip() if resp.text else ""
+                        if not raw_text:
+                            raise RuntimeError(f"Empty HTTP response received from OmniRoute/LLM server (HTTP {resp.status_code})")
+
+                        # If response is SSE stream (text/event-stream or contains data: prefixes)
+                        if "data:" in raw_text:
+                            full_content = ""
+                            prompt_tokens = 0
+                            completion_tokens = 0
+                            for line in raw_text.splitlines():
+                                line = line.strip()
+                                if line.startswith("data: "):
+                                    data_str = line[6:].strip()
+                                    if data_str == "[DONE]":
+                                        break
+                                    try:
+                                        chunk = json.loads(data_str)
+                                        choices = chunk.get("choices", [])
+                                        if choices:
+                                            delta = choices[0].get("delta", {})
+                                            content = delta.get("content", "")
+                                            if content:
+                                                full_content += content
+                                        usage = chunk.get("usage")
+                                        if usage:
+                                            prompt_tokens = usage.get("prompt_tokens", prompt_tokens)
+                                            completion_tokens = usage.get("completion_tokens", completion_tokens)
+                                    except Exception:
+                                        continue
+
+                            class MessageObj:
+                                def __init__(self, content):
+                                    self.content = content
+
+                            class ChoiceObj:
+                                def __init__(self, message):
+                                    self.message = message
+
+                            class UsageObj:
+                                def __init__(self, prompt, completion):
+                                    self.prompt_tokens = prompt
+                                    self.completion_tokens = completion
+                                    self.candidates_token_count = completion
+
+                            class ResponseObj:
+                                def __init__(self, content, prompt_t, comp_t):
+                                    self.choices = [ChoiceObj(MessageObj(content))]
+                                    self.usage = UsageObj(prompt_t, comp_t)
+
+                            return ResponseObj(full_content, prompt_tokens, completion_tokens)
+
+                        # Otherwise standard JSON response
+                        try:
+                            data = json.loads(raw_text)
+                        except Exception as exc:
+                            raise RuntimeError(f"OmniRoute returned non-JSON payload: {raw_text[:200]}") from exc
+
+                        class MessageObj:
+                            def __init__(self, content):
+                                self.content = content
+
+                        class ChoiceObj:
+                            def __init__(self, message):
+                                self.message = message
+
+                        class UsageObj:
+                            def __init__(self, usage_dict):
+                                self.prompt_tokens = usage_dict.get("prompt_tokens", 0)
+                                self.completion_tokens = usage_dict.get("completion_tokens", 0)
+                                self.total_tokens = usage_dict.get("total_tokens", 0)
+
+                        class ResponseObj:
+                            def __init__(self, raw):
+                                choices = raw.get("choices", [])
+                                msg_content = choices[0].get("message", {}).get("content", "") if choices else ""
+                                self.choices = [ChoiceObj(MessageObj(msg_content))]
+                                self.usage = UsageObj(raw.get("usage", {}))
+
+                        return ResponseObj(data)
+
+
 class GroqResponseWrapper:
-    """Wrapper to make Groq response compatible with Gemini response format."""
+    """Wrapper to make Groq / OpenAI response compatible with Gemini response format."""
     def __init__(self, response):
         self._response = response
 
     @property
     def text(self) -> str:
-        """Extract text content from Groq response."""
+        """Extract text content from Groq/OpenAI response."""
         if self._response and hasattr(self._response, 'choices') and self._response.choices:
             return self._response.choices[0].message.content or "{}"
         return "{}"
 
     @property
     def usage_metadata(self):
-        """Extract usage metadata from Groq response."""
+        """Extract usage metadata from Groq/OpenAI response."""
         class UsageMetadata:
             def __init__(self, prompt_tokens, response_tokens):
                 self.prompt_token_count = prompt_tokens
@@ -68,8 +204,8 @@ class SmartGenerativeModel:
         if self.real_model:
             if self.provider == "vertex":
                 return f"Vertex AI Gemini ({self.model_name}, project={self.project}, location={self.location})"
-            elif self.provider == "groq":
-                return f"Groq ({self.model_name})"
+            elif self.provider in ("groq", "omniroute"):
+                return f"OmniRoute / Groq ({self.model_name})"
             return f"Gemini Developer API ({self.model_name})"
         return "No live LLM configured"
 
@@ -340,60 +476,96 @@ _llm_instance = None
 def get_llm():
     """
     Returns a configured SmartGenerativeModel client instance (singleton).
-    Supports multiple providers: groq, gemini (Vertex/Developer API).
+    Supports multiple providers: omniroute, groq, gemini (Vertex/Developer API).
     Mock mode requires MOCK_LLM=true and ALLOW_MOCK_LLM=true.
     """
     global _llm_instance
     if _llm_instance is not None:
         return _llm_instance
 
-    # Check for Groq API key first (free/fast alternative)
-    groq_api_key = os.getenv("GROQ_API_KEY")
-    if groq_api_key:
-        logger.info("Initializing Groq client", model=os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile"))
+    provider_pref = os.getenv("LLM_PROVIDER", "").strip().lower()
+
+    # Prioritize OmniRoute / Groq if requested explicitly or if GROQ_API_KEY is configured
+    if provider_pref in {"omniroute", "groq", "openai"} or (not provider_pref and os.getenv("GROQ_API_KEY") and not os.getenv("GEMINI_API_KEY")):
+        groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")
+        if groq_api_key:
+            model_name = os.getenv("GROQ_MODEL") or os.getenv("ANTHROPIC_DEFAULT_OPUS_MODEL", "oc/nemotron-3-ultra-free")
+            base_url = os.getenv("GROQ_BASE_URL") or os.getenv("ANTHROPIC_BASE_URL", "http://localhost:20128/v1")
+            logger.info("Initializing OmniRoute/OpenAI client", model=model_name, base_url=base_url)
+            try:
+                if base_url:
+                    real_model = OpenAICompatibleClient(api_key=groq_api_key, base_url=base_url)
+                else:
+                    from groq import Groq as GroqClient
+                    real_model = GroqClient(api_key=groq_api_key)
+
+                _llm_instance = SmartGenerativeModel(
+                    real_model,
+                    provider="groq",
+                    model_name=model_name,
+                )
+                logger.info("OmniRoute/OpenAI client initialized successfully", model=model_name, base_url=base_url)
+                return _llm_instance
+            except Exception as e:
+                logger.error("Failed to initialize Groq/OmniRoute client", error=str(e))
+
+    # Check for Google AI Studio API key
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    if gemini_api_key and provider_pref not in {"omniroute", "groq"}:
+        logger.info("Initializing Google AI Studio Gemini SDK", model=gemini_model)
         try:
-            from groq import Groq as GroqClient
-            real_model = GroqClient(api_key=groq_api_key)
-            model_name = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+            genai.configure(api_key=gemini_api_key)
+            real_model = genai.GenerativeModel(gemini_model)
+            _llm_instance = SmartGenerativeModel(
+                real_model,
+                provider="developer_api",
+                model_name=gemini_model,
+            )
+            logger.info("Google AI Studio Gemini initialized successfully", model=gemini_model)
+            return _llm_instance
+        except Exception as e:
+            logger.error("Failed to initialize Google AI Studio Gemini SDK", error=str(e))
+
+    # Fallback to Groq / OmniRoute if available
+    groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")
+    if groq_api_key:
+        model_name = os.getenv("GROQ_MODEL") or os.getenv("ANTHROPIC_DEFAULT_OPUS_MODEL", "oc/nemotron-3-ultra-free")
+        base_url = os.getenv("GROQ_BASE_URL") or os.getenv("ANTHROPIC_BASE_URL", "http://localhost:20128/v1")
+        logger.info("Initializing fallback Groq/OmniRoute client", model=model_name, base_url=base_url)
+        try:
+            if base_url:
+                real_model = OpenAICompatibleClient(api_key=groq_api_key, base_url=base_url)
+            else:
+                from groq import Groq as GroqClient
+                real_model = GroqClient(api_key=groq_api_key)
+
             _llm_instance = SmartGenerativeModel(
                 real_model,
                 provider="groq",
                 model_name=model_name,
             )
-            logger.info("Groq client initialized successfully", model=model_name)
+            logger.info("Groq/OmniRoute client initialized successfully", model=model_name, base_url=base_url)
             return _llm_instance
         except Exception as e:
             logger.error("Failed to initialize Groq client", error=str(e))
 
-    # Fallback to Gemini providers
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-    api_key = os.getenv("GEMINI_API_KEY")
+    # Fallback to Vertex AI / GCP
+    model_name = gemini_model
     real_model = None
     provider = "mock"
-    project = None
-    location = None
-
-    if api_key:
-        logger.info("Initializing developer Gemini SDK", model=model_name)
-        try:
-            genai.configure(api_key=api_key)
-            real_model = genai.GenerativeModel(model_name)
-            provider = "developer_api"
-        except Exception as e:
-            logger.error("Failed to initialize developer SDK", error=str(e))
-    else:
-        project = os.getenv("GOOGLE_CLOUD_PROJECT", "procureai")
-        location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-        logger.info("GEMINI_API_KEY not found. Attempting Vertex AI initialization...", project=project, location=location)
-        try:
-            import vertexai
-            from vertexai.generative_models import GenerativeModel
-            vertexai.init(project=project, location=location)
-            real_model = GenerativeModel(model_name)
-            provider = "vertex"
-            logger.info("Vertex AI initialized successfully", model=model_name)
-        except Exception as e:
-            logger.warning("Failed to initialize Vertex AI client", error=str(e))
+    project = os.getenv("GOOGLE_CLOUD_PROJECT", "procureai")
+    location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    logger.info("GEMINI_API_KEY not found. Attempting Vertex AI initialization...", project=project, location=location)
+    try:
+        import vertexai
+        from vertexai.generative_models import GenerativeModel
+        vertexai.init(project=project, location=location)
+        real_model = GenerativeModel(model_name)
+        provider = "vertex"
+        logger.info("Vertex AI initialized successfully", model=model_name)
+    except Exception as e:
+        logger.warning("Failed to initialize Vertex AI client", error=str(e))
 
     _llm_instance = SmartGenerativeModel(
         real_model,

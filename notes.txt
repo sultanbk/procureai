@@ -1,0 +1,128 @@
+Accuracy is the single most critical factor in automated contract auditing—if an audit produces false positives or misses overcharges, procurement teams lose trust immediately.
+
+Here is an architectural breakdown of **how ProcureAI guarantees accuracy**, the **built-in safeguards**, and **how you can verify and stress-test it**:
+
+---
+
+### 1. The Zero-Hallucination Math Rule
+In many naive AI tools, the LLM is asked to calculate differences, percentages, or tier rates—which inevitably causes hallucinated math.
+* **In ProcureAI, the LLM does ZERO arithmetic.**
+* The LLM's only job is structuring text into typed schema objects ([`PricingRule`](file:///d:/sultan/ProcureAI/procureai/backend/models/schemas.py), [`InvoiceData`](file:///d:/sultan/ProcureAI/procureai/backend/models/schemas.py)).
+* The actual auditing is executed by a **deterministic Python rule engine** ([`rule_engine.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/compliance_checker/rule_engine.py)) using high-precision `Decimal` math for:
+  * Flat rates
+  * Volume tiered brackets (min/max unit thresholds)
+  * SLA performance breach penalty percentages
+  * Early payment discount windows
+  * Bundle thresholds and capped rates
+  * Milestone delivery date delays (daily liquidated damages)
+  * Annual compounding adjustments ($P \times (1 + r)^t$)
+
+---
+
+### 2. Multi-Pass Self-Consistency & Voting
+To prevent the LLM from missing complex clauses or misinterpreting rules during extraction:
+* **Multi-Pass Extraction ([`contract_parser/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/contract_parser/agent.py)):** Runs multiple passes across different temperatures.
+* **Rule Voting & Deduplication ([`vote_on_rules`](file:///d:/sultan/ProcureAI/procureai/backend/agents/contract_parser/tools.py)):** Cross-evaluates rulebooks across passes. Rules with unanimous agreement are locked in; any discrepancies between passes trigger explicit **review flags** rather than guessing.
+* **Cross-Reference Resolution:** Detects references like *"see Schedule B"* or *"as defined in Section 4.2"* and runs a second resolution pass over the full text to bind related clauses together.
+
+---
+
+### 3. Strict Schema Contracts & Auto-Correction
+* All LLM inputs/outputs are strictly bounded by **Pydantic v2 schemas**.
+* If an LLM response violates a schema or emits an invalid data type, it enters an **auto-correction retry loop** that feeds the exact validation error back to the LLM to fix itself.
+* If it cannot recover, the pipeline safely halts with an [`AgentError`](file:///d:/sultan/ProcureAI/procureai/backend/models/schemas.py) rather than continuing with corrupted data.
+
+---
+
+### 4. 100% Evidence Grounding (No Phantom Findings)
+Every discrepancy flagged by the system must include:
+1. `rule_id` and exact **verbatim clause text** from the contract.
+2. The specific line item ID and description from the invoice.
+3. `expected_amount`, `charged_amount`, and calculated `delta`.
+4. `confidence_score` and reasoning.
+
+If an invoice line item cannot be mapped with high confidence to a contract rule, it is marked as an **unmapped line** or generates a `DataRequiredFlag` (prompting human review) instead of fabricating a false violation.
+
+---
+
+### 5. Automated Evaluation & Precision/Recall Metrics
+You don't have to take the system's accuracy on faith; the project includes an automated evaluation harness ([`backend/eval/harness.py`](file:///d:/sultan/ProcureAI/procureai/backend/eval/harness.py)) and benchmark dataset ([`data/eval/test_cases.json`](file:///d:/sultan/ProcureAI/procureai/data/eval/test_cases.json)):
+
+* **Precision:** Does the system avoid false alarms?
+* **Recall:** Did it catch every true overcharge in the test contracts?
+* **Financial Delta Accuracy:** Did the calculated recovery amount match the exact ground truth down to the cent/paise?
+
+You can run this evaluation harness anytime from the terminal:
+```powershell
+$env:PYTHONPATH="."
+python -m backend.eval.harness
+```
+
+
+-----------------------------------------------------------------------------
+
+Listed directory data
+Listed directory synthetic
+Listed directory scripts
+Viewed generate_synthetic_data.py:1-60
+Listed directory contracts
+Listed directory invoices
+Viewed test_cases.json:1-60
+
+Getting realistic, high-quality data is the #1 hurdle in procurement AI because real enterprise contracts and invoices are protected by NDAs, trade secrets, and financial privacy laws.
+
+To test ProcureAI thoroughly, here is a **3-Pillar Data Strategy** combining **real public commercial documents** and **industrial-grade synthetic stress-test data with ground-truth labels**.
+
+---
+
+### Pillar 1: 100% Real, Legally Public Commercial Contracts
+You don't need access to a private enterprise to get real 50–100 page contracts:
+
+1. **SEC EDGAR Database (Exhibit 10 Filings):**
+   * Public companies (e.g., Apple, Amazon, Sysco, Walmart, FedEx) are legally required by the SEC to file all material contracts, Master Services Agreements (MSAs), and vendor agreements publicly under **Exhibit 10**.
+   * These are authentic, lawyer-drafted agreements containing real rate schedules, SLA benchmarks, volume discounts, and payment terms.
+2. **Public Government & PSU Contracts (e.g., GeM India, US GSA, UK Contracts Finder):**
+   * Government procurement contracts are public record.
+   * We already have a real India Post / IPPB contract (`india_post.pdf`) in the repo. We can pull more public IT, freight, and healthcare MSAs.
+
+---
+
+### Pillar 2: High-Fidelity Synthetic Data with Ground Truth
+Synthetic data is actually **better than real data for automated evaluation** because we can inject exact known overcharges and calculate the mathematical ground truth to test precision and recall down to the exact rupee/cent.
+
+Our codebase already contains generators ([`generate_synthetic_data.py`](file:///d:/sultan/ProcureAI/procureai/scripts/generate_synthetic_data.py), [`generate_sysco_data.py`](file:///d:/sultan/ProcureAI/procureai/scripts/generate_sysco_data.py)) covering 8 core suppliers (Apex Logistics, TechSoft, BuildRight, MediSupply, CloudHost, ProServices, Sysco, Premium Cold Foods).
+
+#### How we can expand this to test extreme real-world stress cases:
+| Scenario | Why It's Hard (The Stress Test) | Ground Truth Injected |
+|---|---|---|
+| **Messy Naming / Fuzzy SKU Matching** | Invoice calls it `STD-SRV-4C-VM` while contract states `"Standard 4-Core Cloud Compute Node"`. | Tests fuzzy cross-validator. |
+| **Cross-Invoice Price Creep (Stealth Drift)** | Supplier charges $10.00 in Jan, $10.25 in Feb, $10.55 in Mar without an amendment. | Tests [`cross_invoice_analyzer`](file:///d:/sultan/ProcureAI/procureai/backend/agents/cross_invoice_analyzer/agent.py). |
+| **Complex SLA Breach & Penalties** | Uptime was 98.2% (threshold: 99.5%), requiring a 5% credit on the monthly total that the vendor "forgot" to credit. | Tests [`reverse_sweep`](file:///d:/sultan/ProcureAI/procureai/backend/agents/reverse_sweep/agent.py). |
+| **Milestone Delay & Liquidated Damages** | Delivery scheduled for Oct 15, completed Nov 2 (18 days delay × $500/day). | Tests `MilestonePenaltyEvaluator`. |
+| **Clean / Compliant Control Batches** | 100% compliant invoices with zero errors. | Verifies **False Positive Rate = 0%**. |
+| **Layout & Formatting Diversity** | Multi-page tabular invoices, varied fonts, borderless tables, summary boxes. | Tests PDF extraction resilience. |
+
+---
+
+### Pillar 3: Automated Evaluation Suite (`test_cases.json`)
+Every generated test case is paired with an entry in [`data/eval/test_cases.json`](file:///d:/sultan/ProcureAI/procureai/data/eval/test_cases.json) specifying:
+* Expected Discrepancy Type (`overcharge`, `unapplied_penalty`, `unapplied_discount`, `price_drift`)
+* Expected financial leakage delta (e.g., `-₹19,200.00`)
+* Rule ID and severity
+
+Whenever we run:
+```powershell
+$env:PYTHONPATH="."
+python -m backend.eval.harness
+```
+It runs the full multi-agent pipeline across all test pairs and outputs exact **Precision, Recall, and Accuracy scores**.
+
+---
+
+### Recommended Next Steps
+We can do any of the following right now:
+1. **Generate a comprehensive new batch of stress-test contracts & multi-month invoices** (with realistic enterprise layouts, edge cases, and ground-truth eval cases).
+2. **Download & format real SEC EDGAR Exhibit 10 MSAs** (e.g. Cloud Logistics, SaaS, Facility Management) and build matching invoice test packs.
+3. **Run the existing evaluation harness** on the current dataset to see current baseline accuracy metrics.
+
+Which approach would you like to take?

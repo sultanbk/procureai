@@ -1,4 +1,4 @@
-﻿# Configuration Guide
+# Configuration Guide
 
 **Audience:** Developers and operators.
 
@@ -32,6 +32,10 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `RATE_LIMIT_WINDOW_SECONDS` | `60` | Rate-limit window for middleware if mounted |
 | `MOCK_LLM` | unset | Requests mock LLM responses |
 | `ALLOW_MOCK_LLM` | unset | Required with `MOCK_LLM=true` to actually enable mock responses |
+| `LLM_PROVIDER` | unset | Active LLM provider selection: `omniroute`, `groq`, or `gemini` |
+| `GROQ_API_KEY` | unset | Groq or OpenAI-compatible API key / auth token |
+| `GROQ_BASE_URL` | unset | Optional custom base URL for OpenAI-compatible proxies (e.g. `http://localhost:20128/v1` for OmniRoute, vLLM, Ollama) |
+| `GROQ_MODEL` | `llama-3.1-70b-versatile` | Model name for Groq / OpenAI-compatible provider |
 | `GEMINI_API_KEY` | unset | Gemini Developer API key |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model name |
 | `GOOGLE_CLOUD_PROJECT` | `procureai` in `llm_client.py` fallback | Vertex AI project |
@@ -58,14 +62,32 @@ Both `MOCK_LLM` and `ALLOW_MOCK_LLM` must be truthy for the mock path in `backen
 
 ## Live LLM Configuration
 
-Gemini Developer API:
+### 1. OmniRoute / Local OpenAI Gateway
 
 ```ini
-GEMINI_API_KEY=your-api-key
-GEMINI_MODEL=gemini-2.5-flash
+LLM_PROVIDER=omniroute
+GROQ_BASE_URL=http://localhost:20128/v1
+GROQ_API_KEY=your-omniroute-token
+GROQ_MODEL=oc/nemotron-3-ultra-free
 ```
 
-Vertex AI:
+### 2. Groq Cloud (Fast Free Cloud Tier)
+
+```ini
+LLM_PROVIDER=groq
+GROQ_API_KEY=your-groq-api-key
+GROQ_MODEL=llama-3.1-70b-versatile
+```
+
+### 3. Google AI Studio (Gemini Developer API)
+
+```ini
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your-api-key
+GEMINI_MODEL=gemini-3.7-flash
+```
+
+### 4. Google Cloud Vertex AI
 
 ```ini
 GOOGLE_CLOUD_PROJECT=your-project-id

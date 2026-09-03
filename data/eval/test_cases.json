@@ -154,5 +154,110 @@
       }
     ],
     "expected_total_leakage": 16000.0
+  },
+  {
+    "test_id": "TC011",
+    "description": "CloudScale Clean Control Invoice Month 1 (Zero False Positive Verification)",
+    "contract_path": "data/synthetic/contracts/c009_cloudscale_technologies_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c009_invoice_i018.pdf"],
+    "expected_discrepancies": [],
+    "expected_total_leakage": 0.0
+  },
+  {
+    "test_id": "TC012",
+    "description": "CloudScale Month 2 Egress Volume Tier Overcharge ($3,250) + Support Cap Exceeded ($1,000) + SLA Breach Penalty Credit ($3,700)",
+    "contract_path": "data/synthetic/contracts/c009_cloudscale_technologies_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c009_invoice_i019.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -3250.0,
+        "severity": "HIGH"
+      },
+      {
+        "rule_id": "R004",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -1000.0,
+        "severity": "MEDIUM"
+      },
+      {
+        "rule_id": "R005",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -3700.0,
+        "severity": "CRITICAL"
+      }
+    ],
+    "expected_total_leakage": 7950.0
+  },
+  {
+    "test_id": "TC013",
+    "description": "TransNational Freight Clean Control Invoice Month 1 (Zero False Positive Verification)",
+    "contract_path": "data/synthetic/contracts/c010_transnational_freight_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c010_invoice_i021.pdf"],
+    "expected_discrepancies": [],
+    "expected_total_leakage": 0.0
+  },
+  {
+    "test_id": "TC014",
+    "description": "TransNational Freight Month 2 Pallet Volume Tier Overcharge ($36,800) + Fuel Surcharge Cap Exceeded ($200) + SLA Delivery Penalty Credit ($8,364)",
+    "contract_path": "data/synthetic/contracts/c010_transnational_freight_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c010_invoice_i022.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R001",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -36800.0,
+        "severity": "CRITICAL"
+      },
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -200.0,
+        "severity": "MEDIUM"
+      },
+      {
+        "rule_id": "R004",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -8364.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 45364.0
+  },
+  {
+    "test_id": "TC015",
+    "description": "Apex Facilities Maintenance Month 1 Clean Baseline (Zero False Positive Verification)",
+    "contract_path": "data/synthetic/contracts/c011_apex_facilities_maintenance_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c011_invoice_i023.pdf"],
+    "expected_discrepancies": [],
+    "expected_total_leakage": 0.0
+  },
+  {
+    "test_id": "TC016",
+    "description": "Apex Facilities Maintenance Month 3 Price Creep Overcharge + Milestone Delay Liquidated Damages ($3,200)",
+    "contract_path": "data/synthetic/contracts/c011_apex_facilities_maintenance_edgar.pdf",
+    "invoice_paths": ["data/synthetic/invoices/c011_invoice_i025.pdf"],
+    "expected_discrepancies": [
+      {
+        "rule_id": "R002",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -770.0,
+        "severity": "MEDIUM"
+      },
+      {
+        "rule_id": "R003",
+        "discrepancy_type": "overcharge",
+        "expected_delta": -450.0,
+        "severity": "MEDIUM"
+      },
+      {
+        "rule_id": "R004",
+        "discrepancy_type": "unapplied_penalty",
+        "expected_delta": -3200.0,
+        "severity": "HIGH"
+      }
+    ],
+    "expected_total_leakage": 4420.0
   }
 ]

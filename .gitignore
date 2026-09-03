@@ -27,6 +27,8 @@ dist-ssr/
 
 # Local databases and runtime files
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 data/uploads/
@@ -43,6 +45,7 @@ suppliergaurd_feature_expansion.html
 data/eval/evaluation_report.md
 
 # Editor / OS
+.claude/
 .vscode/*
 !.vscode/extensions.json
 .idea/
