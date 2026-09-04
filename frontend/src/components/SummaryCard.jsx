@@ -146,8 +146,6 @@ export default function SummaryCard({ summary, discrepancies = [], onGenerateDis
 
       </div>
 
-      {children}
-
       {executive_summary && (
         <Card>
           <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
@@ -159,6 +157,8 @@ export default function SummaryCard({ summary, discrepancies = [], onGenerateDis
           </p>
         </Card>
       )}
+
+      {children}
     </div>
   );
 }

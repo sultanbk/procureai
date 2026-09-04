@@ -475,7 +475,7 @@ export default function Settings() {
                   </label>
 
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-center space-y-2">
-                    <span className="text-sm font-semibold text-slate-900 block">Leakage Threshold Trigger (INR)</span>
+                    <span className="text-sm font-semibold text-slate-900 block">Leakage Threshold Trigger ($ USD)</span>
                     <div className="relative">
                       <span className="absolute left-3 top-2.5 text-sm font-semibold text-slate-500">$</span>
                       <Input

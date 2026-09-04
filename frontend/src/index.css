@@ -44,7 +44,7 @@
   }
 
   *:focus-visible {
-    outline: 2px solid #E0292A;
+    outline: 2px solid #0d9488;
     outline-offset: 2px;
   }
 }

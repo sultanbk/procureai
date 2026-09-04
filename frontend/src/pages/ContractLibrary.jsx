@@ -80,12 +80,8 @@ export default function ContractLibrary({ onSelectSupplier }) {
       : 'border-slate-300 bg-slate-50 hover:border-teal-400 hover:bg-teal-50/10'
     }`;
 
-  const loadContracts = (archived = showArchived, isInitial = false) => {
-    if (isInitial) {
-      setLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
+  const loadContracts = (archived = showArchived) => {
+    setIsRefreshing(true);
     getContracts(archived)
       .then(data => {
         setContracts(data);
@@ -99,8 +95,24 @@ export default function ContractLibrary({ onSelectSupplier }) {
       });
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadContracts(showArchived, true); }, []);
+  useEffect(() => {
+    let ignore = false;
+    getContracts(showArchived)
+      .then(data => {
+        if (ignore) return;
+        setContracts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        if (ignore) return;
+        setError(err.message || 'Failed to load contract library');
+        setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [showArchived]);
 
   const handleFileChange = (e) => {
     if (e.target.files?.[0]) setSelectedFile(e.target.files[0]);

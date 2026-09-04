@@ -553,10 +553,10 @@ export default function Compare() {
             <Table className="border-0 rounded-none">
               <TableHead>
                 <tr>
-                  <TableCell header>Rule / Applies To</TableCell>
-                  <TableCell header>Impact</TableCell>
-                  <TableCell header>Old Term</TableCell>
-                  <TableCell header>New Term</TableCell>
+                  <TableCell header className="w-44 min-w-[160px]">Rule / Applies To</TableCell>
+                  <TableCell header className="w-36 min-w-[130px]">Impact</TableCell>
+                  <TableCell header className="w-48 min-w-[180px]">Old Term</TableCell>
+                  <TableCell header className="w-48 min-w-[180px]">New Term</TableCell>
                   <TableCell header>Description</TableCell>
                 </tr>
               </TableHead>
@@ -566,16 +566,16 @@ export default function Compare() {
                     const styles = getChangeTypeStyles(change.change_type, change.impact);
                     return (
                       <TableRow key={idx} className={styles.rowBg}>
-                        <TableCell className="space-y-1">
+                        <TableCell className="space-y-1 w-44 min-w-[160px]">
                           <span className="font-semibold text-slate-900 block capitalize">{change.rule_type.replace('_', ' ')}</span>
-                          <span className="text-xs text-slate-500">{change.applies_to}</span>
+                          <span className="text-xs text-slate-500 break-words">{change.applies_to}</span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-36 min-w-[130px]">
                           <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold uppercase border rounded-full ${styles.badge}`}>
                             {styles.badgeText}
                           </span>
                         </TableCell>
-                        <TableCell className="space-y-1">
+                        <TableCell className="space-y-1 w-48 min-w-[180px] break-words">
                           <span className="text-slate-600 block">
                             {change.old_rule ? (
                               change.old_rule.flat_unit_price !== undefined && change.old_rule.flat_unit_price !== null ? (
@@ -596,12 +596,12 @@ export default function Compare() {
                             )}
                           </span>
                           {change.old_clause && (
-                            <span className="text-xs font-mono text-slate-500" title="Reference Clause">
+                            <span className="text-xs font-mono text-slate-500 block break-words" title="Reference Clause">
                               Clause: {change.old_clause}
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="space-y-1">
+                        <TableCell className="space-y-1 w-48 min-w-[180px] break-words">
                           <span className="text-slate-900 font-medium block">
                             {change.new_rule ? (
                               change.new_rule.flat_unit_price !== undefined && change.new_rule.flat_unit_price !== null ? (
@@ -622,12 +622,12 @@ export default function Compare() {
                             )}
                           </span>
                           {change.new_clause && (
-                            <span className="text-xs font-mono text-teal-600" title="Reference Clause">
+                            <span className="text-xs font-mono text-teal-600 block break-words" title="Reference Clause">
                               Clause: {change.new_clause}
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="max-w-sm leading-relaxed">
+                        <TableCell className="max-w-md leading-relaxed break-words">
                           {change.description}
                         </TableCell>
                       </TableRow>

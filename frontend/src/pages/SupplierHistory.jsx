@@ -30,18 +30,6 @@ export default function SupplierHistory({ supplierName, onBack, backLabel = 'Bac
   const [briefLoading, setBriefLoading] = useState(false);
   const [activeBrief, setActiveBrief] = useState(null);
 
-  const fetchBriefs = async () => {
-    try {
-      const briefs = await getBriefs(supplierName);
-      if (briefs.length > 0) {
-        const latestBriefId = briefs[0].brief_id;
-        const fullBrief = await getBrief(supplierName, latestBriefId);
-        setActiveBrief(fullBrief);
-      }
-    } catch (err) {
-      console.error('Error fetching briefs:', err);
-    }
-  };
 
   const handleGenerateBrief = async () => {
     setBriefLoading(true);
@@ -68,13 +56,37 @@ export default function SupplierHistory({ supplierName, onBack, backLabel = 'Bac
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (supplierName) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchHistory();
-      fetchBriefs();
-    }
+    let ignore = false;
+    if (!supplierName) return undefined;
+
+    getSupplierHistory(supplierName)
+      .then(res => {
+        if (ignore) return;
+        setData(res);
+        setLoading(false);
+      })
+      .catch(err => {
+        if (ignore) return;
+        console.error('Error loading supplier history:', err);
+        setError('Failed to load supplier audit history.');
+        setLoading(false);
+      });
+
+    getBriefs(supplierName)
+      .then(briefs => {
+        if (ignore) return;
+        if (briefs.length > 0) {
+          getBrief(supplierName, briefs[0].brief_id).then(fullBrief => {
+            if (!ignore) setActiveBrief(fullBrief);
+          });
+        }
+      })
+      .catch(err => console.error('Error fetching briefs:', err));
+
+    return () => {
+      ignore = true;
+    };
   }, [supplierName]);
 
   const getRiskDetails = (score) => {
@@ -92,7 +104,7 @@ export default function SupplierHistory({ supplierName, onBack, backLabel = 'Bac
         <p className="text-slate-600">{error || 'No data available.'}</p>
         <div className="flex justify-center gap-2">
           <Button variant="secondary" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4" /> {backLabel}</Button>
-          <Button size="sm" onClick={fetchHistory}><RefreshCw className="h-4 w-4" /> Retry</Button>
+          <Button size="sm" onClick={() => fetchHistory(true)}><RefreshCw className="h-4 w-4" /> Retry</Button>
         </div>
       </div>
     );

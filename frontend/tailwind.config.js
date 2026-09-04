@@ -17,10 +17,14 @@ export default {
           strong: '#cbd5e1',
         },
         brand: {
-          DEFAULT: '#E0292A',
+          DEFAULT: '#0d9488',
           hover: '#0f766e',
           light: '#f0fdfa',
           muted: '#ccfbf1',
+        },
+        prodapt: {
+          DEFAULT: '#E0292A',
+          hover: '#c92021',
         },
       },
       fontFamily: {
