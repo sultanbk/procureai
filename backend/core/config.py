@@ -59,6 +59,8 @@ def get_list(name: str, default: List[str]) -> List[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "supplierguard")
+GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./procureai.db")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join("data", "uploads"))
 MAX_UPLOAD_SIZE_MB = get_int("MAX_UPLOAD_SIZE_MB", 20)

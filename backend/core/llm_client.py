@@ -476,7 +476,7 @@ _llm_instance = None
 def get_llm():
     """
     Returns a configured SmartGenerativeModel client instance (singleton).
-    Supports multiple providers: omniroute, groq, gemini (Vertex/Developer API).
+    Supports multiple providers: vertex (GCP), omniroute, groq, gemini (Developer API).
     Mock mode requires MOCK_LLM=true and ALLOW_MOCK_LLM=true.
     """
     global _llm_instance
@@ -485,7 +485,35 @@ def get_llm():
 
     provider_pref = os.getenv("LLM_PROVIDER", "").strip().lower()
 
-    # Prioritize OmniRoute / Groq if requested explicitly or if GROQ_API_KEY is configured
+    # 1. Prioritize Vertex AI if requested explicitly (e.g. LLM_PROVIDER=vertex, vertexai, gcp)
+    if provider_pref in {"vertex", "vertexai", "gcp"}:
+        project = os.getenv("GOOGLE_CLOUD_PROJECT", "supplierguard")
+        location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+        model_name = os.getenv("VERTEX_MODEL") or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if cred_path and os.path.exists(cred_path):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = cred_path
+
+        logger.info("Initializing Vertex AI client (GCP)", project=project, location=location, model=model_name)
+        try:
+            import vertexai
+            from vertexai.generative_models import GenerativeModel
+            vertexai.init(project=project, location=location)
+            real_model = GenerativeModel(model_name)
+            _llm_instance = SmartGenerativeModel(
+                real_model,
+                provider="vertex",
+                model_name=model_name,
+                project=project,
+                location=location,
+            )
+            logger.info("Vertex AI initialized successfully", project=project, location=location, model=model_name)
+            return _llm_instance
+        except Exception as e:
+            logger.error("Failed to initialize Vertex AI client", error=str(e), project=project, location=location)
+            raise RuntimeError(f"Vertex AI initialization failed for project '{project}': {e}") from e
+
+    # 2. Prioritize OmniRoute / Groq if requested explicitly
     if provider_pref in {"omniroute", "groq", "openai"} or (not provider_pref and os.getenv("GROQ_API_KEY") and not os.getenv("GEMINI_API_KEY")):
         groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")
         if groq_api_key:
@@ -509,7 +537,7 @@ def get_llm():
             except Exception as e:
                 logger.error("Failed to initialize Groq/OmniRoute client", error=str(e))
 
-    # Check for Google AI Studio API key
+    # 3. Check for Google AI Studio API key
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     if gemini_api_key and provider_pref not in {"omniroute", "groq"}:
@@ -527,9 +555,9 @@ def get_llm():
         except Exception as e:
             logger.error("Failed to initialize Google AI Studio Gemini SDK", error=str(e))
 
-    # Fallback to Groq / OmniRoute if available
+    # 4. Fallback to Groq / OmniRoute if available
     groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")
-    if groq_api_key:
+    if groq_api_key and not provider_pref:
         model_name = os.getenv("GROQ_MODEL") or os.getenv("ANTHROPIC_DEFAULT_OPUS_MODEL", "oc/nemotron-3-ultra-free")
         base_url = os.getenv("GROQ_BASE_URL") or os.getenv("ANTHROPIC_BASE_URL", "http://localhost:20128/v1")
         logger.info("Initializing fallback Groq/OmniRoute client", model=model_name, base_url=base_url)
@@ -550,13 +578,13 @@ def get_llm():
         except Exception as e:
             logger.error("Failed to initialize Groq client", error=str(e))
 
-    # Fallback to Vertex AI / GCP
+    # 5. Fallback to Vertex AI / GCP
     model_name = gemini_model
     real_model = None
     provider = "mock"
-    project = os.getenv("GOOGLE_CLOUD_PROJECT", "procureai")
+    project = os.getenv("GOOGLE_CLOUD_PROJECT", "supplierguard")
     location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    logger.info("GEMINI_API_KEY not found. Attempting Vertex AI initialization...", project=project, location=location)
+    logger.info("Attempting Vertex AI initialization...", project=project, location=location)
     try:
         import vertexai
         from vertexai.generative_models import GenerativeModel
