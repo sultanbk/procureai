@@ -299,7 +299,7 @@ useEffect(() => {
 # Google / Vertex AI
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=us-central1
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.7-flash
 
 # Database
 DATABASE_URL=sqlite:///./data/procureai.db

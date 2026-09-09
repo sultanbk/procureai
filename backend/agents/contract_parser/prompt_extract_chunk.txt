@@ -33,7 +33,10 @@ FOR EACH RULE YOU FIND, OUTPUT:
   ₹400 per bag regardless of quoted unit price"
 - applies_to: the item, category, or service this rule governs — be SPECIFIC
   and use the SAME WORDING as the contract (e.g. "Portland Cement (OPC 53
-  Grade)" not just "cement")
+  Grade)" not just "cement"). If a section introduces a service in an introductory sentence
+  (e.g. "Standard Delivery - Domestic shipping") and subsequent sub-clauses in that section
+  define the volume tiers or rates, use the specific service name for applies_to and combine
+  them into ONE complete rule. Do NOT create an empty rule with no rates for the introductory sentence.
 - clause_text: COPY THE EXACT TEXT of the relevant sentence(s) from this
   chunk, verbatim, character for character. Do not paraphrase, summarize,
   or correct typos. This will be verified against the source text — if it
@@ -68,6 +71,10 @@ for penalty rates" and Schedule B / Section 9 is NOT in this chunk, still
 output the rule with whatever information IS available, set
 extraction_confidence = 0.3, and write in description: "References
 [Schedule B / Section 9] — not resolved in this chunk."
+HOWEVER, if the rates or volume tiers ARE defined in subsequent sentences or sub-clauses
+within this same chunk (e.g. Section 4.2 provides the tier pricing directly in this chunk),
+do NOT output a separate empty cross-reference rule. Extract the complete pricing rule with
+its tiers directly.
 
 OUTPUT FORMAT:
 Return a JSON array of rule objects matching the schema. If this chunk

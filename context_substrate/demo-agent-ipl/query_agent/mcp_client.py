@@ -13,7 +13,10 @@ from typing import Any
 
 import httpx
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+try:
+    from mcp.client.streamable_http import streamable_http_client as streamablehttp_client
+except ImportError:
+    from mcp.client.streamable_http import streamablehttp_client
 
 from .s2s import SecretTokenSource, StaticTokenSource
 
@@ -114,14 +117,31 @@ class SynaptMCP:
 
         stack = AsyncExitStack()
         try:
-            read, write, _ = await stack.enter_async_context(
-                streamablehttp_client(
-                    self.mcp_url,
-                    headers={"Authorization": f"Bearer {token}"},
-                    timeout=self._timeout,
-                    httpx_client_factory=factory,
+            import inspect
+            sig = inspect.signature(streamablehttp_client)
+            if "http_client" in sig.parameters:
+                try:
+                    import httpx2
+                    client_cls = httpx2.AsyncClient
+                except ImportError:
+                    client_cls = httpx.AsyncClient
+                http_c = await stack.enter_async_context(
+                    client_cls(headers={"Authorization": f"Bearer {token}"}, timeout=self._timeout, verify=verify)
                 )
-            )
+                streams = await stack.enter_async_context(
+                    streamablehttp_client(self.mcp_url, http_client=http_c)
+                )
+                read, write = streams[0], streams[1]
+            else:
+                streams = await stack.enter_async_context(
+                    streamablehttp_client(
+                        self.mcp_url,
+                        headers={"Authorization": f"Bearer {token}"},
+                        timeout=self._timeout,
+                        httpx_client_factory=factory,
+                    )
+                )
+                read, write = streams[0], streams[1]
             session = await stack.enter_async_context(ClientSession(read, write))
             await session.initialize()
         except BaseException as exc:
@@ -158,7 +178,11 @@ class SynaptMCP:
         assert self._session is not None
         result = await self._session.list_tools()
         return [
-            {"name": t.name, "description": t.description, "schema": t.inputSchema}
+            {
+                "name": t.name,
+                "description": t.description,
+                "schema": getattr(t, "input_schema", getattr(t, "inputSchema", {})),
+            }
             for t in result.tools
         ]
 

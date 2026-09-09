@@ -15,6 +15,7 @@ The original seven-day build log below is historical. The current implementation
 - React views for audit history/upload/progress/report, supplier scorecards/history, analytics, settings, contract library, auto-audit, and comparison.
 - Human review feedback, contract Q&A, evidence document viewing, dispute letters, notifications, and negotiation briefs.
 - Ten synthetic evaluation cases plus unit/integration coverage; mock LLM mode supports offline tests.
+- **SynaptAI Context Substrate (4-Store Knowledge Brain)**: Neo4j Concept Graph, Milvus Knowledge Store (KS), Milvus Procedural Store (PS), and Milvus Graph Node Index (GN). Supports amendment supersession resolution (`SUPERSEDES`/`GOVERNED_BY`), interactive Reasoning Subgraph visualization, 5-stage Retrieval Pass Card scoring, corporate dispute recovery SOP DAG execution (`PRECEDES`), and automatic embedded fallback.
 
 ---
 

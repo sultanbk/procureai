@@ -117,12 +117,24 @@ async def generate_dispute_letter(
         )
         llm_data = DisputeLetterLLMResponse.model_validate_json(retry_response.text)
 
+    # Fetch corporate dispute recovery SOP from SynaptAI Context Substrate (Milvus PS)
+    procedure_dag = None
+    try:
+        from backend.core.context_substrate_client import get_context_substrate_client
+        client = get_context_substrate_client()
+        dag_obj = client.get_procedure_dag("dispute_recovery")
+        if dag_obj:
+            procedure_dag = dag_obj.model_dump()
+    except Exception as e:
+        logger.debug("SOP DAG retrieval skipped", error=str(e))
+
     return DisputeLetterResponse(
         letter_text=llm_data.letter_text,
         letter_html=llm_data.letter_html,
         findings_count=len(dispute_findings),
         total_disputed=f"INR {total_disputed:,.2f}",
         supplier_email=request.supplier_email,
+        procedure_dag=procedure_dag,
     )
 
 

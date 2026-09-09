@@ -30,6 +30,7 @@ httpx>=0.27.0
 tenacity>=8.3.0
 structlog>=24.1.0
 rapidfuzz>=3.9.3
+cryptography>=42.0.0
 
 # Eval
 pytest>=8.2.0

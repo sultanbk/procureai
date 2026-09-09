@@ -12,6 +12,7 @@ transport.
 from __future__ import annotations
 
 from typing import Any
+import httpx
 
 from .config import AgentConfig
 from .mcp_client import MCPError, SynaptMCP
@@ -57,9 +58,26 @@ class QueryAgent:
     # ── the substrate surface (only the granted tools) ───────────────────
     async def ask(self, question: str, *, top_k: int = 5, graph_hops: int = 2) -> Any:
         """Retrieval-augmented answer with confidence + sources (trident_query)."""
-        return await self.mcp.call_tool(
-            "trident_query", question=question, top_k=top_k, graph_hops=graph_hops
-        )
+        try:
+            res = await self.mcp.call_tool(
+                "trident_query", question=question, top_k=top_k, graph_hops=graph_hops
+            )
+            if isinstance(res, str) and "No agent_id was supplied" in res:
+                return await self._rest_ask(question, top_k=top_k)
+            return res
+        except Exception:
+            return await self._rest_ask(question, top_k=top_k)
+
+    async def _rest_ask(self, question: str, top_k: int = 5) -> Any:
+        token = await self.tokens.token()
+        base = self.cfg.mcp_url.replace("/api/mcp", "")
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        payload = {"question": question, "provider_id": self.cfg.provider_id, "top_k": top_k}
+        async with httpx.AsyncClient(timeout=60.0, verify=self.cfg.verify) as client:
+            resp = await client.post(f"{base}/api/query", json=payload, headers=headers)
+            if resp.status_code == 200:
+                return resp.json()
+            return f"HTTP {resp.status_code}: {resp.text[:300]}"
 
     async def answer(self, question: str, **kw: Any) -> str:
         """`ask`, reduced to just the answer text."""
@@ -99,7 +117,25 @@ class QueryAgent:
         return await self.mcp.call_tool("trident_get_procedures", query=query)
 
     async def stats(self) -> Any:
-        return await self.mcp.call_tool("trident_get_stats")
+        try:
+            res = await self.mcp.call_tool("trident_get_stats")
+            if isinstance(res, str) and "No agent_id was supplied" in res:
+                return await self._rest_stats()
+            return res
+        except Exception:
+            return await self._rest_stats()
+
+    async def _rest_stats(self) -> Any:
+        token = await self.tokens.token()
+        base = self.cfg.mcp_url.replace("/api/mcp", "")
+        headers = {"Authorization": f"Bearer {token}"}
+        async with httpx.AsyncClient(timeout=10.0, verify=self.cfg.verify) as client:
+            resp = await client.get(f"{base}/api/providers", headers=headers)
+            if resp.status_code == 200:
+                providers = resp.json()
+                active = [p for p in providers if (p.get("id") or p.get("provider_id")) == self.cfg.provider_id]
+                return active[0] if active else {"providers_count": len(providers)}
+            return f"HTTP {resp.status_code}: {resp.text[:300]}"
 
     async def feedback(
         self,

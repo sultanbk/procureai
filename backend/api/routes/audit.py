@@ -569,8 +569,7 @@ async def get_audit_logs(audit_id: str):
         for l in logs
     ]
 
-from pydantic import BaseModel
-from typing import Optional
+# Fix #11: Moved these imports to top of file (removed duplicates)
 from backend.services.risk_scorer import compute_risk_score
 from pathlib import Path
 
@@ -616,7 +615,16 @@ async def predict_risk(request: RiskScoreRequest):
 async def audit_websocket(websocket: WebSocket, audit_id: str):
     """
     WebSocket endpoint that streams real-time status and telemetry logs for a running audit.
+    Fix #12: Added API key verification for WebSocket connections.
     """
+    # Fix #12: WebSocket auth — check API key in query params or headers
+    from backend.core.config import REQUIRE_API_KEY, PROCUREAI_API_KEY
+    if REQUIRE_API_KEY and PROCUREAI_API_KEY:
+        ws_api_key = websocket.query_params.get("api_key") or websocket.headers.get("x-api-key")
+        if ws_api_key != PROCUREAI_API_KEY:
+            await websocket.close(code=4001, reason="Unauthorized: Invalid or missing API key")
+            return
+
     await websocket.accept()
     
     # 1. Fetch and send initial status and logs

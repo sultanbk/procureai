@@ -13,8 +13,9 @@ High. Accelerates rule extraction by pinpointing relevant contract clauses.
 
 import re
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 import structlog
+from rapidfuzz import fuzz
 from backend.models.schemas import ContractRulebook, PricingRule
 
 logger = structlog.get_logger()
@@ -212,6 +213,29 @@ def merge_rulebooks(rulebooks: List[ContractRulebook]) -> ContractRulebook:
         if rb.extraction_notes:
             notes.append(rb.extraction_notes)
 
+    # Consolidate parent section rules and sub-clause rules
+    # E.g. Section 4 defines applies_to="Standard Delivery - Domestic shipping" with tiers=[]
+    # and Section 4.2 defines tiers=[...] with generic applies_to="monthly shipment volumes"
+    empty_volume_rules = [
+        r for r in merged_rules
+        if r.rule_type == "volume_tier" and not r.tiers and not r.flat_unit_price
+    ]
+    tiered_volume_rules = [
+        r for r in merged_rules
+        if r.rule_type == "volume_tier" and r.tiers
+    ]
+    for empty_r in empty_volume_rules:
+        for tiered_r in tiered_volume_rules:
+            sec1 = (empty_r.clause_reference or "").lower()
+            sec2 = (tiered_r.clause_reference or "").lower()
+            shared_sec = (sec1 and sec2 and (sec1 in sec2 or sec2 in sec1 or sec1.split('.')[0] == sec2.split('.')[0]))
+            generic_applies = any(w in (tiered_r.applies_to or "").lower() for w in ["volume", "shipment", "monthly", "units", "tier"])
+            if shared_sec or generic_applies:
+                if empty_r.applies_to and len(empty_r.applies_to) > len(tiered_r.applies_to):
+                    tiered_r.applies_to = empty_r.applies_to
+                if empty_r.description and "schedule" not in empty_r.description.lower():
+                    tiered_r.description = empty_r.description
+
     # 2. Re-index rule IDs sequentially (R001, R002, ...) and deduplicate
     final_rules: List[PricingRule] = []
     seen_clauses = set()
@@ -220,6 +244,10 @@ def merge_rulebooks(rulebooks: List[ContractRulebook]) -> ContractRulebook:
     for rule in merged_rules:
         # Check if the rule is empty (e.g. unknown rule type or empty clause text)
         if rule.rule_type == "unknown" and not rule.clause_text:
+            continue
+
+        # Skip empty placeholder volume_tier rule when tiered rules exist
+        if rule.rule_type == "volume_tier" and not rule.tiers and not rule.flat_unit_price and tiered_volume_rules:
             continue
             
         clause_key = rule.clause_text.strip().lower() if rule.clause_text else ""
@@ -245,13 +273,37 @@ def merge_rulebooks(rulebooks: List[ContractRulebook]) -> ContractRulebook:
     )
 
 
+def _match_rule_across_passes(base_rule: PricingRule, candidate_rules: List[PricingRule]) -> Optional[PricingRule]:
+    """Find best matching candidate rule from another pass."""
+    for cand in candidate_rules:
+        if cand.rule_type != base_rule.rule_type:
+            continue
+        # 1. Exact applies_to match
+        if (cand.applies_to or "").strip().lower() == (base_rule.applies_to or "").strip().lower():
+            return cand
+        # 2. Exact clause_reference match (if specific)
+        if cand.clause_reference and base_rule.clause_reference:
+            c_ref = cand.clause_reference.lower().strip()
+            b_ref = base_rule.clause_reference.lower().strip()
+            if c_ref == b_ref and c_ref not in {"unspecified", "section", "clause"}:
+                return cand
+        # 3. High fuzzy text similarity on applies_to or clause_text
+        score_applies = fuzz.token_sort_ratio((cand.applies_to or "").lower(), (base_rule.applies_to or "").lower())
+        if score_applies >= 70:
+            return cand
+        score_clause = fuzz.token_sort_ratio((cand.clause_text or "").lower(), (base_rule.clause_text or "").lower())
+        if score_clause >= 70:
+            return cand
+    return None
+
+
 def vote_on_rules(
     extractions: List[ContractRulebook],
 ) -> tuple:
     """
     v4: Majority-vote across multiple extraction passes for self-consistency.
 
-    Matches rules across passes by (rule_type, applies_to) tuple.
+    Matches rules across passes by semantic rule identity (rule_type + reference/applies_to).
     For each matched rule group, votes on numeric parameters:
     - 3/3 agree → use value, confidence boost to 1.0, vote_agreement = "3/3"
     - 2/3 agree → use majority value, confidence = 0.9, vote_agreement = "2/3"
@@ -279,19 +331,33 @@ def vote_on_rules(
     num_passes = len(extractions)
     review_flags = []
 
-    # Collect rules from all passes, keyed by (rule_type, applies_to)
-    all_pass_rules = []
-    for extraction in extractions:
-        pass_map = {}
-        for rule in extraction.rules:
-            key = (rule.rule_type, rule.applies_to.strip().lower())
-            pass_map[key] = rule
-        all_pass_rules.append(pass_map)
+    # Track which rules from other passes were matched to avoid duplicates
+    matched_other_rules = [set() for _ in range(num_passes)]
 
-    # Build the set of all rule keys across all passes
-    all_keys = set()
-    for pm in all_pass_rules:
-        all_keys.update(pm.keys())
+    # Build rule groups: list of [cand_pass0, cand_pass1, ...]
+    rule_groups = []
+    for r0 in base.rules:
+        group = [r0]
+        for p_idx in range(1, num_passes):
+            other_rules = extractions[p_idx].rules if p_idx < len(extractions) else []
+            unmatched = [r for idx, r in enumerate(other_rules) if idx not in matched_other_rules[p_idx]]
+            match = _match_rule_across_passes(r0, unmatched)
+            if match:
+                group.append(match)
+                matched_other_rules[p_idx].add(other_rules.index(match))
+            else:
+                group.append(None)
+        rule_groups.append(group)
+
+    # Any remaining unmatched rules from passes 1+
+    for p_idx in range(1, num_passes):
+        other_rules = extractions[p_idx].rules if p_idx < len(extractions) else []
+        for idx, r in enumerate(other_rules):
+            if idx not in matched_other_rules[p_idx]:
+                group = [None] * num_passes
+                group[p_idx] = r
+                rule_groups.append(group)
+                matched_other_rules[p_idx].add(idx)
 
     # Parameters to vote on (numeric fields)
     VOTABLE_FIELDS = [
@@ -303,16 +369,12 @@ def vote_on_rules(
     ]
 
     voted_rules = []
-    for key in sorted(all_keys):
-        # Collect this rule from each pass
-        candidates = [pm.get(key) for pm in all_pass_rules]
-        present = [c for c in candidates if c is not None]
-
+    for group in rule_groups:
+        present = [c for c in group if c is not None]
         if not present:
             continue
 
-        # Use pass-0 as base (or first available if pass-0 didn't extract it)
-        base_rule = candidates[0] if candidates[0] is not None else present[0]
+        base_rule = group[0] if group[0] is not None else present[0]
         voted_rule = base_rule.model_copy(deep=True)
 
         # Vote on each numeric parameter
@@ -354,7 +416,7 @@ def vote_on_rules(
                 disagreements.append(field)
 
         # Determine agreement level
-        found_in_passes = sum(1 for c in candidates if c is not None)
+        found_in_passes = len(present)
         # The true agreement count is bounded by how many passes even found the rule
         final_agreement = min(lowest_agreement_count, found_in_passes)
         

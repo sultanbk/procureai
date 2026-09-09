@@ -1,0 +1,313 @@
+{
+  "rulebook": {
+    "supplier_name": "Apex Logistics Ltd",
+    "contract_id": "MSA-2024-APX-001",
+    "contract_date": "2024-01-01",
+    "contract_currency": "INR",
+    "rules": [
+      {
+        "rule_id": "R003",
+        "rule_type": "sla_penalty",
+        "description": "If the supplier's on-time delivery rate falls below 97% in any calendar month, a credit equal to 12% of that month's invoice total shall be issued.",
+        "clause_reference": "Section 8.1",
+        "clause_text": "Should the Supplier's on-time delivery rate fall below 97% in any calendar month, the Supplier shall issue a credit equal to 12% of that month's invoice total.",
+        "applies_to": "monthly invoice total",
+        "effective_from": null,
+        "effective_until": null,
+        "expected_cost_formula": null,
+        "tiers": null,
+        "flat_unit_price": null,
+        "standard_unit_price": null,
+        "sla_threshold_pct": 97.0,
+        "penalty_pct": 0.12,
+        "payment_window_days": null,
+        "discount_pct": null,
+        "bundle_threshold": null,
+        "bundle_price": null,
+        "cap_amount": null,
+        "cap_applies_to": null,
+        "extraction_confidence": 0.9,
+        "clause_start_offset": 1127,
+        "clause_end_offset": 1286,
+        "vote_agreement": "2/3"
+      },
+      {
+        "rule_id": "R003",
+        "rule_type": "sla_penalty",
+        "description": "Supplier shall issue a credit equal to 12% of the monthly invoice total if the on-time delivery rate falls below 97% in any calendar month.",
+        "clause_reference": "Section 8.1",
+        "clause_text": "Should the Supplier's on-time delivery rate fall below 97% in any calendar month, the Supplier shall issue a credit equal to 12% of that month's invoice total.",
+        "applies_to": "monthly invoice total for on-time delivery",
+        "effective_from": null,
+        "effective_until": null,
+        "expected_cost_formula": null,
+        "tiers": null,
+        "flat_unit_price": null,
+        "standard_unit_price": null,
+        "sla_threshold_pct": 97.0,
+        "penalty_pct": 0.12,
+        "payment_window_days": null,
+        "discount_pct": null,
+        "bundle_threshold": null,
+        "bundle_price": null,
+        "cap_amount": null,
+        "cap_applies_to": null,
+        "extraction_confidence": 0.3,
+        "clause_start_offset": 1127,
+        "clause_end_offset": 1286,
+        "vote_agreement": "1/3"
+      },
+      {
+        "rule_id": "R002",
+        "rule_type": "volume_tier",
+        "description": "Unit pricing for monthly shipments varies based on volume, with different rates for 0-499 units, 500-1,999 units, and 2,000 units and above.",
+        "clause_reference": "Section 4.2",
+        "clause_text": "For monthly shipment volumes of 0-499 units, the applicable unit price shall be INR 14.00. For 500-1,999 units, the unit price shall be INR 11.50. For 2,000 units and above, the unit price shall be INR 9.80.",
+        "applies_to": "monthly shipment volumes",
+        "effective_from": null,
+        "effective_until": null,
+        "expected_cost_formula": null,
+        "tiers": [
+          {
+            "min_units": 0,
+            "max_units": 499,
+            "unit_price": "14.0"
+          },
+          {
+            "min_units": 500,
+            "max_units": 1999,
+            "unit_price": "11.5"
+          },
+          {
+            "min_units": 2000,
+            "max_units": null,
+            "unit_price": "9.8"
+          }
+        ],
+        "flat_unit_price": null,
+        "standard_unit_price": null,
+        "sla_threshold_pct": null,
+        "penalty_pct": null,
+        "payment_window_days": null,
+        "discount_pct": null,
+        "bundle_threshold": null,
+        "bundle_price": null,
+        "cap_amount": null,
+        "cap_applies_to": null,
+        "extraction_confidence": 1.0,
+        "clause_start_offset": 727,
+        "clause_end_offset": 934,
+        "vote_agreement": "2/3"
+      },
+      {
+        "rule_id": "R001",
+        "rule_type": "volume_tier",
+        "description": "Billing for Standard Delivery - Domestic shipping is calculated monthly on a volume tier basis, with details referenced in Schedule B which is not provided in this chunk.",
+        "clause_reference": "Section 4: Rates and Billing Structure",
+        "clause_text": "All billing for Standard Delivery - Domestic shipping shall be calculated monthly on a volume tier basis as described in Schedule B.",
+        "applies_to": "Standard Delivery - Domestic shipping",
+        "effective_from": "null",
+        "effective_until": "null",
+        "expected_cost_formula": "null",
+        "tiers": [],
+        "flat_unit_price": null,
+        "standard_unit_price": null,
+        "sla_threshold_pct": null,
+        "penalty_pct": null,
+        "payment_window_days": null,
+        "discount_pct": null,
+        "bundle_threshold": null,
+        "bundle_price": null,
+        "cap_amount": null,
+        "cap_applies_to": null,
+        "extraction_confidence": 0.3,
+        "clause_start_offset": 581,
+        "clause_end_offset": 713,
+        "vote_agreement": "1/3"
+      }
+    ],
+    "unextracted_sections": [],
+    "extraction_notes": "No pricing or financial compliance rules found in this section."
+  },
+  "invoice_data": [
+    {
+      "invoice_id": "INV-APX-202410",
+      "invoice_date": "2024-11-15",
+      "billing_period": "October 2024",
+      "supplier_name": "Apex Logistics Ltd",
+      "invoice_total": "15500.00",
+      "line_items": [
+        {
+          "line_id": "L001",
+          "raw_description": "Standard Delivery - Domestic (Express Parcel Services)",
+          "mapped_contract_item": "",
+          "mapping_confidence": 0.0,
+          "quantity": "1240",
+          "unit_price_charged": "12.5",
+          "line_total_charged": "15500.0",
+          "billing_period": "October 2024",
+          "sla_actual_pct": 98.5,
+          "milestone_date": "2024-10-31",
+          "milestone_status": "On-time delivery performance for October 2024 was 98.5%.",
+          "extraction_confidence": 1.0,
+          "arithmetic_valid": true,
+          "notes": "SLA Metric from invoice footer."
+        }
+      ],
+      "validation": {
+        "totals_match": true,
+        "all_lines_mapped": true,
+        "arithmetic_errors": [],
+        "unmapped_lines": []
+      },
+      "notes": "Note: Monthly SLA Metric: On-time delivery performance for October 2024 was 98.5%. Early payment terms: 2% Net-10 eligible.",
+      "milestone_statements": [],
+      "penalties_applied": 0.0,
+      "invoice_arithmetic_valid": true
+    },
+    {
+      "invoice_id": "INV-APX-202411",
+      "invoice_date": "2024-12-15",
+      "billing_period": "November 2024",
+      "supplier_name": "Apex Logistics Ltd",
+      "invoice_total": "24500.00",
+      "line_items": [
+        {
+          "line_id": "L001",
+          "raw_description": "Standard Delivery - Domestic (Express Parcel Services)",
+          "mapped_contract_item": "",
+          "mapping_confidence": 0.0,
+          "quantity": "2500",
+          "unit_price_charged": "9.8",
+          "line_total_charged": "24500.0",
+          "billing_period": "November 2024",
+          "sla_actual_pct": 94.2,
+          "milestone_date": "2024-11-30",
+          "milestone_status": "On-time delivery performance for November 2024 was 94.2%.",
+          "extraction_confidence": 1.0,
+          "arithmetic_valid": true,
+          "notes": "SLA Metric from invoice notes."
+        }
+      ],
+      "validation": {
+        "totals_match": true,
+        "all_lines_mapped": true,
+        "arithmetic_errors": [],
+        "unmapped_lines": []
+      },
+      "notes": "Note: Monthly SLA Metric: On-time delivery performance for November 2024 was 94.2%. Early payment terms: 2% Net-10 eligible.",
+      "milestone_statements": [],
+      "penalties_applied": 0.0,
+      "invoice_arithmetic_valid": true
+    }
+  ],
+  "discrepancies": {
+    "audit_id": "aud_3afbe1f1",
+    "discrepancies": [
+      {
+        "finding_id": "F001",
+        "invoice_id": "INV-APX-202411",
+        "line_id": "N/A",
+        "rule_id": "R003",
+        "discrepancy_type": "unapplied_penalty",
+        "description": "The invoice from Apex Logistics Ltd. is missing a contractually required service level credit. The contract mandates that if the supplier's on-time delivery rate falls below 97% in any calendar month, a credit equal to 12% of that month's total invoice must be issued. For the billing period, performance did not meet this threshold, which should have resulted in a credit of $2,940.00. The invoice did not apply this credit, leading to an overpayment.",
+        "clause_reference": "Section 8.1",
+        "clause_text": "Should the Supplier's on-time delivery rate fall below 97% in any calendar month, the Supplier shall issue a credit equal to 12% of that month's invoice total.",
+        "quantity": "1",
+        "unit_price_charged": "0.00",
+        "unit_price_expected": "-2940.00",
+        "line_total_charged": "0.00",
+        "line_total_expected": "-2940.00",
+        "delta": "-2940.00",
+        "severity": "HIGH",
+        "recommendation": "DISPUTE",
+        "confidence": 0.285,
+        "critic_status": "CONFIRMED",
+        "critic_reasoning": "The contractual interpretation is sound. The rule unambiguously requires a 12% credit on the total monthly invoice if on-time delivery targets are missed. The calculated expected cost correctly represents this credit, and the discrepancy arises because the supplier did not issue it.",
+        "narrative": null
+      }
+    ],
+    "compliant_lines": [
+      {
+        "line_id": "L001",
+        "rule_id": "R001",
+        "description": "Line item matches pricing under contract rule R001 (Billing for Standard Delivery - Domestic shipping is calculated monthly on a volume tier basis, with details referenced in Schedule B which is not provided in this chunk.)."
+      },
+      {
+        "line_id": "L001",
+        "rule_id": "R001",
+        "description": "Line item matches pricing under contract rule R001 (Billing for Standard Delivery - Domestic shipping is calculated monthly on a volume tier basis, with details referenced in Schedule B which is not provided in this chunk.)."
+      }
+    ],
+    "skipped_lines": [],
+    "total_delta": "-2940.00",
+    "checker_notes": "{\"note\": \"Checked compliance across all lines against rules. Found overcharges.\", \"token_audit_logs\": {\"prompt_tokens\": 3958, \"response_tokens\": 480, \"llm_calls\": 4}, \"confidence_map\": {\"F001\": {\"line_id\": \"N/A\", \"rule_id\": \"R003\", \"mapping_confidence\": 1.0, \"extraction_confidence\": 0.3, \"evaluation_confidence\": 0.285, \"composite_confidence\": 0.0855}}}"
+  },
+  "audit_report": {
+    "audit_id": "aud_3afbe1f1",
+    "summary": {
+      "supplier_name": "Apex Logistics Ltd",
+      "contract_id": "MSA-2024-APX-001",
+      "audit_date": "2026-09-09T19:09:12.020830+00:00",
+      "billing_period": "November 2024 \u2013 October 2024",
+      "total_leakage": "2940.00",
+      "total_lines_audited": 3,
+      "compliant_lines": 2,
+      "compliance_score": 66.67,
+      "discrepancy_count": 1,
+      "critical_count": 0,
+      "high_count": 1,
+      "medium_count": 0,
+      "executive_summary": "An audit of Apex Logistics Ltd. for the period covering invoice INV-APX-202411 identified an overpayment of INR 2940.00. This overpayment resulted from the supplier's failure to apply a contractually required 12% service level credit after their on-time delivery performance fell below the specified threshold."
+    },
+    "discrepancies": [
+      {
+        "finding_id": "F001",
+        "invoice_id": "INV-APX-202411",
+        "line_id": "N/A",
+        "rule_id": "R003",
+        "discrepancy_type": "unapplied_penalty",
+        "description": "The invoice from Apex Logistics Ltd. is missing a contractually required service level credit. The contract mandates that if the supplier's on-time delivery rate falls below 97% in any calendar month, a credit equal to 12% of that month's total invoice must be issued. For the billing period, performance did not meet this threshold, which should have resulted in a credit of $2,940.00. The invoice did not apply this credit, leading to an overpayment.",
+        "clause_reference": "Section 8.1",
+        "clause_text": "Should the Supplier's on-time delivery rate fall below 97% in any calendar month, the Supplier shall issue a credit equal to 12% of that month's invoice total.",
+        "quantity": "1",
+        "unit_price_charged": "0.00",
+        "unit_price_expected": "-2940.00",
+        "line_total_charged": "0.00",
+        "line_total_expected": "-2940.00",
+        "delta": "-2940.00",
+        "severity": "HIGH",
+        "recommendation": "DISPUTE",
+        "confidence": 0.285,
+        "critic_status": "CONFIRMED",
+        "critic_reasoning": "The contractual interpretation is sound. The rule unambiguously requires a 12% credit on the total monthly invoice if on-time delivery targets are missed. The calculated expected cost correctly represents this credit, and the discrepancy arises because the supplier did not issue it.",
+        "narrative": null
+      }
+    ],
+    "compliant_lines": [
+      {
+        "line_id": "L001",
+        "rule_id": "R001",
+        "description": "Line item matches pricing under contract rule R001 (Billing for Standard Delivery - Domestic shipping is calculated monthly on a volume tier basis, with details referenced in Schedule B which is not provided in this chunk.)."
+      },
+      {
+        "line_id": "L001",
+        "rule_id": "R001",
+        "description": "Line item matches pricing under contract rule R001 (Billing for Standard Delivery - Domestic shipping is calculated monthly on a volume tier basis, with details referenced in Schedule B which is not provided in this chunk.)."
+      }
+    ],
+    "recommendations": [
+      "Recover the INR 2940.00 overpayment from Apex Logistics Ltd. for the unapplied service level credit.",
+      "Implement a pre-payment check to ensure all future invoices from this supplier correctly apply service level credits per contract section 8.1.",
+      "Review previous billing periods to determine if this same error has occurred before."
+    ],
+    "report_generated_at": "2026-09-09T19:09:12.020830+00:00",
+    "data_required_flags": [],
+    "review_flags": [],
+    "rules_never_billed": [
+      "R002"
+    ],
+    "missing_credits": [],
+    "price_drifts": []
+  }
+}

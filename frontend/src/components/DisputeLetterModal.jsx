@@ -13,15 +13,16 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { jsPDF } from 'jspdf';
-import { generateDisputeLetter, getDisputeLetter, reviseDisputeLetter } from '../api';
+import { generateDisputeLetter, getDisputeLetter, reviseDisputeLetter, getProcedureDAG } from '../api';
 import {
   Sparkles, Smile, AlertTriangle, Printer, Edit3,
-  Copy, Check, Mail, FileDown, ChevronLeft, Scale, User
+  Copy, Check, Mail, FileDown, ChevronLeft, Scale, User, GitBranch
 } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 import { useToast } from './ui/ToastProvider';
+import ProcedureDAGViewer from './ProcedureDAGViewer';
 
 const labelClass = 'block text-xs font-semibold text-slate-700 uppercase tracking-wide';
 
@@ -57,8 +58,9 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
   const [isRevising, setIsRevising] = useState(false);
   
   // Custom UI states
-  const [previewTab, setPreviewTab] = useState('print'); // 'edit' | 'print'
+  const [previewTab, setPreviewTab] = useState('print'); // 'edit' | 'print' | 'sop'
   const [activeTone, setActiveTone] = useState(''); // 'collaborative' | 'formal' | 'strict'
+  const [procedureDag, setProcedureDag] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -76,10 +78,18 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
         if (ignore) return;
         setLetterText(data.letter_text);
         setLetterHtml(data.letter_html || '');
+        if (data.procedure_dag) {
+          setProcedureDag(data.procedure_dag);
+        } else {
+          getProcedureDAG('dispute_recovery').then(setProcedureDag).catch(() => {});
+        }
         setStep('preview');
       })
       .catch(() => {
-        if (!ignore) setStep((currentStep) => (currentStep === 'preview' ? currentStep : 'form'));
+        if (!ignore) {
+          getProcedureDAG('dispute_recovery').then(setProcedureDag).catch(() => {});
+          setStep((currentStep) => (currentStep === 'preview' ? currentStep : 'form'));
+        }
       })
       .finally(() => {
         if (!ignore) setIsHydrating(false);
@@ -110,6 +120,11 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
       const data = await generateDisputeLetter(payload);
       setLetterText(data.letter_text);
       setLetterHtml(data.letter_html || '');
+      if (data.procedure_dag) {
+        setProcedureDag(data.procedure_dag);
+      } else {
+        getProcedureDAG('dispute_recovery').then(setProcedureDag).catch(() => {});
+      }
       setStep('preview');
       setActiveTone('formal'); // Default initial tone is formal
     } catch (err) {
@@ -517,6 +532,18 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
                   <Edit3 className="h-3.5 w-3.5 stroke-[1.5]" />
                   Edit Draft
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('sop')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                    previewTab === 'sop'
+                      ? 'bg-white text-indigo-700 shadow-sm font-bold'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <GitBranch className="h-3.5 w-3.5 stroke-[1.5] text-indigo-500" />
+                  Recovery SOP (DAG)
+                </button>
               </div>
             </div>
           </div>
@@ -529,7 +556,11 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
               </div>
             )}
 
-            {previewTab === 'edit' ? (
+            {previewTab === 'sop' ? (
+              <div className="absolute inset-0 bg-slate-50 border border-slate-200 rounded-xl p-5 overflow-y-auto shadow-inner">
+                <ProcedureDAGViewer procedureDag={procedureDag} />
+              </div>
+            ) : previewTab === 'edit' ? (
               <textarea
                 value={letterText}
                 onChange={(e) => setLetterText(e.target.value)}

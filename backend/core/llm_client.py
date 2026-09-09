@@ -10,7 +10,8 @@ import os
 import time
 import json
 import structlog
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List
 
 import google.generativeai as genai
 
@@ -19,6 +20,45 @@ from backend.core.mock_router import get_mock_response
 from backend.core.schema_utils import clean_vertex_schema
 
 logger = structlog.get_logger()
+
+
+# --- Fix #13: Proper response wrapper dataclasses (replaces dynamic type() objects) ---
+
+@dataclass
+class StreamDelta:
+    content: str = ""
+
+@dataclass
+class StreamChoice:
+    delta: StreamDelta = field(default_factory=StreamDelta)
+
+@dataclass
+class StreamChunk:
+    choices: List[StreamChoice] = field(default_factory=list)
+
+@dataclass
+class ResponseMessage:
+    content: str = ""
+
+@dataclass
+class ResponseChoice:
+    message: ResponseMessage = field(default_factory=ResponseMessage)
+
+@dataclass
+class ResponseUsage:
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    candidates_token_count: int = 0
+
+@dataclass
+class CompatibleResponse:
+    choices: List[ResponseChoice] = field(default_factory=list)
+    usage: ResponseUsage = field(default_factory=ResponseUsage)
+
+@dataclass
+class MockChunkObj:
+    text: str = ""
 
 
 class OpenAICompatibleClient:
@@ -68,7 +108,7 @@ class OpenAICompatibleClient:
                                                 delta = choices[0].get("delta", {})
                                                 content = delta.get("content", "")
                                                 if content:
-                                                    yield type("Chunk", (), {"choices": [type("Choice", (), {"delta": type("Delta", (), {"content": content})()})]})()
+                                                    yield StreamChunk(choices=[StreamChoice(delta=StreamDelta(content=content))])
                                         except Exception:
                                             continue
                     return stream_generator()
@@ -106,26 +146,14 @@ class OpenAICompatibleClient:
                                     except Exception:
                                         continue
 
-                            class MessageObj:
-                                def __init__(self, content):
-                                    self.content = content
-
-                            class ChoiceObj:
-                                def __init__(self, message):
-                                    self.message = message
-
-                            class UsageObj:
-                                def __init__(self, prompt, completion):
-                                    self.prompt_tokens = prompt
-                                    self.completion_tokens = completion
-                                    self.candidates_token_count = completion
-
-                            class ResponseObj:
-                                def __init__(self, content, prompt_t, comp_t):
-                                    self.choices = [ChoiceObj(MessageObj(content))]
-                                    self.usage = UsageObj(prompt_t, comp_t)
-
-                            return ResponseObj(full_content, prompt_tokens, completion_tokens)
+                            return CompatibleResponse(
+                                choices=[ResponseChoice(message=ResponseMessage(content=full_content))],
+                                usage=ResponseUsage(
+                                    prompt_tokens=prompt_tokens,
+                                    completion_tokens=completion_tokens,
+                                    candidates_token_count=completion_tokens,
+                                ),
+                            )
 
                         # Otherwise standard JSON response
                         try:
@@ -133,28 +161,17 @@ class OpenAICompatibleClient:
                         except Exception as exc:
                             raise RuntimeError(f"OmniRoute returned non-JSON payload: {raw_text[:200]}") from exc
 
-                        class MessageObj:
-                            def __init__(self, content):
-                                self.content = content
-
-                        class ChoiceObj:
-                            def __init__(self, message):
-                                self.message = message
-
-                        class UsageObj:
-                            def __init__(self, usage_dict):
-                                self.prompt_tokens = usage_dict.get("prompt_tokens", 0)
-                                self.completion_tokens = usage_dict.get("completion_tokens", 0)
-                                self.total_tokens = usage_dict.get("total_tokens", 0)
-
-                        class ResponseObj:
-                            def __init__(self, raw):
-                                choices = raw.get("choices", [])
-                                msg_content = choices[0].get("message", {}).get("content", "") if choices else ""
-                                self.choices = [ChoiceObj(MessageObj(msg_content))]
-                                self.usage = UsageObj(raw.get("usage", {}))
-
-                        return ResponseObj(data)
+                        raw_choices = data.get("choices", [])
+                        msg_content = raw_choices[0].get("message", {}).get("content", "") if raw_choices else ""
+                        raw_usage = data.get("usage", {})
+                        return CompatibleResponse(
+                            choices=[ResponseChoice(message=ResponseMessage(content=msg_content))],
+                            usage=ResponseUsage(
+                                prompt_tokens=raw_usage.get("prompt_tokens", 0),
+                                completion_tokens=raw_usage.get("completion_tokens", 0),
+                                total_tokens=raw_usage.get("total_tokens", 0),
+                            ),
+                        )
 
 
 class GroqResponseWrapper:
@@ -439,19 +456,16 @@ class SmartGenerativeModel:
         response = self.real_model.chat.completions.create(**params)
         for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
-                yield type('MockChunk', (), {'text': chunk.choices[0].delta.content})()
+                yield MockChunkObj(text=chunk.choices[0].delta.content)
 
     def _mock_stream(self, contents, generation_config=None):
         import time
         mock_resp = get_mock_response(contents, generation_config)
         text = mock_resp.text
         words = text.split(" ")
-        class MockChunk:
-            def __init__(self, text):
-                self.text = text
         for i in range(0, len(words), 3):
             chunk_text = " ".join(words[i:i+3]) + (" " if i+3 < len(words) else "")
-            yield MockChunk(chunk_text)
+            yield MockChunkObj(text=chunk_text)
             time.sleep(0.02)
 
 
@@ -603,3 +617,14 @@ def get_llm():
         location=location,
     )
     return _llm_instance
+
+
+def reset_llm() -> None:
+    """
+    Fix #14: Clears the cached LLM singleton so the next call to get_llm()
+    re-initializes with current environment settings. Call this when LLM
+    provider configuration changes at runtime (e.g. via the Settings page).
+    """
+    global _llm_instance
+    _llm_instance = None
+    logger.info("LLM client singleton cleared. Next get_llm() call will re-initialize.")

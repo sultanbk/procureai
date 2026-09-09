@@ -21,6 +21,7 @@ from decimal import Decimal
 from backend.core.db import get_db
 from backend.core.config import FRONTEND_BASE_URL
 from backend.core.time import utc_now_iso
+from backend.core.encryption import encrypt_value, decrypt_value
 from backend.models.audit import NotificationSettings
 from backend.models.schemas import AuditReport, AuditSummary
 
@@ -94,12 +95,15 @@ async def update_notification_settings(
         settings = NotificationSettings(id=1)
         db.add(settings)
 
-    for field, value in update_data.model_dump(exclude_unset=True).items():
+    for field_name, value in update_data.model_dump(exclude_unset=True).items():
         if value is not None:
             if isinstance(value, bool):
-                setattr(settings, field, 1 if value else 0)
+                setattr(settings, field_name, 1 if value else 0)
+            elif field_name == "smtp_password":
+                # Fix #9: Encrypt SMTP password before storing
+                setattr(settings, field_name, encrypt_value(value))
             else:
-                setattr(settings, field, value)
+                setattr(settings, field_name, value)
 
     await db.commit()
     await db.refresh(settings)
@@ -159,13 +163,15 @@ async def test_email_notification(
     saved = result.scalar_one_or_none()
 
     # Merge passed values with saved values as fallback
+    # Fix #9: Decrypt stored SMTP password for use
+    stored_password = decrypt_value(saved.smtp_password) if saved and saved.smtp_password else None
     settings_obj = NotificationSettings(
         email_to=request.email_to or (saved.email_to if saved else None),
         email_from=request.email_from or (saved.email_from if saved else None),
         smtp_host=request.smtp_host or (saved.smtp_host if saved else None),
         smtp_port=request.smtp_port or (saved.smtp_port if saved else 587),
         smtp_user=request.smtp_user or (saved.smtp_user if saved else None),
-        smtp_password=request.smtp_password or (saved.smtp_password if saved else None),
+        smtp_password=request.smtp_password or stored_password,
     )
 
     if not settings_obj.email_to or not settings_obj.smtp_host:

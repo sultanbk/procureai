@@ -37,9 +37,9 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `GROQ_BASE_URL` | unset | Optional custom base URL for OpenAI-compatible proxies (e.g. `http://localhost:20128/v1` for OmniRoute, vLLM, Ollama) |
 | `GROQ_MODEL` | `llama-3.1-70b-versatile` | Model name for Groq / OpenAI-compatible provider |
 | `GEMINI_API_KEY` | unset | Gemini Developer API key |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model name |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Gemini model name |
 | `GOOGLE_CLOUD_PROJECT` | `procureai` in `llm_client.py` fallback | Vertex AI project |
-| `GOOGLE_CLOUD_LOCATION` | `us-central1` | Vertex AI region |
+| `GOOGLE_CLOUD_LOCATION` | `global` (or `us-central1`) | Vertex AI region / location |
 
 ## Frontend Environment Variables
 
@@ -92,7 +92,7 @@ GEMINI_MODEL=gemini-3.7-flash
 ```ini
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=us-central1
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.7-flash
 ```
 
 Assumption: Vertex AI authentication is provided through the Google SDK environment, such as `GOOGLE_APPLICATION_CREDENTIALS` or application default credentials. The code initializes `vertexai.init(project=..., location=...)` but does not manage credential files itself.

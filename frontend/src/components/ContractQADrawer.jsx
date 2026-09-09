@@ -12,9 +12,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, ChevronRight, FileText, Loader2, Send, Sparkles, X } from 'lucide-react';
+import { Bot, ChevronRight, FileText, Loader2, Send, Sparkles, X, Network, ShieldCheck } from 'lucide-react';
 import { chatWithContract } from '../api';
 import Drawer from './ui/Drawer';
+import ReasoningSubgraphModal from './ReasoningSubgraphModal';
+import RetrievalPassCard from './RetrievalPassCard';
 
 const DELIMITER = '\n\n---CITATIONS---\n';
 
@@ -48,6 +50,9 @@ function parseStreamPayload(rawText) {
     content: answer.replace(/\[CONFIDENCE:\s*(HIGH|MEDIUM|NOT_FOUND)\]/i, '').trim(),
     confidence,
     citations: metadata?.citations || [],
+    reasoningSubgraph: metadata?.reasoning_subgraph || null,
+    retrievalPassCard: metadata?.retrieval_pass_card || null,
+    procedureDag: metadata?.procedure_dag || null,
   };
 }
 
@@ -68,6 +73,8 @@ export default function ContractQADrawer({ isOpen, onClose, auditId, supplierNam
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [openCitations, setOpenCitations] = useState({});
+  const [activeSubgraph, setActiveSubgraph] = useState(null);
+  const [isSubgraphOpen, setIsSubgraphOpen] = useState(false);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -247,6 +254,29 @@ export default function ContractQADrawer({ isOpen, onClose, auditId, supplierNam
                       {confidenceLabel(message.confidence)}
                     </span>
                   )}
+                  {message.reasoningSubgraph && (
+                    <>
+                      <span className="text-slate-200">·</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSubgraph(message.reasoningSubgraph);
+                          setIsSubgraphOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50/80 hover:bg-indigo-100/80 px-2 py-0.5 rounded-full border border-indigo-200/60"
+                      >
+                        <Network className="w-3 h-3 text-indigo-500" />
+                        <span>Reasoning Graph</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Retrieval Pass Card (Context Substrate 5-Stage Verification) */}
+              {message.role === 'assistant' && message.retrievalPassCard && (
+                <div className="w-full max-w-[84%] mt-2 pl-0.5">
+                  <RetrievalPassCard passCard={message.retrievalPassCard} isCompact={true} />
                 </div>
               )}
 
@@ -321,6 +351,13 @@ export default function ContractQADrawer({ isOpen, onClose, auditId, supplierNam
         </div>
       </div>
 
+      {/* Context Substrate Reasoning Subgraph Modal */}
+      <ReasoningSubgraphModal
+        isOpen={isSubgraphOpen}
+        onClose={() => setIsSubgraphOpen(false)}
+        subgraph={activeSubgraph}
+        title={`Reasoning Graph: ${supplierName || 'Contract Query'}`}
+      />
     </Drawer>
   );
 }
