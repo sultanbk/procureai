@@ -170,7 +170,7 @@ export default function AutoAudit({ onSelectAudit, onGoToLibrary }) {
 
               <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-200 text-xs text-slate-600 space-y-1 max-w-full">
                 <span className="font-semibold uppercase tracking-wide block text-slate-700">Watch Directory:</span>
-                <span className="font-mono text-slate-800 select-all block whitespace-pre-wrap leading-relaxed">{status.watch_dir}</span>
+                <span className="font-mono text-slate-800 select-all block whitespace-pre-wrap break-all leading-relaxed">{status.watch_dir}</span>
               </div>
 
               <div className="flex gap-3 pt-2">

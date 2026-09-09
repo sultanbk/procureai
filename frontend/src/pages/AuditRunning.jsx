@@ -146,16 +146,19 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
     };
   }, [auditId, onComplete]);
 
+  // Final elapsed time derived when audit has finished; otherwise dynamic seconds
+  const displaySeconds = (() => {
+    if ((auditState?.status === 'COMPLETE' || auditState?.status === 'FAILED') && auditState?.created_at && auditState?.completed_at) {
+      const start = parseUtcDate(auditState.created_at).getTime();
+      const end = parseUtcDate(auditState.completed_at).getTime();
+      return Math.max(0, Math.round((end - start) / 1000));
+    }
+    return secondsElapsed;
+  })();
+
   // Live Timer Tracker synchronized with backend start timestamp
   useEffect(() => {
-    if (!auditState) return;
-
-    if (auditState.status === 'COMPLETE' || auditState.status === 'FAILED') {
-      if (auditState.created_at && auditState.completed_at) {
-        const start = parseUtcDate(auditState.created_at).getTime();
-        const end = parseUtcDate(auditState.completed_at).getTime();
-        setSecondsElapsed(Math.max(0, Math.round((end - start) / 1000)));
-      }
+    if (!auditState || auditState.status === 'COMPLETE' || auditState.status === 'FAILED') {
       return;
     }
 
@@ -170,7 +173,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
     const timerInterval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timerInterval);
-  }, [auditState?.status, auditState?.created_at, auditState?.completed_at]);
+  }, [auditState]);
 
   const STATUS_DETAILS = {
     PENDING: {
@@ -345,7 +348,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Elapsed Time</span>
                 <span className="text-sm font-semibold text-slate-700 mt-1 flex items-center gap-1 font-mono">
                   <Clock className="h-3.5 w-3.5 text-teal-600" />
-                  {formatElapsed(secondsElapsed)}
+                  {formatElapsed(displaySeconds)}
                 </span>
               </div>
               <div className="h-8 w-px bg-slate-100" />

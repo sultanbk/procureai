@@ -13,9 +13,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  ArrowLeft, Sparkles, FileCheck, Terminal, ChevronDown, ChevronUp,
+  ArrowLeft, FileCheck, Terminal, ChevronDown, ChevronUp,
   ListChecks, MessageSquare, AlertTriangle, ShieldAlert, FileQuestion,
-  DollarSign, Award, Calendar, User, FileText, CheckCircle, Info, ShieldCheck
+  Award, CheckCircle, ShieldCheck
 } from 'lucide-react';
 import SummaryCard from '../components/SummaryCard';
 import DiscrepancyTable from '../components/DiscrepancyTable';
@@ -29,6 +29,16 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
+
+const TYPE_LABELS = {
+  overcharge: 'Direct Overcharge',
+  missed_discount: 'Unapplied Discount',
+  unapplied_penalty: 'Unapplied SLA Penalty',
+  incorrect_rate: 'Rate Sheet Mismatch',
+  missing_credit: 'Unapplied Volume Credit',
+  period_mismatch: 'Billing Cycle Mismatch',
+  other: 'General Compliance Discrepancy'
+};
 
 export default function AuditReport({ report, onBack }) {
   const [logs, setLogs] = useState([]);
@@ -46,6 +56,8 @@ export default function AuditReport({ report, onBack }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(null);
   const [flagNotes, setFlagNotes] = useState({});
   const [submittingFlagIdx, setSubmittingFlagIdx] = useState(null);
+
+  const discrepancies = report?.discrepancies;
 
   const associatedFinding = useMemo(() => {
     if (!report?.review_flags) return {};
@@ -110,20 +122,10 @@ export default function AuditReport({ report, onBack }) {
     }
   }, [report]);
 
-  const typeLabels = {
-    overcharge: 'Direct Overcharge',
-    missed_discount: 'Unapplied Discount',
-    unapplied_penalty: 'Unapplied SLA Penalty',
-    incorrect_rate: 'Rate Sheet Mismatch',
-    missing_credit: 'Unapplied Volume Credit',
-    period_mismatch: 'Billing Cycle Mismatch',
-    other: 'General Compliance Discrepancy'
-  };
-
   const leakageByType = useMemo(() => {
-    if (!report?.discrepancies) return {};
+    if (!discrepancies) return {};
     const acc = {};
-    report.discrepancies.forEach(d => {
+    discrepancies.forEach(d => {
       const rawType = d.discrepancy_type || 'other';
       const absDelta = Math.abs(parseFloat(d.delta || 0));
       if (!acc[rawType]) {
@@ -133,40 +135,35 @@ export default function AuditReport({ report, onBack }) {
       acc[rawType].total += absDelta;
     });
     return acc;
-  }, [report?.discrepancies]);
+  }, [discrepancies]);
 
   const sortedLeakageTypes = useMemo(() => {
     return Object.entries(leakageByType)
       .map(([type, data]) => ({
         type,
-        label: typeLabels[type] || type.replace(/_/g, ' '),
+        label: TYPE_LABELS[type] || type.replace(/_/g, ' '),
         count: data.count,
         total: data.total,
       }))
       .sort((a, b) => b.total - a.total);
   }, [leakageByType]);
 
-  const maxTypeLeakage = useMemo(() => {
-    if (sortedLeakageTypes.length === 0) return 1;
-    return Math.max(...sortedLeakageTypes.map(t => t.total));
-  }, [sortedLeakageTypes]);
-
   const topDiscrepancies = useMemo(() => {
-    if (!report?.discrepancies) return [];
-    return [...report.discrepancies]
+    if (!discrepancies) return [];
+    return [...discrepancies]
       .sort((a, b) => Math.abs(parseFloat(b.delta || 0)) - Math.abs(parseFloat(a.delta || 0)))
       .slice(0, 3);
-  }, [report?.discrepancies]);
+  }, [discrepancies]);
 
   const chunkedDiscrepancies = useMemo(() => {
-    if (!report?.discrepancies) return [];
+    if (!discrepancies) return [];
     const chunks = [];
     const chunkSize = 4; // fit exactly 4 detailed findings per page to stay spacious
-    for (let i = 0; i < report.discrepancies.length; i += chunkSize) {
-      chunks.push(report.discrepancies.slice(i, i + chunkSize));
+    for (let i = 0; i < discrepancies.length; i += chunkSize) {
+      chunks.push(discrepancies.slice(i, i + chunkSize));
     }
     return chunks;
-  }, [report?.discrepancies]);
+  }, [discrepancies]);
 
   const leakageVal = Math.abs(parseFloat(report?.summary?.total_leakage || 0));
   const totalAuditedLines = report?.summary?.total_lines_audited || 0;
@@ -228,7 +225,7 @@ export default function AuditReport({ report, onBack }) {
             >
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-5 w-5 text-orange-500 stroke-[1.5]" />
-                <span className="text-sm font-bold font-display">Audit Integrity &amp; Compliance Flags (v4)</span>
+                <span className="text-sm font-bold font-display">Audit Integrity &amp; Compliance Flags</span>
                 <Badge variant="warning">{(report.review_flags?.length || 0) + (report.data_required_flags?.length || 0)} Total Flags</Badge>
               </div>
               {showComplianceFlags ? (
@@ -699,12 +696,12 @@ export default function AuditReport({ report, onBack }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-xs">
-                    {topDiscrepancies.map((d, i) => (
+                    {topDiscrepancies.map((d) => (
                       <tr key={d.finding_id} className="hover:bg-slate-50">
                         <td className="py-2.5 px-3 font-semibold text-slate-800">
                           {d.invoice_id} <span className="text-[10px] font-mono text-slate-400 block font-normal">Line: {d.line_id}</span>
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 font-medium">{typeLabels[d.discrepancy_type] || d.discrepancy_type.replace(/_/g, ' ')}</td>
+                        <td className="py-2.5 px-3 text-slate-600 font-medium">{TYPE_LABELS[d.discrepancy_type] || d.discrepancy_type.replace(/_/g, ' ')}</td>
                         <td className="py-2.5 px-3 text-slate-500 font-mono text-[10px]">{d.clause_reference}</td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-rose-600">
                           -${Math.abs(parseFloat(d.delta)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -797,7 +794,7 @@ export default function AuditReport({ report, onBack }) {
                                 </span>
                               </td>
                               <td className="py-3.5 pr-2 align-top font-semibold text-slate-700 text-[11px]">
-                                {typeLabels[d.discrepancy_type] || d.discrepancy_type.replace(/_/g, ' ')}
+                                {TYPE_LABELS[d.discrepancy_type] || d.discrepancy_type.replace(/_/g, ' ')}
                               </td>
                               <td className="py-3.5 pr-2 align-top space-y-1.5">
                                 <p className="text-slate-700 font-medium leading-relaxed">{d.description}</p>

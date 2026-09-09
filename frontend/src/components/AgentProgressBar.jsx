@@ -13,7 +13,7 @@
 
 import Card from './ui/Card';
 import Badge from './ui/Badge';
-import { Check, Loader2, AlertCircle, Hourglass, Play } from 'lucide-react';
+import { Check, Loader2, AlertCircle, Hourglass } from 'lucide-react';
 
 export default function AgentProgressBar({ status, currentAgent, agentsCompleted, partialResults, errorDetail }) {
   const steps = [

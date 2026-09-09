@@ -42,17 +42,11 @@ export default function AuditDocumentPanel({ auditId, discrepancies = [] }) {
   const [activeTab, setActiveTab] = useState('documents'); // 'documents' | 'findings'
   const [copiedId, setCopiedId] = useState(null);
 
+  const activeFindingId = selectedFindingId || discrepancies[0]?.finding_id || '';
   const selectedFinding = useMemo(
-    () => discrepancies.find((item) => item.finding_id === selectedFindingId),
-    [discrepancies, selectedFindingId]
+    () => discrepancies.find((item) => item.finding_id === activeFindingId),
+    [discrepancies, activeFindingId]
   );
-
-  // Sync selected finding if it changes or gets initialized
-  useEffect(() => {
-    if (!selectedFindingId && discrepancies.length > 0) {
-      setSelectedFindingId(discrepancies[0].finding_id);
-    }
-  }, [discrepancies, selectedFindingId]);
 
   useEffect(() => {
     let ignore = false;
@@ -79,7 +73,9 @@ export default function AuditDocumentPanel({ auditId, discrepancies = [] }) {
 
     if (!auditId || !selectedDocumentId) return undefined;
 
-    setIsLoadingDocument(true);
+    Promise.resolve().then(() => {
+      if (!ignore) setIsLoadingDocument(true);
+    });
 
     fetchAuditDocumentBlob(auditId, selectedDocumentId)
       .then((blob) => {

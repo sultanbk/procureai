@@ -15,8 +15,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { jsPDF } from 'jspdf';
 import { generateDisputeLetter, getDisputeLetter, reviseDisputeLetter } from '../api';
 import {
-  FileText, Sparkles, Smile, AlertTriangle, Printer, Edit3,
-  Copy, Check, Mail, FileDown, Sliders, ChevronLeft, Scale, User
+  Sparkles, Smile, AlertTriangle, Printer, Edit3,
+  Copy, Check, Mail, FileDown, ChevronLeft, Scale, User
 } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
@@ -64,8 +64,13 @@ export default function DisputeLetterModal({ isOpen, onClose, auditId, supplierN
     let ignore = false;
     if (!isOpen || !auditId) return undefined;
 
-    setError(null);
-    setIsHydrating(true);
+    Promise.resolve().then(() => {
+      if (!ignore) {
+        setError(null);
+        setIsHydrating(true);
+      }
+    });
+
     getDisputeLetter(auditId)
       .then((data) => {
         if (ignore) return;
