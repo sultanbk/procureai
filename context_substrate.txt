@@ -1,0 +1,630 @@
+System Overview
+SynaptAI is a context substrate layer that converts unstructured documents into a queryable knowledge graph. It combines graph databases, vector stores, and LLM-driven extraction to enable both structural traversal and semantic search over your data.
+
+📐 Architecture
+💡
+Every node in the graph has an embedding signature stored in the GN index with a direct Neo4j ID link — enabling semantic search that resolves instantly to graph nodes without fuzzy matching.
+🔗
+Neo4j
+Concept Graph
+Entities, concepts, propositions, procedures as DAGs, and relationships between them. The structural backbone.
+📄
+Milvus KS
+Knowledge Store
+Embedded document chunks for semantic text search. Raw source material indexed by meaning.
+📋
+Milvus PS
+Procedural Store
+Embedded procedure intents for SOP retrieval. Find the right procedure by describing what you need.
+🧠
+Milvus GN
+Graph Node Index
+Embedded node signatures with direct Neo4j IDs. Bridges semantic search and graph traversal.
+🔄 Ingestion Pipeline
+Documents flow through a 5-service pipeline. Each service hands off over Kafka (job_events) and streams its progress to the UI in real time.
+
+Ingestion
+synapt0001
+→
+Normalize
+synapt0002
+→
+Chunk
+synapt0003
+→
+Knowledge
+synapt0004
+→
+Store
+synapt0005
+→
+Done
+job complete
+🔑 Key Concepts
+Concept	Description
+Provider	An isolated knowledge base. Each provider has its own Neo4j subgraph and Milvus collections.
+Semantic Resolution	When an entity is extracted, its embedding is compared against existing nodes. If similarity > 0.85, it merges.
+Unified Extraction	One LLM call per chunk extracts entities, concepts, relationships, and propositions together.
+Extraction Density	Controls how many nodes/edges the LLM extracts per chunk: low (3-5), medium (5-10), or high (comprehensive).
+SOP as DAG	Standard Operating Procedures are stored as Directed Acyclic Graphs with PRECEDES edges.
+Reasoning Subgraph	When querying, the system returns the exact nodes and edges it traversed to answer the question.
+Authentication & Access
+Access to the Admin Console is gated by an email + password account secured with a one-time passcode (OTP), with optional Microsoft / SAML single sign-on. Roles control what each user can do.
+
+🏢
+Only work email addresses are accepted. Public providers (Gmail, Yahoo, Outlook and similar) are rejected at both sign-up and sign-in.
+🆕 Sign Up
+New users register with full name, username, work email, country, mobile and a password (minimum 8 characters). The email is verified by OTP before the account is created.
+
+Details
+work email
+→
+OTP
+email code
+→
+Verify
+6 digits
+→
+Account
+role: user
+New accounts are created with the user role. An administrator grants further access from the Security panel.
+
+🔐 Sign In
+Returning users sign in directly with email + password — no OTP step. On success the session is issued as a short-lived access token plus a refresh token.
+
+Email + Pwd
+credentials
+→
+Verify
+auth service
+→
+Tokens
+access + refresh
+🔁 Other Flows
+Flow	How it works
+SSO	Microsoft OAuth or SAML enterprise login.
+Forgot password	Enter your work email → receive an OTP → set a new password (confirmed twice, min 8 chars).
+Session refresh	The access token is silently refreshed with the refresh token; expiry forces a re-login.
+Sign out	Clears the stored tokens and ends the session; recorded in User Activity.
+👥 Roles (RBAC)
+Access has three independent axes: a business role (what you can do), an operational role (platform/ops access), and a designation(which gates promotion eligibility).
+
+Business roles
+Role	Can do
+user	Base access — query, ingest and browse providers they have access to.
+cp_contributor	Ingest and manage content within assigned Context Providers (CPs).
+cp_admin	Manage Context Providers — create, configure and grant access.
+org_admin	Manage users and organisational administration (roles, designations).
+synapt_admin	Full control — all governance, platform and user-management actions.
+Operational roles
+Role	Can do
+op_viewer	Default for everyone — read-only operational dashboards.
+op_devops	Pipeline and DevOps actions.
+op_platform_admin	Full platform administration and write access.
+Designations
+employeeteam_leadit_admintechnical_architectsynapt_engineer
+
+✅
+A user's designation determines which roles they can be promoted to — e.g. only a synapt_engineer is eligible for synapt_admin. Per-provider access (read / write / update) is granted separately, regardless of role.
+Admin Console
+The console is organised into five groups in the left navigation. This is a map of every tab and what it does — deeper guides for ingestion, the graph, querying, the agent and explainability follow in their own sections.
+
+🧱
+Substrate Core
+Tab	What it does
+Context Provider	Create and manage context providers — each an isolated knowledge base with its own graph and vector collections. Generates a Client ID.
+Data Ingestion	Upload documents and watch the 5-stage pipeline in real time. Unified Ingest adds file, URL, SharePoint, Jira, Confluence, CRM and database sources.
+Context Graph	Explore the knowledge graph — search nodes, filter by type, inspect node detail and navigate relationships.
+Query Context Graph	Chat with ingested knowledge and view the reasoning subgraph. Includes the Agent and Task Agent (executes SOPs / multi-step tasks).
+🛡️
+Governance
+Tab	What it does
+Audit Logs	Trace IDs, stage-level I/O, service-to-service auth decisions, ingestion records, LLM calls, sessions and Kafka dead-letters.
+Security	Role-based access, users, sessions, encryption status and per-provider access grants (read / write / update).
+User Activity	Real-time sign-ups, sign-ins, sign-outs, active sessions and location.
+Explainability	Per-query response traces, confidence distribution, the Reasoning Trace and the Retrieval Pass Card. See the Explainability section.
+📡
+Observability
+Tab	What it does
+Context Status	Health of backend services and providers at a glance.
+Context Monitoring	End-to-end latency, success rate, SLA breaches, events today vs yesterday and daily throughput.
+Pipeline Health	Per-stage ingestion health — adapter, chunking, KG extraction — plus LLM latency trends and failed documents.
+🔗
+Integration & Services
+Tab	What it does
+MCP Servers	Browse registered MCP tools, call them, and view the system prompt exposed to agents.
+Data Connectors	Source connectors, schedules and pipeline rules for automated ingestion.
+Client IDs & apps	Registered agentic-platform connections (S2S clients) and their keys / permissions.
+Consumer Registry	Registered consumers and their usage policies.
+Wiki	This documentation — architecture, workflows, services and configuration.
+⚙️
+Platform
+Tab	What it does
+Product Config	Platform identity, module toggles and product attributes.
+LLM & API Keys	Model-provider settings and external service credentials.
+Infrastructure	Cloud environments, VMs, gateways, databases and AI-service health across the fleet.
+Knowledge / Procedure / Graph Store	Store-level settings — embedding & retrieval (KS), playbooks & policies (PS), entity types & traversal (Graph).
+Correlation & Reasoning · Safety & Controls	Cross-store inference and context ranking; content filters, guardrails and access rules.
+💡
+Every panel is scoped by the provider filter at the top — switch providers to see that knowledge base’s data across all tabs. The light/dark theme toggle lives in the top bar.
+Document Ingestion
+Sources are turned into structured knowledge by a five-service pipeline. Each service runs as a stage, hands off over Kafka (job_events), and streams its progress to the Unified Ingest screen in real time.
+
+🔌 Source Connectors
+The Unified Ingest screen ingests from any of these sources into the selected provider:
+
+Connector	What it ingests	Key fields
+📄 File	Upload PDF, text, Markdown, CSV, SOP, DDL or an archive.	File picker (archives auto-detected)
+🌐 URL	Fetch a web page; optionally crawl same-domain links.	URL · crawl depth 0–2
+📁 SharePoint	Pull a file or folder from SharePoint.	client_id, client_secret, tenant_id, url, is_folder
+🟦 Jira	Ingest issues from a Jira project.	base_url, email, api_token, project_key, max_results
+🟦 Confluence	Ingest pages from a Confluence space.	base_url, email, api_token, space_key, max_results
+☁️ CRM (Salesforce)	Ingest records of a Salesforce object.	username, password, security_token, client_id/secret, object_type, domain
+🗄️ Database	Ingest rows from a SQL table, optionally by date range.	db_type, host, port, database, table, columns, date range, row_limit
+⚙️ Pipeline Stages
+Ingestion
+synapt0001
+→
+Normalize
+synapt0002
+→
+Chunk
+synapt0003
+→
+Knowledge Service
+synapt0004
+→
+Store
+synapt0005
+→
+Done
+job complete
+Service	Stage	What happens	Output
+synapt0001	Ingestion	Accept the source from the chosen connector (upload / fetch / pull), register the job, and emit it onto the pipeline.	Job + raw source
+synapt0002	Normalize	Adapter parses & converts the raw source into normalized Markdown; detects format and extracts pages / tables.	Normalized text + detected format
+synapt0003	Chunk	Split the normalized text into chunks that respect headings, tables and token limits.	KnowledgeChunk[]
+synapt0004	Knowledge Service	One unified LLM call per chunk extracts entities + concepts + relationships + propositions (and procedures for SOPs), then semantic resolution dedupes against existing nodes.	Resolved nodes, edges, propositions
+synapt0005	Store	Persist everything: nodes + edges → Neo4j, chunks → Milvus KS, procedures → Milvus PS + Neo4j DAG, node signatures → GN index.	Data in all 4 stores
+📡
+Live stage status is read from Kafka job_events and shown per document in Data Ingestion and Pipeline Health.
+📁 File Formats (Normalize stage)
+Type	Extensions	How it's normalized
+PDF	.pdf	PDF pipeline — fast tables, no OCR
+Text / Markdown	.txt, .md	Markdown converter
+CSV	.csv	CSV converter
+SOP	.sop	Markdown → ProcedureSignature (stored as a DAG)
+DDL	.sql, .ddl	DBSemanticsSignature + unified extraction
+Web	URL	HTML → Markdown converter
+🎚️ Extraction Density
+Controls how much the Knowledge Service extracts per chunk.
+
+Level	Entities	Concepts	Relationships	Propositions	Use Case
+Low	3–5	1–3	2–4	2–4	Quick ingestion, simple docs
+Medium	5–10	2–5	4–8	4–8	Default — balanced
+High	All	All	All	All	Comprehensive analysis
+🎛️ Extraction Mode
+A per-provider preset (extraction_mode) that tunes the Knowledge Service's extraction strategy. Set it when creating or editing a Context Provider, or per ingest job. Default is balanced.
+
+Mode	Behaviour
+fast	Fewest passes, minimal density — quickest ingestion. Captures only the most salient entities & relationships.
+balanceddefault	Balanced coverage vs. speed. Recommended preset for most documents.
+max_extraction	Maximum density — extracts every entity, concept and relationship the model can find.
+deep	Multi-pass, thorough reasoning. Highest recall on long or complex documents.
+fact_dense	Optimized for dense factual propositions (triples). Best for spec / reference material.
+precise	High-precision — favors accuracy over recall. Fewer but higher-confidence extractions.
+auto	Picks a preset automatically based on document characteristics.
+🛠️
+Modes are defined in config.yaml and map onto the extraction density and entity / relationship taxonomy used by the Knowledge Service — adjustable without code changes.
+🔗 Semantic Resolution
+During the Knowledge Service stage, each new node is embedded and compared against existing nodes via the GN index; close matches are merged instead of duplicated.
+
+Node Type	Embedding Input	Example
+Entity	{label}: {description}	BT Group: British telecommunications company
+Concept	{name}: {definition}. Also known as: {aliases}	MRC: Monthly Recurring Charge. Also known as: Monthly Fee
+Procedure	{name}: {intent}	Circuit Decommission: Decommission and cease billing
+Step	{description}	Notify carrier of pending decommission and request cease date
+🔑
+Entity merge threshold: 0.85. Concept merge threshold: 0.82.
+🌐 Web Ingestion
+Setting	Description
+crawl depth = 0	Single page only
+crawl depth = 1	Page + all same-domain links found on it
+crawl depth = 2	Page + links + links from those pages
+Domain	Same-domain only — external links are skipped
+Knowledge Graph
+The graph stores entities, concepts, procedures, and their relationships in Neo4j. Every node also has an embedding signature in the GN vector index with a direct neo4j_id link.
+
+🏗️ Node Types
+🏷️ Entity
+Named things: people, orgs, circuits, devices, locations
+e.g. BT Group, CID-44821, LON-CE-01
+💡 Concept
+Definitions and terms with aliases
+e.g. MRC (Monthly Recurring Charge)
+📌 Proposition
+Factual triples: (subject, predicate, object)
+e.g. (CID-44821, has_bandwidth, 100Mbps)
+📋 Procedure
+Named SOP with intent. Parent of Step nodes.
+e.g. Circuit Decommissioning and Billing Cessation
+▶️ Step
+Individual step in a procedure DAG
+e.g. Step 3: Remove circuit config from edge routers
+📁 Document
+Ingested file. Connected to Chunks via CONTAINS.
+e.g. contract.pdf, decom_sop.txt
+📄 Chunk
+Text segment from a document. Stored in KS with embedding.
+e.g. 512-token segment with heading context
+🗄️ TableSchema
+DDL table with column descriptions
+e.g. circuits (circuit_id, bandwidth, carrier)
+🔗 Edge Vocabulary (20 types)
+default
+Edge Type	From	To	Meaning
+CONTAINS	Document	Chunk	Document contains this chunk of text
+MENTIONS	Chunk	Entity	Chunk mentions this entity
+DEFINES	Chunk	Concept	Chunk defines this concept
+ASSERTS	Chunk	Proposition	Chunk asserts this fact
+HAS_STEP	Procedure	Step	Procedure contains this step
+PRECEDES	Step	Step	This step must complete before the next
+REFERENCES	Step	Entity	Step references this entity
+RELATED_TO	Entity	Entity	General semantic relationship
+INSTANCE_OF	Entity	Concept	Entity is an instance of a concept
+PART_OF	Entity	Entity	Component relationship
+TERMINATES_AT	Entity	Entity	Circuit/service endpoint
+PROVISIONED_FROM	Entity	Entity	Service origin
+GOVERNED_BY	Entity	Entity	Regulatory relationship
+BILLED_ON	Entity	Entity	Billing relationship
+IMPLEMENTED_BY	Entity	Entity	Implementation link
+DESCRIBED_BY	Entity	Entity	Documentation link
+CLASSIFIED_AS	Entity	Entity	Categorization
+SOURCED_FROM	Entity	Entity	Data origin
+FLAGS	Entity	Entity	Issue/exception flag
+SUPERSEDES	Entity	Entity	Version replacement
+🧩 Entity Type Taxonomy (102 types · 7 categories)
+default
+When the Knowledge Service extracts a node, it classifies it into one of these entity types. The taxonomy is grouped by category and spans organizational, business, technology, software-engineering, security and domain concepts.
+
+Organizational
+10
+Person
+Role
+Team
+Department
+Organization
+Stakeholder
+User
+Customer
+Vendor
+Partner
+Business
+19
+BusinessUnit
+Product
+Service
+Offering
+Capability
+BusinessProcess
+Workflow
+Task
+Activity
+Operation
+Policy
+Rule
+Regulation
+Standard
+ComplianceRequirement
+SLA
+KPI
+Metric
+Objective
+Technology
+32
+System
+Application
+SoftwareComponent
+Microservice
+Module
+Library
+Framework
+API
+APIEndpoint
+Interface
+ServiceEndpoint
+Database
+Table
+Schema
+Column
+DataModel
+DataEntity
+DataPipeline
+DataProduct
+DataSet
+DataSource
+File
+Document
+Configuration
+Environment
+Platform
+Infrastructure
+Server
+Container
+Cluster
+Network
+Protocol
+Software Engineering
+15
+CodeRepository
+Package
+Class
+Function
+Method
+Variable
+Parameter
+Exception
+Event
+Message
+Queue
+Topic
+Job
+BatchProcess
+Scheduler
+Security & Governance
+11
+SecurityPolicy
+AccessControl
+Permission
+RoleBinding
+AuthenticationMethod
+AuthorizationRule
+EncryptionStandard
+AuditLog
+Incident
+Risk
+Control
+Domain Concepts
+5
+Concept
+Term
+Definition
+Category
+Tag
+Location & Time
+10
+Location
+Region
+Country
+City
+Site
+Date
+Time
+Duration
+Schedule
+Version
+🔀 Relationship Type Taxonomy (85 types · 8 categories)
+default
+Extracted edges are typed using this relationship vocabulary. These are the semantic predicates the extractor may emit, grouped by category.
+
+Organization
+11
+works_for
+member_of
+part_of
+reports_to
+managed_by
+owned_by
+operated_by
+supported_by
+provided_by
+assigned_to
+responsible_for
+Business
+17
+implements
+governs
+defines
+requires
+enables
+supports
+delivers
+offers
+consumes
+depends_on
+triggers
+initiates
+produces
+uses
+applies_to
+evaluates
+measures
+Process & Workflow
+11
+precedes
+follows
+executes
+invokes
+calls
+returns
+generates
+creates
+updates
+deletes
+transforms
+Technology
+13
+connects_to
+integrates_with
+exposes
+implements_interface
+extends
+inherits_from
+deploys_to
+runs_on
+hosted_on
+configured_in
+stored_in
+retrieved_from
+built_on
+Data
+11
+reads_from
+writes_to
+backed_by
+publishes
+subscribes_to
+contains
+references
+derived_from
+aggregates
+indexes
+validates
+Security & Governance
+9
+authorized_by
+authenticated_by
+encrypted_with
+audited_by
+restricted_by
+approved_by
+complies_with
+violates
+monitored_by
+Software
+7
+imports
+depends_on
+calls_function
+handles_event
+emits_event
+throws_exception
+handled_by
+Time & Version
+6
+created_on
+updated_on
+valid_from
+valid_until
+version_of
+replaced_by
+🛠️
+The entity & relationship taxonomies are injected directly into the LLM extraction prompts via config.yaml, so they can be extended without code changes. Each Context Provider can also override them with a custom entity_types / relationship_types map keyed by category.
+Querying
+Questions are answered by semantically anchoring into the knowledge graph, expanding the neighbourhood, retrieving source chunks, and generating a grounded answer.
+
+🔍 Query Flow
+Embed
+Question → vector
+→
+Search GN
+Semantic anchors
+→
+BFS
+Neo4j traversal
+→
+Search KS
+Chunk retrieval
+→
+Search PS
+Procedures
+→
+LLM
+Generate answer
+Step	What Happens	Key Detail
+1. Embed question	The question is embedded using the configured embedding model	Same model used for node embeddings
+2. Search GN	Semantic search against graph node index. Returns nodes with neo4j_id directly.	Threshold: 0.40. No fuzzy lookup needed.
+3. BFS Expansion	From anchored nodes, expand neighbourhood in Neo4j up to N hops	Returns both nodes AND edges (reasoning subgraph)
+4. Search KS	ANN search in Milvus KS for semantically relevant document chunks	Top-K chunks (default 5)
+5. Search PS	ANN search in Milvus PS for relevant procedures	Included if similarity ≥ 0.75
+6. LLM Answer	Graph context + chunk context + procedure context → LLM generates grounded answer	DSPy ChainOfThought with AnswerSignature
+🧠 Reasoning Subgraph
+Every query response includes a reasoning_subgraph — the exact nodes and edges the system traversed to answer the question.
+
+Field	Description
+nodes	All nodes in the traversed subgraph (with properties)
+edges	All edges connecting those nodes (source, target, type)
+anchor_node_ids	Which nodes were the semantic search entry points
+🕸️ Graph Explorer
+🔍 Semantic Search
+Search bar with node type filters. Results link directly to graph nodes via neo4j_id.
+🎨 Type Filtering
+Legend pills toggle visibility. "Core" preset hides Chunks and Propositions.
+📋 Node Detail
+Click any node to see properties, chunk text, procedure steps, and all connections.
+🔗 Navigation
+Click connections in the sidebar to navigate to that node and highlight its neighbourhood.
+Explainability & Observability
+Every query is fully traceable. A Retrieval Pass Card scores each stage of the retrieval pipeline, and a Reasoning Trace shows the exact graph path, document chunks, and procedures the system used to produce its answer.
+
+🎴 Retrieval Pass Card
+Open it from any row in the Explainability response-trace table. It walks the same five stages the query engine ran, each with a 0–100 score and its own quality + risk signals.
+
+Knowledge
+Milvus KS
+→
+Context Graph
+Neo4j
+→
+Procedure
+Milvus PS
+→
+Fusion
+Weighted merge
+→
+Generation
+LLM answer
+Stage	What it measures	Signals
+Knowledge Store	How many document chunks were retrieved and how relevant they are	Retrieval confidence, avg similarity, coverage, source diversity · Risks: hallucination, knowledge gap, noise
+Context Graph	How the query anchored into the graph and which entities/relationships were traversed	Entity match, relationship confidence, graph relevance, completeness · Risks: contradictions, missing context, fragmentation
+Procedure Store	Which SOP(s) the query consumed and the exact steps used	Match score, step coverage, execution readiness, policy alignment · Risks: ambiguity, missing steps, failure risk
+Fusion Layer	How the three stores were combined into one confidence	Cross-source agreement, consistency, source balance · Risks: conflict, signal entropy
+Generation	How well the LLM grounded its answer in the retrieved context	Groundedness, faithfulness, answer relevance, citation coverage, completeness · Risks: hallucination, model uncertainty
+🎨 Confidence & Risk Scoring
+🎚️
+All scores use one colour scale: 0–40 red, 40–70 orange, 70–100 green.
+Signal type	How to read it
+Quality signals	Higher is better — confidence, similarity, groundedness, coverage. Green = strong.
+Risk signals	Shown as the actual probability, where lower is better — hallucination, missing context, ambiguity. Green = low risk.
+Confidence ring	The query's final blended confidence (Fusion-weighted across all stores).
+🧭 Reasoning Trace
+The graph-trace modal (the graph tag on a response row) opens three tabs:
+
+Trace
+The tool calls and the ordered graph-traversal steps from the semantic anchors outward, each with a per-hop confidence.
+Graph
+An interactive force-directed view of the reasoning subgraph — nodes coloured by type, anchors highlighted.
+Answer
+The query, final confidence band, and the generated answer text.
+🔑
+The trace is reconstructed from the query's graph_path (nodes, edges, anchor_node_ids) stored on every tristore_query_events row.
+📋 Procedure Consumption
+The Procedure Store tab shows which SOP(s) this specific query consumed and the exact steps it used — reconstructed from the Procedure and Stepnodes in the query's graph path, linked by HAS_STEP edges.
+
+State	What you see
+SOP used	The procedure name, version, and the ordered "Steps consumed" list with a match score.
+None used, store has SOPs	A compact note with the count of SOPs available in the store (informational queries don't trigger an SOP).
+Store has no SOPs	An empty state — nothing was ingested as a procedure for this provider.
+🔢 Token Usage
+Source	Behaviour
+Exact	Summed from llm_logs where job_id = query_id and query_type = 'query' — the real prompt/completion tokens for that query's LLM calls.
+Estimated ~	When a query has no linkable LLM log, tokens are estimated from the retrieved context size and answer length (≈ 4 chars/token) and shown with a ~ and an "estimated" note.
+✅
+For exact tokens everywhere, the query service must write a query_id on each tristore_query_events row and reuse it as the llm_logs.job_id for that query's LLM calls.
+📊 Observability Surfaces
+Console Panel	Purpose
+Explainability	Response traces, confidence distribution, Reasoning Trace + Retrieval Pass Card per query
+Context Monitoring	End-to-end latency, success rate, SLA breaches, daily throughput
+Pipeline Health	Per-stage ingestion health: adapter, chunking, KG extraction, LLM latency
+Audit Logs	S2S auth events, ingestion records, LLM calls, sessions, Kafka dead-letters
+Security	Users, roles, sessions, CP access grants
+User Activity	Login / session activity dashboard
+Infrastructure	VM, gateway and AI-service health across the fleet
+🧩 Platform Services
+Service	Role	Where
+synaptui	Admin Console UI (Node/Express + Vite build).	port 5173
+agent-query-logger	Observability & Explainability API — backs the panels above, builds the Retrieval Pass Card, logs query events.	FastAPI · port 8004
+context substrate / tristore	Query service — Milvus + Neo4j retrieval and grounded answer generation. Returns the reasoning subgraph.	TRISTORE_URL
+auth-service	Login, sessions, RBAC, and context-provider access grants.	AUTH_SERVICE_URL
+ingestion-service	Document parse → chunk → extract → store pipeline.	INGEST_SERVICE_URL
+llm gateway	Routes LLM calls and records token usage to llm_logs.	LLM_BASE_URL
+
