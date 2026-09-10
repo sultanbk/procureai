@@ -1,4 +1,4 @@
-﻿# Needs Human Review User Guide
+# Needs Human Review User Guide
 
 **Audience:** End users and business reviewers.
 
@@ -34,3 +34,13 @@ A finding can need review when:
 ## Important Note
 
 The AI critic does not remove findings. It only annotates them. A human decision is required to resolve business ambiguity.
+
+## What if the Whole Audit is Marked "Needs Review"?
+
+If an audit report displays an Amber Banner saying **"Needs Procurement Review: This audit contains CRITICAL severity findings"**, the entire audit is held in `PENDING_REVIEW` status. 
+
+To release the audit:
+1. Review all items marked with red `CRITICAL` severity tags in the findings table.
+2. Confirm the contract evidence and invoice billing deltas.
+3. Click the **"Approve Audit"** button on the Amber Banner. The audit will transition to `COMPLETE`.
+

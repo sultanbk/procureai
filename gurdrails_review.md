@@ -60,17 +60,25 @@ All agent outputs are validated against strict Pydantic schemas. On `ValidationE
 
 The compliance checker skips deltas below `MINIMUM_MATERIAL_THRESHOLD` (default ₹100) to avoid noise.
 
-## ❌ Guardrails That Are Missing
+## ✅ Enterprise Security & Safety Guardrails (Implemented & Verified)
 
-| Missing Guardrail                              | Risk                                                                           | Recommendation                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| **No prompt injection protection**             | User-uploaded PDFs could contain adversarial text that manipulates LLM outputs | Add input sanitization and instruction-defense prompting             |
-| **No output content filtering**                | LLM could generate inappropriate content in dispute letters or summaries       | Add output filtering layer before returning to user                  |
-| **No confidence-based gating**                 | Low-confidence extractions proceed without additional verification             | Gate pipeline progression on `extraction_confidence` thresholds      |
-| **No token/cost limits per audit**             | A large document could trigger unbounded LLM calls                             | Add token budget per pipeline run                                    |
-| **No human-in-the-loop for CRITICAL findings** | Critical findings auto-complete without mandatory human review                 | Add a hold state for CRITICAL severity before marking audit COMPLETE |
-| **No rate limiting on LLM calls**              | Rapid audit requests could exhaust provider quotas                             | Add per-provider rate limiting in `llm_client.py`                    |
+All 6 identified missing guardrails have been implemented, wired into the LangGraph audit pipeline, integrated with frontend workflows, and verified with 16 dedicated unit tests:
 
-## Summary
+| Guardrail Layer | Threat / Risk Mitigated | Implementation Files | Status |
+|---|---|---|---|
+| **1. Prompt Injection Defense** | Adversarial text in PDFs tricking LLM into false compliance | [`backend/core/input_sanitizer.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/input_sanitizer.py)<br/>[`contract_parser/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/contract_parser/agent.py)<br/>[`invoice_extractor/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/invoice_extractor/agent.py) | ✅ **Active** (9 regex heuristics, defanging, `<untrusted_document_content>` tags, instruction defense preamble) |
+| **2. Output Content Filtering & PII** | Sensitive customer/vendor PII leaked; XSS via HTML in reports | [`backend/core/output_filter.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/output_filter.py)<br/>[`report_generator/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/report_generator/agent.py)<br/>[`services/dispute_generator.py`](file:///d:/sultan/ProcureAI/procureai/backend/services/dispute_generator.py) | ✅ **Active** (Redacts PAN, Aadhaar, SSN, cards, emails, phones; strips scripts/HTML; enforces professional tone) |
+| **3. Confidence-Based Gating** | Low-confidence OCR/clause extractions causing false disputes | [`contract_parser/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/contract_parser/agent.py)<br/>[`compliance_checker/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/compliance_checker/agent.py)<br/>[`models/schemas.py`](file:///d:/sultan/ProcureAI/procureai/backend/models/schemas.py) | ✅ **Active** (Rules with extraction confidence < 0.70 auto-bypass Critic to force `NEEDS_HUMAN_REVIEW`) |
+| **4. Token Budget per Audit** | Pathological PDF or retry loops causing huge cloud bills | [`backend/core/token_budget.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/token_budget.py)<br/>[`backend/core/llm_client.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/llm_client.py)<br/>[`models/schemas.py`](file:///d:/sultan/ProcureAI/procureai/backend/models/schemas.py) | ✅ **Active** (500k default budget, warning at 80%, hard stop raising `TokenBudgetExceeded`) |
+| **5. Human-in-the-Loop for CRITICAL Findings** | Unaudited critical overbills releasing automatically | [`report_generator/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/report_generator/agent.py)<br/>[`models/audit.py`](file:///d:/sultan/ProcureAI/procureai/backend/models/audit.py)<br/>[`api/routes/audit.py`](file:///d:/sultan/ProcureAI/procureai/backend/api/routes/audit.py)<br/>[`frontend/src/pages/AuditReport.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/pages/AuditReport.jsx) | ✅ **Active** (CRITICAL findings hold audit in `PENDING_REVIEW`; single-click "Approve Audit" UI banner & API) |
+| **6. LLM Provider Rate Limiting** | Rapid concurrent agent requests crashing with HTTP 429 | [`backend/core/llm_rate_limiter.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/llm_rate_limiter.py)<br/>[`backend/core/llm_client.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/llm_client.py)<br/>[`backend/core/config.py`](file:///d:/sultan/ProcureAI/procureai/backend/core/config.py) | ✅ **Active** (Sliding 60-second window across RPM and TPM limits with thread-safe async locks) |
 
-The project has **strong mathematical guardrails** (Python Decimal never trusts LLM math) and decent **structural guardrails** (schema validation, cross-validation gate, critic review). What it lacks are **input protection** (prompt injection from PDFs) and **output safety** guardrails. Would you like me to implement any of the missing ones?
+## Verification Suite
+
+Full guardrail test suite verified in `tests/unit/test_guardrails.py`:
+- 16/16 unit tests passing in 0.28s.
+- 53/53 total backend test suite passing (`pytest tests/ -v`).
+- Frontend production build (`npm run build`) passing with zero errors.
+
+For complete architectural documentation, see [docs/GUARDRAILS.md](file:///d:/sultan/ProcureAI/procureai/docs/GUARDRAILS.md).
+

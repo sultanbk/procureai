@@ -21,6 +21,7 @@ The implementation is the source of truth for this documentation. Current code u
 | [Deployment Guide](docs/DEPLOYMENT.md) | Developers, operators | Local and production-oriented deployment notes |
 | [Database Guide](docs/DATABASE.md) | Developers | ORM schema, JSON columns, migration scripts, and storage directories |
 | [Security Guide](docs/SECURITY.md) | Developers, operators | Authentication status, API-key support, CORS, file handling, and secrets |
+| [Guardrails & Safety Guide](docs/GUARDRAILS.md) | Developers, auditors | 6-layer safety architecture: prompt injection defense, PII filtering, token budgets, rate limiting, and human approval gates |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | Developers, users | Common setup, PDF, LLM, watcher, and frontend issues |
 | [Testing](TESTING.md) | Developers | Backend, frontend, integration, and evaluation test commands |
 | [Documentation Coverage](docs/DOCUMENTATION_COVERAGE.md) | Maintainers | Coverage checklist and known assumptions |
@@ -58,6 +59,8 @@ Important implementation notes:
 - **Dual-Brain Architecture**: ProcureAI strictly separates mathematical computation from epistemic contract knowledge:
   - **Deterministic Math Engine** (`backend/core/rule_engine.py`): Python `Decimal` performs 100% of monetary math (Zero-Math rule for LLMs).
   - **SynaptAI Context Substrate** (`backend/core/context_substrate_client.py`): Connects to live TriStore (`beta.synapt.ai`, provider `procureai`) via Trident MCP and REST. Resolves amendment hierarchies (`SUPERSEDES`), retrieves corporate recovery SOP DAGs (`PRECEDES`), and provides 5-stage retrieval pass cards and visual reasoning subgraphs with resilient embedded fallback.
+- **6-Layer Enterprise Guardrails**: Defense-in-depth safety controls protecting against prompt injection in PDFs (`input_sanitizer.py`), leaking PII/PAN/Aadhaar in dispute letters (`output_filter.py`), low-confidence extraction hallucinations (Critic auto-bypass), runaway LLM token costs (`token_budget.py` hard-stop at 500k tokens), silent release of critical discrepancies (`PENDING_REVIEW` hold state), and provider API rate exhaustion (`llm_rate_limiter.py`). See [docs/GUARDRAILS.md](docs/GUARDRAILS.md).
+
 
 ## Quick Start
 

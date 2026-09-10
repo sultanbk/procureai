@@ -99,6 +99,7 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/audit/{audit_id}/report` | Completed `AuditReport` only |
+| `POST` | `/api/audit/{audit_id}/approve` | Approve audit in `PENDING_REVIEW` and transition to `COMPLETE` |
 | `GET` | `/api/audit/{audit_id}/documents` | List contract and invoice documents for an audit |
 | `GET` | `/api/audit/{audit_id}/documents/{document_id}` | Inline PDF response for `contract` or `invoice-{index}` |
 | `GET` | `/api/audit/{audit_id}/breach-pages/{finding_id}` | Download contract pages related to a finding |
@@ -108,6 +109,27 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 | `POST` | `/api/predict/risk` | Supplier risk prediction by supplier name or invoice file ID |
 | `POST` | `/api/audit/{audit_id}/findings/{finding_id}/feedback` | Store human review verdict |
 | `WS` | `/api/audit/{audit_id}/ws` | Stream status and audit logs |
+
+### Approve Audit
+
+```http
+POST /api/audit/{audit_id}/approve
+```
+
+Used by authorized reviewers to approve an audit that is held in `PENDING_REVIEW` state due to `CRITICAL` severity findings. Transitions the audit status to `COMPLETE`.
+
+Response (`200 OK`):
+```json
+{
+  "message": "Audit aud_1234abcd approved successfully",
+  "audit_id": "aud_1234abcd",
+  "status": "COMPLETE"
+}
+```
+
+Error Responses:
+- `404 Not Found`: Audit does not exist.
+- `400 Bad Request`: Audit is not in `PENDING_REVIEW` state (e.g. already `COMPLETE` or `FAILED`).
 
 ### Finding Feedback
 
@@ -121,6 +143,18 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 ```
 
 Allowed verdict values are documented in code comments as `CORRECT`, `FALSE_POSITIVE`, `FALSE_NEGATIVE`, and `ADJUSTED`.
+
+### Audit Lifecycle Statuses
+
+| Status | Description |
+|---|---|
+| `PENDING` | Audit registered in database and queued for execution |
+| `RUNNING` | Audit pipeline currently executing through agent graph |
+| `PENDING_REVIEW` | Audit pipeline finished, but one or more `CRITICAL` severity discrepancies were identified; held awaiting auditor approval |
+| `COMPLETE` | Audit finished and fully approved/cleared; reports and dispute letters unlocked |
+| `FAILED` | Pipeline crashed or unrecoverable error encountered |
+| `CANCELLED` | Audit cancelled by operator |
+
 
 ## Contract Library
 

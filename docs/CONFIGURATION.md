@@ -16,6 +16,9 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `LLM_RETRY_ATTEMPTS` | `3` | LLM retry count |
 | `LLM_RETRY_DELAY_SECONDS` | `2.0` | Delay between LLM retries |
 | `LLM_CALL_TIMEOUT_SECONDS` | `120` | Async LLM call timeout |
+| `MAX_TOKENS_PER_AUDIT` | `500000` | Maximum cumulative LLM tokens per audit pipeline run before safe halt (`TokenBudgetExceeded`) |
+| `LLM_RPM_LIMIT` | `60` | Maximum LLM requests per minute (sliding 60-second window across agents) |
+| `LLM_TPM_LIMIT` | `100000` | Maximum LLM tokens per minute (sliding 60-second window across agents) |
 | `PIPELINE_MAX_LLM_CALLS` | `100` | Configured maximum call count; verify enforcement before relying on it operationally |
 | `PIPELINE_TIMEOUT_SECONDS` | `600` | Configured pipeline timeout; verify enforcement before relying on it operationally |
 | `SELF_CONSISTENCY_PASSES` | `3` | Contract/invoice extraction self-consistency pass count |
@@ -153,5 +156,30 @@ Runs completely locally with zero external network dependencies, serving the ver
 ```ini
 CONTEXT_SUBSTRATE_ENABLED=true
 CONTEXT_SUBSTRATE_MODE=mock
+```
+
+## Guardrails & Resource Safety Configuration
+
+ProcureAI provides fine-grained controls over LLM rate limits, token cost caps, and confidence gating. Detailed architectural mechanisms are documented in [docs/GUARDRAILS.md](GUARDRAILS.md).
+
+```ini
+# =====================================================================
+# Guardrails, Safety Limits & Rate Governance
+# =====================================================================
+
+# Maximum cumulative LLM tokens per single audit run (default: 500,000)
+# A warning is logged at 80% (400,000 tokens). If exceeded, raises TokenBudgetExceeded.
+MAX_TOKENS_PER_AUDIT=500000
+
+# In-memory sliding 60-second window provider rate limits
+# Throttles concurrent agent calls before hitting provider HTTP 429 errors
+LLM_RPM_LIMIT=60
+LLM_TPM_LIMIT=100000
+
+# Minimum confidence required for extracted pricing rules before tagging for human review
+COMPLIANCE_CONFIDENCE_THRESHOLD=0.70
+
+# Minimum rupee discrepancy required to record a finding (filters out rounding noise)
+MINIMUM_MATERIAL_THRESHOLD=100.0
 ```
 
