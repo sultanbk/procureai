@@ -94,7 +94,7 @@ export default function AuditList({ onSelectAudit, onNewAudit }) {
     });
   }, [audits, searchTerm, statusFilter]);
 
-  const completedAudits = audits.filter(a => a.status === 'COMPLETE');
+  const completedAudits = audits.filter(a => a.status === 'COMPLETE' || a.status === 'PENDING_REVIEW');
   const totalLeakage = completedAudits.reduce((acc, curr) => {
     return acc + Math.abs(parseFloat(curr.total_leakage) || 0);
   }, 0);
@@ -117,6 +117,7 @@ export default function AuditList({ onSelectAudit, onNewAudit }) {
 
   const getStatusVariant = (status) => {
     if (status === 'COMPLETE') return 'success';
+    if (status === 'PENDING_REVIEW') return 'high';
     if (status === 'FAILED') return 'critical';
     if (status === 'PENDING' || status.includes('_')) return 'brand';
     return 'default';
@@ -173,6 +174,7 @@ export default function AuditList({ onSelectAudit, onNewAudit }) {
             <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full sm:w-44">
               <option value="ALL">All statuses</option>
               <option value="COMPLETE">Complete</option>
+              <option value="PENDING_REVIEW">Pending Review</option>
               <option value="FAILED">Failed</option>
               <option value="PENDING">Pending</option>
             </Select>
@@ -209,7 +211,7 @@ export default function AuditList({ onSelectAudit, onNewAudit }) {
                     <Badge variant={getStatusVariant(a.status)}>{a.status.replace(/_/g, ' ')}</Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono font-semibold">
-                    {a.status === 'COMPLETE' && a.total_leakage !== null ? (
+                    {(a.status === 'COMPLETE' || a.status === 'PENDING_REVIEW') && a.total_leakage !== null ? (
                       <span className={Math.abs(parseFloat(a.total_leakage)) > 0 ? 'text-rose-600' : 'text-emerald-600'}>
                         ${Math.abs(parseFloat(a.total_leakage)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>

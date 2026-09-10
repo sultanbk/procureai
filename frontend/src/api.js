@@ -85,6 +85,17 @@ export const getAuditStatus = async (auditId) => {
   return response.json();
 };
 
+export const approveAudit = async (auditId) => {
+  const response = await authFetch(`${API_BASE}/audit/${auditId}/approve`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to approve audit");
+  }
+  return response.json();
+};
+
 export const getAudits = async () => {
   const response = await authFetch(`${API_BASE}/audits`);
   if (!response.ok) {

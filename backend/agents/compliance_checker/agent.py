@@ -27,6 +27,7 @@ from backend.core.llm_client import get_llm
 from backend.core.prompt_loader import load_prompt
 from backend.core.db import AsyncSessionLocal
 from backend.models.audit import Audit
+from backend.core.token_budget import TokenBudgetExceeded
 from sqlalchemy import select
 from backend.core.audit_logger import log_audit_event
 
@@ -184,6 +185,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
         ]
         
         llm = get_llm()
+        budget = state.get("token_budget")
         prompt_template_match = load_prompt("compliance_checker", "prompt_match_rules.txt")
         prompt_template_critic = load_prompt("compliance_checker", "prompt_critic.txt")
         prompt_template_narrative = load_prompt("compliance_checker", "prompt.txt")
@@ -213,7 +215,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
             invoice_to_map.line_items = [li for li in invoice.line_items if li.line_id not in cv_unmapped and li.line_id in candidate_map]
             
             if invoice_to_map.line_items:
-                mappings = await match_invoice_rules(llm, prompt_template_match, invoice_to_map, rules_map, candidate_map, token_accumulator)
+                mappings = await match_invoice_rules(llm, prompt_template_match, invoice_to_map, rules_map, candidate_map, token_accumulator, budget=budget)
             else:
                 mappings = InvoiceRuleMapping(mappings=[])
             
@@ -320,8 +322,15 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                     
                     # Check threshold
                     if abs(delta) > MINIMUM_MATERIAL_THRESHOLD:
-                        # LLM Critic check (Flag Only)
-                        critic_result = await verify_discrepancy_with_critic(llm, prompt_template_critic, line_item, rule, delta, invoice, token_accumulator)
+                        # Guardrail 3: Confidence-Based Gating / LLM Critic check
+                        if getattr(rule, "needs_human_review", False):
+                            critic_result = CriticReflection(
+                                status="NEEDS_HUMAN_REVIEW",
+                                confidence=getattr(rule, "extraction_confidence", 0.5) or 0.5,
+                                reasoning=f"Pricing rule {rule_id} has low extraction confidence ({getattr(rule, 'extraction_confidence', 0.0)}) and was flagged for human review."
+                            )
+                        else:
+                            critic_result = await verify_discrepancy_with_critic(llm, prompt_template_critic, line_item, rule, delta, invoice, token_accumulator, budget=budget)
                         if critic_result.status == "NEEDS_HUMAN_REVIEW":
                             await log_audit_event(audit_id, f"Critic flagged discrepancy on line {line_id} for human review. Reasoning: {critic_result.reasoning}", "INFO", "compliance_checker")
                             review_flags = state.get("review_flags", [])
@@ -341,7 +350,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         discrepancy_type = classify_discrepancy_type(rule.rule_type)
                         
                         narrative = await generate_evidence_narrative(
-                            llm, prompt_template_narrative, line_item, rule, delta, invoice, token_accumulator
+                            llm, prompt_template_narrative, line_item, rule, delta, invoice, token_accumulator, budget=budget
                         )
                         
                         severity = compute_severity(delta)
@@ -446,7 +455,15 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         delta = expected_total  # since charged is 0
                         discrepancy_type = "unapplied_penalty"
                         
-                        critic_result = await verify_discrepancy_with_critic(llm, prompt_template_critic, dummy_line, rule, delta, invoice, token_accumulator)
+                        # Guardrail 3: Confidence-Based Gating / LLM Critic check
+                        if getattr(rule, "needs_human_review", False):
+                            critic_result = CriticReflection(
+                                status="NEEDS_HUMAN_REVIEW",
+                                confidence=getattr(rule, "extraction_confidence", 0.5) or 0.5,
+                                reasoning=f"Whole-invoice rule {rule_id} has low extraction confidence ({getattr(rule, 'extraction_confidence', 0.0)}) and was flagged for human review."
+                            )
+                        else:
+                            critic_result = await verify_discrepancy_with_critic(llm, prompt_template_critic, dummy_line, rule, delta, invoice, token_accumulator, budget=budget)
                         if critic_result.status == "NEEDS_HUMAN_REVIEW":
                             await log_audit_event(audit_id, f"Critic flagged whole-invoice discrepancy under rule {rule_id}. Reasoning: {critic_result.reasoning}", "INFO", "compliance_checker")
                             review_flags = state.get("review_flags", [])
@@ -462,7 +479,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         await log_audit_event(audit_id, f"Discrepancy detected for whole-invoice rule {rule_id} ({rule.rule_type}). Penalty/credit triggered: INR {expected_total}.", "INFO", "compliance_checker")
                         
                         narrative = await generate_evidence_narrative(
-                            llm, prompt_template_narrative, dummy_line, rule, delta, invoice, token_accumulator
+                            llm, prompt_template_narrative, dummy_line, rule, delta, invoice, token_accumulator, budget=budget
                         )
                         
                         severity = compute_severity(delta)
@@ -581,9 +598,15 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
         
     except Exception as e:
         await log_audit_event(audit_id, f"Compliance Checker agent failed: {str(e)}", "ERROR", "compliance_checker")
+        err_type = "llm_call_failed"
+        if isinstance(e, TokenBudgetExceeded) or "token budget" in str(e).lower():
+            err_type = "token_budget_exceeded"
+        elif "engine" in str(e).lower():
+            err_type = "rule_application_failed"
+
         error = AgentError(
             agent="compliance_checker",
-            error_type="rule_application_failed" if "engine" in str(e).lower() else "llm_call_failed",
+            error_type=err_type,
             message=str(e),
             recoverable=False
         )
@@ -674,7 +697,7 @@ def get_token_counts(contents, response) -> dict:
     }
 
 async def match_invoice_rules(
-    llm, prompt_template: str, invoice: InvoiceData, rules_map: dict, candidate_map: dict, token_accumulator: Optional[dict] = None
+    llm, prompt_template: str, invoice: InvoiceData, rules_map: dict, candidate_map: dict, token_accumulator: Optional[dict] = None, budget=None
 ) -> InvoiceRuleMapping:
     """
     Asks LLM to map rules to invoice line items from a constrained list of candidates.
@@ -705,7 +728,8 @@ async def match_invoice_rules(
             response_mime_type="application/json",
             response_schema=InvoiceRuleMapping.model_json_schema(),
             temperature=0.0
-        )
+        ),
+        budget=budget
     )
     
     if token_accumulator is not None:
@@ -721,7 +745,7 @@ async def match_invoice_rules(
         return InvoiceRuleMapping(mappings=[])
 
 async def generate_evidence_narrative(
-    llm, prompt_template: str, line_item: LineItem, rule: PricingRule, delta: Decimal, invoice: InvoiceData, token_accumulator: Optional[dict] = None
+    llm, prompt_template: str, line_item: LineItem, rule: PricingRule, delta: Decimal, invoice: InvoiceData, token_accumulator: Optional[dict] = None, budget=None
 ) -> DiscrepancyNarrative:
     """
     Asks LLM to generate plain-English explanation and copy exact clause text for a finding.
@@ -751,7 +775,8 @@ async def generate_evidence_narrative(
             response_mime_type="application/json",
             response_schema=DiscrepancyNarrative.model_json_schema(),
             temperature=0.0
-        )
+        ),
+        budget=budget
     )
     
     if token_accumulator is not None:
@@ -787,7 +812,7 @@ async def generate_evidence_narrative(
         return DiscrepancyNarrative.model_validate_json(retry_response.text)
 
 async def verify_discrepancy_with_critic(
-    llm, prompt_template: str, line_item: LineItem, rule: PricingRule, delta: Decimal, invoice: InvoiceData, token_accumulator: Optional[dict] = None
+    llm, prompt_template: str, line_item: LineItem, rule: PricingRule, delta: Decimal, invoice: InvoiceData, token_accumulator: Optional[dict] = None, budget=None
 ) -> CriticReflection:
     """
     Asks LLM to verify if a mathematically calculated discrepancy aligns with the logical reality of the contract text.
@@ -813,7 +838,8 @@ async def verify_discrepancy_with_critic(
             response_mime_type="application/json",
             response_schema=CriticReflection.model_json_schema(),
             temperature=0.0
-        )
+        ),
+        budget=budget
     )
     
     if token_accumulator is not None:

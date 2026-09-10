@@ -151,7 +151,11 @@ async def run_audit_pipeline(audit_id: str, contract_path: str, invoice_paths: L
             await log_audit_event(audit_id, f"Invoice {idx} of {len(invoice_paths)} text successfully extracted ({len(inv_text)} characters).", "INFO", "pdf_extractor")
             invoice_texts.append(inv_text)
         
-        # 3. Initialize pipeline state
+        # 3. Initialize pipeline state with token budget
+        from backend.core.token_budget import TokenBudget
+        from backend.core.config import MAX_TOKENS_PER_AUDIT
+        token_budget = TokenBudget(max_tokens=MAX_TOKENS_PER_AUDIT)
+
         initial_state = {
             "audit_id": audit_id,
             "contract_path": contract_path,
@@ -164,7 +168,9 @@ async def run_audit_pipeline(audit_id: str, contract_path: str, invoice_paths: L
             "audit_report": None,
             "errors": [],
             "current_agent": "init",
-            "halt": False
+            "halt": False,
+            "token_budget": token_budget,
+            "token_usage": token_budget.to_dict(),
         }
         
         # 3b. Check for pre-extracted baseline rulebook in Library by file hash
@@ -213,6 +219,12 @@ async def run_audit_pipeline(audit_id: str, contract_path: str, invoice_paths: L
         await log_audit_event(audit_id, "Starting multi-agent contract compliance analysis pipeline.", "INFO", "system")
         graph = get_pipeline()
         await graph.ainvoke(initial_state)
+        await log_audit_event(
+            audit_id,
+            f"Audit pipeline finished. LLM tokens used: {token_budget.total_tokens:,} ({token_budget.utilization_pct}% of budget across {token_budget.call_count} calls).",
+            "INFO",
+            "system",
+        )
         
     except Exception as e:
         await log_audit_event(audit_id, f"Initialization or PDF Extraction failed: {str(e)}", "ERROR", "pdf_extractor")
@@ -798,5 +810,38 @@ async def post_finding_feedback(audit_id: str, finding_id: str, request: Finding
         await session.commit()
         
     return {"message": "Feedback submitted successfully", "feedback_id": feedback_id}
+
+
+@router.post("/audit/{audit_id}/approve")
+async def approve_audit(audit_id: str):
+    """
+    Guardrail 5: Manually approve a PENDING_REVIEW audit (held due to CRITICAL findings),
+    transitioning it to COMPLETE.
+    """
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+        if not db_audit:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+
+        if db_audit.status != "PENDING_REVIEW":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Audit cannot be approved in current status '{db_audit.status}' (must be 'PENDING_REVIEW')",
+            )
+
+        db_audit.status = "COMPLETE"
+        db_audit.completed_at = utc_now()
+        await session.commit()
+
+        await log_audit_event(
+            audit_id,
+            "Audit manually approved by human reviewer — status updated to COMPLETE.",
+            "INFO",
+            "human_reviewer",
+        )
+
+    return {"message": "Audit approved successfully", "audit_id": audit_id, "status": "COMPLETE"}
 
 

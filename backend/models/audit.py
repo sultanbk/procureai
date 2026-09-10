@@ -19,7 +19,7 @@ class Audit(Base):
     __tablename__ = "audits"
     
     id = Column(String, primary_key=True, index=True) # e.g. "aud_20241115_abc123"
-    status = Column(String, nullable=False)           # PENDING | EXTRACTING_PDF | ... | COMPLETE | FAILED
+    status = Column(String, nullable=False)           # PENDING | EXTRACTING_PDF | ... | PENDING_REVIEW | COMPLETE | FAILED
     supplier_name = Column(String, nullable=True)
     contract_file = Column(String, nullable=True)      # stored file path
     invoice_files = Column(String, nullable=True)      # JSON array of file paths

@@ -25,6 +25,9 @@ from backend.agents.contract_parser.tools import (
 )
 
 from backend.core.audit_logger import log_audit_event
+from backend.core.input_sanitizer import sanitize_pdf_text, INSTRUCTION_DEFENSE_PREAMBLE
+from backend.core.token_budget import TokenBudgetExceeded
+from backend.core.config import COMPLIANCE_CONFIDENCE_THRESHOLD
 
 logger = structlog.get_logger()
 
@@ -178,6 +181,34 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
         contract_text = state.get("contract_text", "")
         if not contract_text:
             raise ValueError("Contract text is empty or missing from state.")
+
+        # Guardrail 1: Input sanitization & prompt injection defense
+        sanitized = sanitize_pdf_text(contract_text, source_label="contract")
+        contract_text = sanitized.clean_text
+        state["contract_text"] = contract_text
+
+        if "input_sanitization" not in state or state["input_sanitization"] is None:
+            state["input_sanitization"] = {"warnings": [], "injection_detected": False}
+
+        if sanitized.injection_detected:
+            state["input_sanitization"]["injection_detected"] = True
+            state["input_sanitization"]["warnings"].extend(sanitized.warnings)
+            state.setdefault("errors", []).append(
+                AgentError(
+                    agent="contract_parser",
+                    error_type="injection_detected",
+                    message=f"Prompt injection patterns detected and neutralized in contract ({len(sanitized.warnings)} occurrence(s)).",
+                    recoverable=True,
+                    partial_data={"warnings": sanitized.warnings},
+                ).model_dump()
+            )
+            await log_audit_event(
+                audit_id,
+                f"Security warning: Prompt injection patterns detected and neutralized in contract ({len(sanitized.warnings)} warnings).",
+                "WARNING",
+                "contract_parser",
+            )
+
         document_metadata = extract_contract_metadata(contract_text)
             
         # 1. Chunk contract by section
@@ -192,13 +223,14 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
             
         # Initialize LLM and Prompt
         llm = get_llm()
+        budget = state.get("token_budget")
         llm_status = llm.status_label() if hasattr(llm, "status_label") else "LLM"
         await log_audit_event(audit_id, f"Contract parser LLM backend: {llm_status}.", "INFO", "contract_parser")
         prompt_template = load_prompt("contract_parser", "prompt_extract_chunk.txt")
         
-        # Inject schema into prompt
+        # Inject schema into prompt with instruction defense preamble
         schema_json = json.dumps(ContractRulebook.model_json_schema(), indent=2)
-        system_prompt = prompt_template.replace("{schema}", schema_json)
+        system_prompt = INSTRUCTION_DEFENSE_PREAMBLE + prompt_template.replace("{schema}", schema_json)
         
         # 3. For each relevant section, run multi-pass LLM extraction (v4 self-consistency)
         from backend.core.config import SELF_CONSISTENCY_PASSES, SELF_CONSISTENCY_TEMPERATURES
@@ -229,7 +261,7 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
                 section_content = f"--- SECTION: {sec['header']} ---\n{sec['content']}"
                 
                 try:
-                    rulebook = await extract_section_rulebook(llm, system_prompt, section_content, temperature=temp)
+                    rulebook = await extract_section_rulebook(llm, system_prompt, section_content, temperature=temp, budget=budget)
                     pass_rulebooks.append(rulebook)
                     await log_audit_event(
                         audit_id,
@@ -325,7 +357,8 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
                     generation_config=genai.GenerationConfig(
                         response_mime_type="application/json",
                         temperature=0.0
-                    )
+                    ),
+                    budget=budget
                 )
                 
                 resolved_data = json.loads(resolve_response.text)
@@ -398,6 +431,21 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
 
         if not merged_rulebook.rules:
             raise ValueError("No valid pricing rules were successfully parsed from the contract.")
+
+        # Guardrail 3: Confidence-based gating on extracted rules
+        low_confidence_rules = [
+            r for r in merged_rulebook.rules
+            if (getattr(r, "extraction_confidence", 1.0) or 1.0) < COMPLIANCE_CONFIDENCE_THRESHOLD
+        ]
+        if low_confidence_rules:
+            for rule in low_confidence_rules:
+                rule.needs_human_review = True
+            await log_audit_event(
+                audit_id,
+                f"{len(low_confidence_rules)} pricing rule(s) below confidence threshold ({COMPLIANCE_CONFIDENCE_THRESHOLD}) flagged for human review.",
+                "WARNING",
+                "contract_parser",
+            )
             
         # 5. Write validated rulebook to state
         state["rulebook"] = merged_rulebook.model_dump()
@@ -478,9 +526,15 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
     except Exception as e:
         await log_audit_event(audit_id, f"Contract Parser agent failed: {str(e)}", "ERROR", "contract_parser")
 
+        err_type = "llm_call_failed"
+        if isinstance(e, TokenBudgetExceeded) or "token budget" in str(e).lower():
+            err_type = "token_budget_exceeded"
+        elif "validation" in str(e).lower():
+            err_type = "validation_failed"
+
         error = AgentError(
             agent="contract_parser",
-            error_type="validation_failed" if "validation" in str(e).lower() else "llm_call_failed",
+            error_type=err_type,
             message=str(e),
             recoverable=False
         )
@@ -498,7 +552,7 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
                 
     return state
 
-async def extract_section_rulebook(llm, system_prompt: str, section_content: str, temperature: float = 0.0) -> ContractRulebook:
+async def extract_section_rulebook(llm, system_prompt: str, section_content: str, temperature: float = 0.0, budget=None) -> ContractRulebook:
     """
     Calls LLM to parse a section. Employs correction-prompt retry logic on validation failures.
     v4: Accepts temperature parameter for self-consistency multi-pass extraction.
@@ -510,7 +564,8 @@ async def extract_section_rulebook(llm, system_prompt: str, section_content: str
             response_mime_type="application/json",
             response_schema=ContractRulebook.model_json_schema(),
             temperature=temperature
-        )
+        ),
+        budget=budget
     )
     
     try:
@@ -535,7 +590,8 @@ async def extract_section_rulebook(llm, system_prompt: str, section_content: str
                 response_mime_type="application/json",
                 response_schema=ContractRulebook.model_json_schema(),
                 temperature=0.0
-            )
+            ),
+            budget=budget
         )
         # Attempt validation again. If it fails, let it raise the error to be caught by caller.
         return ContractRulebook.model_validate_json(retry_response.text)

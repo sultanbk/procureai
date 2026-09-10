@@ -26,6 +26,7 @@ from backend.models.schemas import (
     DisputeLetterResponse,
     DisputeLetterRevisionRequest,
 )
+from backend.core.output_filter import filter_output
 
 logger = structlog.get_logger()
 
@@ -128,9 +129,20 @@ async def generate_dispute_letter(
     except Exception as e:
         logger.debug("SOP DAG retrieval skipped", error=str(e))
 
+    # Guardrail 2: Output Content Filtering
+    filtered_text = filter_output(llm_data.letter_text, context="dispute_letter")
+    filtered_html = filter_output(llm_data.letter_html, context="dispute_letter")
+    if filtered_text.flagged or filtered_html.flagged:
+        logger.warning(
+            "Dispute letter content filtered for sensitive/unsafe text",
+            audit_id=request.audit_id,
+            redactions=filtered_text.redactions + filtered_html.redactions,
+            warnings=filtered_text.warnings + filtered_html.warnings,
+        )
+
     return DisputeLetterResponse(
-        letter_text=llm_data.letter_text,
-        letter_html=llm_data.letter_html,
+        letter_text=filtered_text.clean_text,
+        letter_html=filtered_html.clean_text,
         findings_count=len(dispute_findings),
         total_disputed=f"INR {total_disputed:,.2f}",
         supplier_email=request.supplier_email,
@@ -171,9 +183,14 @@ async def revise_dispute_letter(
     )
     llm_data = DisputeLetterLLMResponse.model_validate_json(response.text)
 
+    # Guardrail 2: Output Content Filtering
+    filtered_text = filter_output(llm_data.letter_text, context="dispute_letter")
+    html_source = llm_data.letter_html or existing_letter_html
+    filtered_html = filter_output(html_source, context="dispute_letter")
+
     return DisputeLetterResponse(
-        letter_text=llm_data.letter_text,
-        letter_html=llm_data.letter_html or existing_letter_html,
+        letter_text=filtered_text.clean_text,
+        letter_html=filtered_html.clean_text,
         findings_count=findings_count,
         total_disputed=total_disputed,
         supplier_email=supplier_email,

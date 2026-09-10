@@ -113,6 +113,9 @@ class PipelineState(TypedDict):
     unit_conversions: NotRequired[Optional[Dict]]       # {line_id: {rule_id: conversion_info}}
     reverse_sweep: NotRequired[Optional[Dict]]          # ReverseSweepResult
     cross_invoice: NotRequired[Optional[Dict]]          # CrossInvoiceResult
+    # Guardrail additions
+    token_usage: NotRequired[Optional[Dict]]            # Token usage & budget stats
+    input_sanitization: NotRequired[Optional[Dict]]     # Sanitization warnings & flags
 
 # --- AGENT ERROR SCHEMA ---
 
@@ -126,7 +129,9 @@ class AgentError(BaseModel):
         "no_rules_found",
         "no_line_items_found",
         "hallucinated_clause",
-        "timeout"
+        "timeout",
+        "injection_detected",
+        "token_budget_exceeded"
     ]
     message: str       # Human-readable explanation
     recoverable: bool  # True = pipeline can continue, False = must halt
@@ -175,6 +180,7 @@ class PricingRule(BaseModel):
     cap_applies_to: Optional[str] = None   # what the cap governs
 
     extraction_confidence: float        # 0.0 – 1.0, agent's confidence in extraction
+    needs_human_review: bool = False    # True if extraction confidence < threshold
 
     # v4: Clause byte anchoring — character offsets in the original contract_text
     clause_start_offset: Optional[int] = None   # char position where clause_text begins
@@ -310,6 +316,7 @@ class AuditSummary(BaseModel):
     critical_count: int
     high_count: int
     medium_count: int
+    low_confidence_count: int = 0    # Number of rules flagged for low confidence
     executive_summary: str          # 2–3 sentences for CFO
 
 class AuditReport(BaseModel):

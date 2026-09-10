@@ -63,7 +63,11 @@ function AuditReportRoute() {
       try {
         const data = await getAuditStatus(auditId);
         if (data.audit_report) {
-          const reportWithRulebook = { ...data.audit_report, rulebook: data.partial_results?.rulebook };
+          const reportWithRulebook = {
+            ...data.audit_report,
+            rulebook: data.partial_results?.rulebook,
+            status: data.status,
+          };
           setReport(reportWithRulebook);
         }
       } catch {
@@ -84,7 +88,7 @@ function SupplierHistoryRoute({ backPath = '/suppliers' }) {
   const { toast } = useToast();
 
   const handleSelectAudit = useCallback(async (id, status) => {
-    if (status === 'COMPLETE') {
+    if (status === 'COMPLETE' || status === 'PENDING_REVIEW') {
       navigate(`/audit/${id}/report`);
     } else {
       navigate(`/audit/${id}`);
@@ -107,7 +111,7 @@ export default function App() {
   const { toast } = useToast();
 
   const handleSelectAudit = useCallback(async (id, status) => {
-    if (status === 'COMPLETE') {
+    if (status === 'COMPLETE' || status === 'PENDING_REVIEW') {
       navigate(`/audit/${id}/report`);
     } else {
       navigate(`/audit/${id}`);

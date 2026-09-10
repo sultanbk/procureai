@@ -24,7 +24,7 @@ import AuditLogConsole from '../components/AuditLogConsole';
 import DisputeLetterModal from '../components/DisputeLetterModal';
 import ContractQADrawer from '../components/ContractQADrawer';
 import AuditDocumentPanel from '../components/AuditDocumentPanel';
-import { getAuditLogs, submitFindingFeedback } from '../api';
+import { getAuditLogs, submitFindingFeedback, approveAudit } from '../api';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Card from '../components/ui/Card';
@@ -56,6 +56,26 @@ export default function AuditReport({ report, onBack }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(null);
   const [flagNotes, setFlagNotes] = useState({});
   const [submittingFlagIdx, setSubmittingFlagIdx] = useState(null);
+
+  // Guardrail 5: Human-in-the-Loop review state
+  const [currentStatus, setCurrentStatus] = useState(report?.status || (report?.summary?.critical_count > 0 ? 'PENDING_REVIEW' : 'COMPLETE'));
+  const [isApproving, setIsApproving] = useState(false);
+  const [approvalSuccess, setApprovalSuccess] = useState(false);
+
+  const handleApproveAudit = async () => {
+    if (!report?.audit_id) return;
+    setIsApproving(true);
+    try {
+      await approveAudit(report.audit_id);
+      setCurrentStatus('COMPLETE');
+      setApprovalSuccess(true);
+    } catch (err) {
+      console.error("Failed to approve audit:", err);
+      alert("Failed to approve audit: " + err.message);
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   const discrepancies = report?.discrepancies;
 
@@ -186,7 +206,15 @@ export default function AuditReport({ report, onBack }) {
           </button>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-display font-bold text-slate-900">Supplier Audit Report</h1>
-            <Badge variant="success" className="flex items-center gap-1"><FileCheck className="h-3.5 w-3.5 stroke-[1.5]" /> Verified</Badge>
+            {currentStatus === 'PENDING_REVIEW' ? (
+              <Badge variant="warning" className="flex items-center gap-1">
+                <AlertTriangle className="h-3.5 w-3.5 stroke-[1.5]" /> Pending Review
+              </Badge>
+            ) : (
+              <Badge variant="success" className="flex items-center gap-1">
+                <FileCheck className="h-3.5 w-3.5 stroke-[1.5]" /> Verified
+              </Badge>
+            )}
           </div>
           <p className="text-slate-500 text-xs mt-1.5">
             Ref: <span className="font-mono">{report.audit_id}</span> · {new Date(report.report_generated_at).toLocaleString()}
@@ -199,6 +227,42 @@ export default function AuditReport({ report, onBack }) {
           <ExportButton report={report} />
         </div>
       </div>
+
+      {/* ── Guardrail 5: Human-in-the-Loop Hold Banner for PENDING_REVIEW ── */}
+      {currentStatus === 'PENDING_REVIEW' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm print:hidden">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-100 text-amber-700 rounded-lg shrink-0 mt-0.5 sm:mt-0">
+              <AlertTriangle className="h-5 w-5 stroke-[2]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-amber-900 flex items-center gap-2">
+                Manual Approval Required
+                <Badge variant="warning">HOLD: CRITICAL FINDINGS</Badge>
+              </h3>
+              <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                This audit detected <strong>{report.summary?.critical_count || 0} CRITICAL</strong> billing discrepancies. Under system safety guardrails, audits with critical findings require human sign-off before completion.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleApproveAudit}
+            disabled={isApproving}
+            className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-semibold flex items-center gap-2"
+          >
+            <CheckCircle className="h-4 w-4 stroke-[2]" />
+            {isApproving ? "Approving..." : "Approve Audit"}
+          </Button>
+        </div>
+      )}
+
+      {approvalSuccess && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3 text-emerald-800 text-xs font-medium print:hidden">
+          <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+          <span>Audit approved successfully! Status transitioned to <strong>COMPLETE</strong>.</span>
+        </div>
+      )}
 
       <DisputeLetterModal isOpen={isDisputeModalOpen} onClose={() => setIsDisputeModalOpen(false)} auditId={report.audit_id} supplierName={report.summary?.supplier_name || ''} />
 

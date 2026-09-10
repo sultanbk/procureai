@@ -256,3 +256,48 @@ async def test_error_response_no_traceback(client):
     data = resp.json()
     assert "traceback" not in data
     assert "Traceback" not in json.dumps(data)
+
+
+# ============================================================================
+# Guardrail 5: Human-in-the-Loop Audit Approval Endpoint
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_approve_audit_endpoint(client, test_session_factory):
+    from backend.models.audit import Audit
+    from backend.core.time import utc_now
+
+    # 1. Nonexistent audit -> 404
+    resp = await client.post("/api/audit/nonexistent_id/approve")
+    assert resp.status_code == 404
+
+    # 2. Audit not in PENDING_REVIEW -> 400
+    async with test_session_factory() as session:
+        test_audit_complete = Audit(
+            id="aud_test_complete",
+            status="COMPLETE",
+            supplier_name="Test Supplier",
+            created_at=utc_now(),
+        )
+        session.add(test_audit_complete)
+        await session.commit()
+
+    resp_bad = await client.post("/api/audit/aud_test_complete/approve")
+    assert resp_bad.status_code == 400
+
+    # 3. Audit in PENDING_REVIEW -> 200 and transitions to COMPLETE
+    async with test_session_factory() as session:
+        test_audit_pending = Audit(
+            id="aud_test_pending_review",
+            status="PENDING_REVIEW",
+            supplier_name="Test Supplier",
+            created_at=utc_now(),
+        )
+        session.add(test_audit_pending)
+        await session.commit()
+
+    resp_ok = await client.post("/api/audit/aud_test_pending_review/approve")
+    assert resp_ok.status_code == 200
+    data = resp_ok.json()
+    assert data["status"] == "COMPLETE"
+    assert data["audit_id"] == "aud_test_pending_review"

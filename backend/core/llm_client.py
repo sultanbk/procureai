@@ -18,6 +18,8 @@ import google.generativeai as genai
 from backend.core.config import LLM_RETRY_ATTEMPTS, LLM_RETRY_DELAY_SECONDS
 from backend.core.mock_router import get_mock_response
 from backend.core.schema_utils import clean_vertex_schema
+from backend.core.token_budget import TokenBudget
+from backend.core.llm_rate_limiter import get_rate_limiter
 
 logger = structlog.get_logger()
 
@@ -214,6 +216,32 @@ class SmartGenerativeModel:
         self.model_name = model_name
         self.project = project
         self.location = location
+        self.rate_limiter = get_rate_limiter()
+
+    def _record_tokens(self, response, budget: Optional[TokenBudget] = None):
+        """Helper to extract token usage and update TokenBudget and LLMRateLimiter."""
+        if response is None:
+            return response
+        prompt_tok = 0
+        comp_tok = 0
+        um = getattr(response, "usage_metadata", None)
+        if um:
+            prompt_tok = getattr(um, "prompt_token_count", 0) or 0
+            comp_tok = getattr(um, "candidates_token_count", 0) or 0
+        elif hasattr(response, "usage") and response.usage:
+            prompt_tok = getattr(response.usage, "prompt_tokens", 0) or 0
+            comp_tok = getattr(response.usage, "completion_tokens", 0) or 0
+
+        # Approximate if usage metadata missing
+        if prompt_tok == 0 and comp_tok == 0 and hasattr(response, "text") and response.text:
+            comp_tok = max(1, len(response.text) // 4)
+            prompt_tok = 100
+
+        if budget is not None:
+            budget.record(prompt_tokens=prompt_tok, completion_tokens=comp_tok, agent=self.model_name or "llm")
+        if self.rate_limiter is not None:
+            self.rate_limiter.record_usage(prompt_tok + comp_tok)
+        return response
 
     def status_label(self) -> str:
         if is_mock_llm_enabled():
@@ -226,16 +254,16 @@ class SmartGenerativeModel:
             return f"Gemini Developer API ({self.model_name})"
         return "No live LLM configured"
 
-    def generate_content(self, contents, generation_config=None):
+    def generate_content(self, contents, generation_config=None, budget: Optional[TokenBudget] = None):
         try:
             if is_mock_llm_enabled():
                 logger.info("MOCK_LLM is set to true. Forcing mock LLM response.")
-                return get_mock_response(contents, generation_config)
+                return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
 
             if self.real_model:
                 # Handle Groq provider (OpenAI-compatible API)
                 if self.provider == "groq":
-                    return self._groq_generate_content(contents, generation_config)
+                    return self._record_tokens(self._groq_generate_content(contents, generation_config), budget=budget)
 
                 # Handle Google providers
                 # If generation_config is a google.generativeai.GenerationConfig, convert it to a dictionary
@@ -254,7 +282,7 @@ class SmartGenerativeModel:
                 last_error = None
                 for attempt in range(1, max(LLM_RETRY_ATTEMPTS, 1) + 1):
                     try:
-                        return self.real_model.generate_content(contents, generation_config=generation_config)
+                        return self._record_tokens(self.real_model.generate_content(contents, generation_config=generation_config), budget=budget)
                     except Exception as exc:
                         last_error = exc
                         if attempt >= max(LLM_RETRY_ATTEMPTS, 1):
@@ -271,13 +299,13 @@ class SmartGenerativeModel:
                 if not is_mock_llm_enabled():
                     raise RuntimeError("No real generative model initialized. Check Vertex AI / API credentials.")
                 logger.warning("No real generative model initialized. Falling back to mock generator.")
-                return get_mock_response(contents, generation_config)
+                return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
         except Exception as e:
             if not is_mock_llm_enabled():
                 logger.error("GenerativeModel call failed.", error=str(e))
                 raise e
             logger.warning("GenerativeModel call failed. Falling back to mock response.", error=str(e))
-            return get_mock_response(contents, generation_config)
+            return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
 
     def _groq_generate_content(self, contents, generation_config=None):
         """Generate content using Groq's OpenAI-compatible API."""
@@ -381,17 +409,22 @@ class SmartGenerativeModel:
 
         return messages
 
-    async def async_generate_content(self, contents, generation_config=None):
+    async def async_generate_content(self, contents, generation_config=None, budget: Optional[TokenBudget] = None):
         """
-        Non-blocking async wrapper around generate_content with timeout.
+        Non-blocking async wrapper around generate_content with rate limiting and timeout.
         Runs the synchronous LLM API call in a thread pool to avoid blocking
         the asyncio event loop (critical for FastAPI concurrent request handling).
         Raises asyncio.TimeoutError if the call exceeds LLM_CALL_TIMEOUT_SECONDS.
         """
         import asyncio
         from backend.core.config import LLM_CALL_TIMEOUT_SECONDS
+        if self.rate_limiter is not None:
+            try:
+                await self.rate_limiter.acquire(estimated_tokens=1000)
+            except Exception as exc:
+                logger.warning("LLM rate limiter warning", error=str(exc))
         return await asyncio.wait_for(
-            asyncio.to_thread(self.generate_content, contents, generation_config),
+            asyncio.to_thread(self.generate_content, contents, generation_config, budget),
             timeout=LLM_CALL_TIMEOUT_SECONDS
         )
 
