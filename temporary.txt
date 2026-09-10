@@ -1,0 +1,13 @@
+| Agent                                          | Purpose                                                                                                                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Correlation Agent**                          | Correlates alarms/events, removes duplicates, and identifies likely root causes.                                                        |
+| **Ticket Categorization Agent**                | Classifies and routes tickets to the right team/queue/workflow.                                                                         |
+| **Case/Issue Summarizer**                      | Summarizes incidents, timelines, status, and action items.                                                                              |
+| **RAG / Knowledge Agent**                      | Searches SOPs/documentation and provides troubleshooting guidance using RAG.                                                            |
+| **Ticket Hygiene & Communications Agent**      | Keeps tickets complete, consistent, and customer-readable.                                                                              |
+| **Knowledge Summary & Next Best Action Agent** | Summarizes issues and recommends the next steps for analysts.                                                                           |
+| **Audit & SLA Governance Agent**               | Monitors SLA/quality governance and reporting readiness.                                                                                |
+| **Document Intelligence & Extraction Agent**   | Extracts structured information from programme documents.                                                                               |
+| **Invoice & PO Lifecycle Agent**               | Handles invoice validation, PO routing, and payment tracking.                                                                           |
+| **Impact Assessment Agent**                    | Calculates **blast radius, affected services, customer impact, and severity** using network topology.                                   |
+| **Recommendation Agent**                       | Analyzes tickets, configurations, history, and runbooks to recommend **prioritized remediation actions** and estimated resolution time. |
