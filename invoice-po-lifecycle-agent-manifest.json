@@ -1,0 +1,99 @@
+{
+  "record": {
+    "uid": "A-9105",
+    "name": "Invoice & PO Lifecycle Agent",
+    "version": "1.0.0",
+    "short_description": "Manages invoice validation, PO routing, and Net 90 payment tracking",
+    "description": "Manages invoice validation, PO routing, and Net 90 payment tracking",
+    "status": "work_in_progress",
+    "lifecycle": "approved",
+    "progress": "Active",
+    "owner": "Wireline Programme Management",
+    "platform_source": "native",
+    "created_time": "2026-09-04 07:34:09",
+    "updated_time": "2026-09-10 13:38:19",
+    "rating": "0.0",
+    "view_count": "0"
+  },
+  "classification": {
+    "domains": [
+      "Plan and Build"
+    ],
+    "processes": [],
+    "skills": [],
+    "tags": [],
+    "archetype": "General",
+    "autonomy_level": "Assistive"
+  },
+  "capabilities": {
+    "goals": [],
+    "kpis": [],
+    "features": [],
+    "inputs": [],
+    "outputs": []
+  },
+  "platform_support": [
+    "ADM",
+    "NikaManager",
+    "Web"
+  ],
+  "operations": [],
+  "workflow": [
+    {
+      "step": "INPUT",
+      "label": "User Input / Trigger",
+      "description": "Agent receives structured input or signal.",
+      "active": true
+    },
+    {
+      "step": "ANALYSIS",
+      "label": "Context Analysis",
+      "description": "Agent analyzes input relative to goals & memory.",
+      "active": true
+    },
+    {
+      "step": "EXECUTION",
+      "label": "Tool Execution",
+      "description": "Agent performs actions using available tools.",
+      "active": false
+    },
+    {
+      "step": "VALIDATION",
+      "label": "Output Validation",
+      "description": "Check results against Definition of Done.",
+      "active": true
+    },
+    {
+      "step": "HUMAN_REVIEW",
+      "label": "Human Review",
+      "description": "Output requires approval before finalization.",
+      "active": true
+    }
+  ],
+  "runtime": {
+    "agent_type": "General",
+    "runtime_pattern": "",
+    "architecture_notes": ""
+  },
+  "modules": {
+    "tech_stack": [],
+    "data_connections": [],
+    "runtime_artifacts": [],
+    "security_controls": [],
+    "guardrails": [],
+    "personas": [],
+    "dependencies": [],
+    "triggers": [],
+    "in_scope": [],
+    "out_of_scope": [],
+    "customers": []
+  },
+  "extensions": {
+    "problem_statement": "Validate invoice submissions against milestone Acceptance records (Exhibit E), flag discrepancies, auto-route for approval, track payment status (Net 90), and generate service credit invoices when required. Rogers PM/ARR or Rogers SCM reviews all invoices before approval. Success measured through invoice validation accuracy, payment processing cycle time, and service credit calculation accuracy.",
+    "operational_details": "",
+    "definition_of_done": "",
+    "tools": [],
+    "outbound_to": [],
+    "examples": []
+  }
+}

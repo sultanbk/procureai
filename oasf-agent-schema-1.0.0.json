@@ -1,0 +1,192 @@
+{
+  "title": "OASF Agent Manifest Schema",
+  "version": "1.0.0",
+  "fields": [
+    {
+      "field": "oasf_version",
+      "type": "string",
+      "required": "Required",
+      "description": "OASF specification version this record conforms to (e.g. \"1.0.0\")."
+    },
+    {
+      "field": "agent_id",
+      "type": "string",
+      "required": "Required",
+      "description": "Unique agent identifier (e.g. \"AGT-001\")."
+    },
+    {
+      "field": "name",
+      "type": "string",
+      "required": "Required",
+      "description": "Human-readable agent name."
+    },
+    {
+      "field": "version",
+      "type": "string",
+      "required": "Required",
+      "description": "Semantic version of this agent record (e.g. \"1.0.0\")."
+    },
+    {
+      "field": "status",
+      "type": "string",
+      "required": "Required",
+      "description": "Lifecycle status: draft | wip | deployed."
+    },
+    {
+      "field": "owner",
+      "type": "string",
+      "required": "Optional",
+      "description": "Owning team or individual."
+    },
+    {
+      "field": "business_domain",
+      "type": "string",
+      "required": "Optional",
+      "description": "Business domain classification (e.g. \"Network Operations\")."
+    },
+    {
+      "field": "execution_platform",
+      "type": "string",
+      "required": "Optional",
+      "description": "Platform the agent is deployed on (e.g. \"ServiceNow\")."
+    },
+    {
+      "field": "short_description",
+      "type": "string",
+      "required": "Recommended",
+      "description": "One-line summary of what the agent does."
+    },
+    {
+      "field": "problem_statement",
+      "type": "string",
+      "required": "Recommended",
+      "description": "The business problem this agent is solving."
+    },
+    {
+      "field": "description",
+      "type": "string",
+      "required": "Recommended",
+      "description": "Full description of the agent's purpose and approach."
+    },
+    {
+      "field": "definition_of_done",
+      "type": "string",
+      "required": "Optional",
+      "description": "Criteria that define task completion for this agent."
+    },
+    {
+      "field": "customers",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Customer organisations this agent serves."
+    },
+    {
+      "field": "inputs",
+      "type": "string[]",
+      "required": "Recommended",
+      "description": "Input data types, events, or triggers consumed by the agent."
+    },
+    {
+      "field": "outputs",
+      "type": "string[]",
+      "required": "Recommended",
+      "description": "Artifacts or data the agent produces."
+    },
+    {
+      "field": "in_scope",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Explicit list of capabilities that are in scope."
+    },
+    {
+      "field": "out_of_scope",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Explicitly excluded capabilities."
+    },
+    {
+      "field": "triggers",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Events or schedules that invoke this agent."
+    },
+    {
+      "field": "tools",
+      "type": "object[]",
+      "required": "Optional",
+      "description": "MCP servers or tools used. Each item: { name, description }."
+    },
+    {
+      "field": "tech_stack",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Technologies used (e.g. \"Python\", \"FastAPI\", \"LangChain\")."
+    },
+    {
+      "field": "skills",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Capability tags using slash-notation."
+    },
+    {
+      "field": "operations",
+      "type": "object[]",
+      "required": "Optional",
+      "description": "Exposed operations. Each item: { name, description }."
+    },
+    {
+      "field": "runtime",
+      "type": "object",
+      "required": "Optional",
+      "description": "Runtime details: { type, pattern, notes }."
+    },
+    {
+      "field": "runtime_artifacts",
+      "type": "object[]",
+      "required": "Optional",
+      "description": "Produced artifacts. Each item: { name, type }."
+    },
+    {
+      "field": "external_systems",
+      "type": "object[]",
+      "required": "Optional",
+      "description": "Linked external systems. Each item: { name, description }."
+    },
+    {
+      "field": "connectors",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Connector IDs from the AgentHub Connectors Library."
+    },
+    {
+      "field": "goals",
+      "type": "string[]",
+      "required": "Recommended",
+      "description": "Strategic goals and objectives this agent contributes to."
+    },
+    {
+      "field": "kpis",
+      "type": "object[]",
+      "required": "Optional",
+      "description": "Key performance indicators. Each item: { name, target }."
+    },
+    {
+      "field": "personas",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Target user roles or personas."
+    },
+    {
+      "field": "security_controls",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Security requirements and controls."
+    },
+    {
+      "field": "guardrails",
+      "type": "string[]",
+      "required": "Optional",
+      "description": "Operational guardrails and constraints."
+    }
+  ]
+}
