@@ -40,6 +40,17 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `GEMINI_MODEL` | `gemini-3.7-flash` | Gemini model name |
 | `GOOGLE_CLOUD_PROJECT` | `procureai` in `llm_client.py` fallback | Vertex AI project |
 | `GOOGLE_CLOUD_LOCATION` | `global` (or `us-central1`) | Vertex AI region / location |
+| `CONTEXT_SUBSTRATE_ENABLED` | `true` | Enables/disables Context Substrate epistemic brain |
+| `CONTEXT_SUBSTRATE_MODE` | `auto` | Substrate operating mode: `auto` (preferred: tries live, falls back to embedded), `live`, or `mock` |
+| `CONTEXT_SUBSTRATE_URL` | `https://beta.synapt.ai` | SynaptAI TriStore REST API base URL |
+| `CONTEXT_SUBSTRATE_PROVIDER_ID` | `procureai` | Active Context Provider knowledge sandbox namespace |
+| `CONTEXT_SUBSTRATE_API_KEY` | unset | User/Agent Bearer authentication token for TriStore REST queries |
+| `SYNAPT_MCP_URL` | `https://beta.synapt.ai/api/mcp` | Base URL for Model Context Protocol (MCP) streamable HTTP service |
+| `SYNAPT_PROVIDER_ID` | `procureai` | Provider ID namespace for Trident MCP queries |
+| `SYNAPT_AGENT_CLIENT_ID` | unset | Registered Agent Client ID for MCP authentication |
+| `SYNAPT_AGENT_CLIENT_SECRET` | unset | Optional client secret for automated token exchange |
+| `SYNAPT_AGENT_TOKEN` | unset | Pre-generated static Bearer token for Trident MCP S2S client |
+| `SYNAPT_VERIFY_SSL` | `false` | When false, disables strict TLS inspection on internal domains |
 
 ## Frontend Environment Variables
 
@@ -96,3 +107,51 @@ GEMINI_MODEL=gemini-3.7-flash
 ```
 
 Assumption: Vertex AI authentication is provided through the Google SDK environment, such as `GOOGLE_APPLICATION_CREDENTIALS` or application default credentials. The code initializes `vertexai.init(project=..., location=...)` but does not manage credential files itself.
+
+## Context Substrate & Trident MCP Configuration
+
+Context Substrate connects ProcureAI to Prodapt's governed 4-store knowledge brain (Neo4j Concept Graph, Milvus KS, Milvus PS, and Milvus GN).
+
+### 1. Recommended Auto-Fallback Mode (Zero-Fail Invariant)
+
+In `auto` mode, the client attempts to connect to the live TriStore at `beta.synapt.ai`. If remote credentials expire or the network is unavailable, it seamlessly falls back to the embedded 4-store engine:
+
+```ini
+# =====================================================================
+# SynaptAI Context Substrate (Trident MCP & 4-Store TriStore)
+# =====================================================================
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=auto
+CONTEXT_SUBSTRATE_URL=https://beta.synapt.ai
+CONTEXT_SUBSTRATE_PROVIDER_ID=procureai
+CONTEXT_SUBSTRATE_API_KEY=your-user-session-or-agent-token
+
+# Trident MCP Settings (Official Prodapt IPL SDK)
+SYNAPT_MCP_URL=https://beta.synapt.ai/api/mcp
+SYNAPT_PROVIDER_ID=procureai
+SYNAPT_AGENT_CLIENT_ID=your-registered-client-id
+SYNAPT_AGENT_TOKEN=your-user-session-or-agent-token
+SYNAPT_VERIFY_SSL=false
+```
+
+### 2. Strict Live Mode
+
+In `live` mode, all queries and status probes strictly require valid authorization headers from the live SynaptAI service:
+
+```ini
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=live
+CONTEXT_SUBSTRATE_URL=https://beta.synapt.ai
+CONTEXT_SUBSTRATE_PROVIDER_ID=procureai
+CONTEXT_SUBSTRATE_API_KEY=your-active-jwt-token
+```
+
+### 3. Standalone Embedded / Mock Mode
+
+Runs completely locally with zero external network dependencies, serving the verified benchmark dataset (Apex Telecom MSA, Amendment 1, SLA credits, and recovery DAG):
+
+```ini
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=mock
+```
+

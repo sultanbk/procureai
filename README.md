@@ -1,4 +1,4 @@
-﻿# ProcureAI
+# ProcureAI
 
 **Audience:** Developers, technical evaluators, and application users.
 
@@ -13,6 +13,8 @@ The implementation is the source of truth for this documentation. Current code u
 | [Architecture](ARCHITECTURE.md) | Developers | System architecture, data flow, request flow, and agent workflow |
 | [Data Schemas](DATA_SCHEMAS.md) | Developers | Pydantic contracts and database table reference |
 | [API Reference](docs/API.md) | Developers | HTTP and WebSocket endpoints implemented by FastAPI routers |
+| [Context Substrate Guide](docs/CONTEXT_SUBSTRATE_GUIDE.md) | Developers, users | Plain-English manual to SynaptAI 4-store knowledge brain, live integration, and concepts |
+| [Context Substrate Reference](docs/CONTEXT_SUBSTRATE_PROJECT_REFERENCE.md) | Developers | Technical deep-dive on files, schemas, endpoints, and 4 core workflows |
 | [Configuration](docs/CONFIGURATION.md) | Developers, operators | Environment variables and runtime behavior |
 | [Developer Guide](docs/DEVELOPER_GUIDE.md) | Developers | Local setup, project structure, workflows, and conventions |
 | [User Guide](docs/USER_GUIDE.md) | End users | How to use audits, reports, contract library, analytics, settings, and auto-audit |
@@ -45,14 +47,17 @@ flowchart LR
     CI --> RG[Report Generator]
     RG --> DB
     API --> LLM[Gemini Developer API / Vertex AI / Mock LLM]
+    API <--> CS[Prodapt SynaptAI Context Substrate<br/>Trident MCP & 4-Store TriStore<br/>Neo4j + Milvus KS/PS/GN]
+    CC <--> CS
 ```
 
 Important implementation notes:
 
 - `backend/main.py` registers FastAPI routes and starts the local file watcher during application lifespan.
 - `backend/agents/pipeline.py` compiles the audit graph. The implementation runs invoice extraction before contract parsing inside a single `parallel_extractors` node for state consistency, then runs cross-validation, compliance checking, reverse sweep, cross-invoice analysis, and report generation.
-- Financial rule application is handled by Python evaluators in `backend/agents/compliance_checker/rule_engine.py`; LLM calls are used for extraction, matching assistance, narratives, critic annotation, Q&A, dispute letters, comparisons, and negotiation briefs.
-- Custom API-key and rate-limit middleware exists in `backend/api/middleware.py`, but it is not registered in `backend/main.py` at the time of this documentation update. See [Security](docs/SECURITY.md).
+- **Dual-Brain Architecture**: ProcureAI strictly separates mathematical computation from epistemic contract knowledge:
+  - **Deterministic Math Engine** (`backend/core/rule_engine.py`): Python `Decimal` performs 100% of monetary math (Zero-Math rule for LLMs).
+  - **SynaptAI Context Substrate** (`backend/core/context_substrate_client.py`): Connects to live TriStore (`beta.synapt.ai`, provider `procureai`) via Trident MCP and REST. Resolves amendment hierarchies (`SUPERSEDES`), retrieves corporate recovery SOP DAGs (`PRECEDES`), and provides 5-stage retrieval pass cards and visual reasoning subgraphs with resilient embedded fallback.
 
 ## Quick Start
 

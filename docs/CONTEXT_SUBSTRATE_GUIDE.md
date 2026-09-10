@@ -227,3 +227,51 @@ ProcureAI pairs its **deterministic compliance engine** with Context Substrate's
 | **SOP as DAG** | Standard Operating Procedure represented as a Directed Acyclic Graph. | Powers the step-by-step dispute recovery checklist. |
 | **Reasoning Subgraph**| The exact slice of nodes and edges traversed to validate a finding. | Provides 1-click visual proof for auditors and CFOs. |
 | **Retrieval Pass Card**| A 5-stage scorecard showing groundedness and hallucination risk. | Guarantees audit findings are backed by document evidence. |
+
+---
+
+## 9. Live Deployment & Verified Ingested Contracts
+
+### A. Live Environment Details
+
+ProcureAI is actively connected to Prodapt's live SynaptAI Context Substrate infrastructure:
+* **Host URL:** `https://beta.synapt.ai`
+* **Context Provider Namespace:** `procureai`
+* **MCP Protocol Service:** `https://beta.synapt.ai/api/mcp`
+* **Agent Integration SDK:** [`context_substrate/demo-agent-ipl/`](file:///d:/sultan/ProcureAI/procureai/context_substrate/demo-agent-ipl/)
+
+### B. Live Ingested Enterprise Contracts
+
+The live `procureai` knowledge substrate holds five enterprise contracts available for live semantic search and compliance validation:
+1. **Cloud Infrastructure Master Agreement:** Master cloud hosting, dedicated DIA circuits, tiered compute rates, and SLA penalty credits.
+2. **Master Services Agreement for Logistics & Transport Services (`MSA-2024-APX-001` & `MSA-2025-APX-002`):** Logistics dispatch, fuel surcharge formulas, demurrage allowances, and governing rate revisions.
+3. **Professional Services Master Agreement (`MSA-2024-PSC-006`):** Time-and-materials rate cards, overtime billing caps, and milestone acceptance criteria.
+4. **Software Services & Consulting Contract (`MSA-2024-TSS-002`):** Enterprise software licensing, tier-1 technical support commitments, and warranty terms.
+5. **Construction Services Agreement:** Capital project milestones, retainage withholding percentages, and delay damages clauses.
+
+### C. How to Test & Query
+
+#### 1. Via the Web Interface
+1. Navigate to `http://localhost:5173`.
+2. Go to **Settings** $\rightarrow$ **Context Substrate** tab.
+3. Observe the connection indicator:
+   - When remote tokens are active: **`CONNECTED (LIVE)`**
+   - When offline or during token renewal: **`ACTIVE (EMBEDDED)`** (seamless auto-fallback)
+4. Click **Run Diagnostic Query** to see the 5-stage Pass Card and visual knowledge graph in action.
+
+#### 2. Via the Official Trident MCP Agent CLI
+From the project root:
+
+```bash
+# Query the live SynaptAI TriStore
+.venv\Scripts\python context_substrate/demo-agent-ipl/query.py "What are the main enterprise contracts in this system?" --sources
+```
+
+#### 3. Automated Test Suite
+Continuous validation is executed via Pytest:
+
+```bash
+.venv\Scripts\pytest tests/test_context_substrate.py -v
+```
+All 8 integration tests validate client status, TriStore queries, amendment supersession, SOP DAG retrieval, discrepancy subgraphs, and REST API controllers.
+

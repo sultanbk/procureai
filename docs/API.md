@@ -1,4 +1,4 @@
-﻿# API Reference
+# API Reference
 
 **Audience:** Developers integrating with the backend or maintaining the frontend.
 
@@ -229,3 +229,45 @@ Retry body:
   "contract_id": "ctr_supplier_abcd"
 }
 ```
+
+## Context Substrate & Knowledge Graph
+
+Endpoints providing access to the Prodapt SynaptAI 4-Store TriStore, visual reasoning subgraphs, 5-stage retrieval pass cards, corporate dispute recovery SOP DAGs, and Context Provider management.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/context-substrate/status` | Read Substrate connection health, active mode, and store statistics |
+| `POST` | `/api/context-substrate/query` | Execute grounded semantic query across TriStore (returns answer, subgraph, pass card) |
+| `GET` | `/api/context-substrate/graph/{contract_id}` | Fetch full entity-relationship graph for a contract |
+| `GET` | `/api/context-substrate/subgraph/discrepancy/{finding_id}` | Generate focused visual proof subgraph for an invoice audit finding |
+| `GET` | `/api/context-substrate/procedures/{intent}` | Retrieve corporate Standard Operating Procedure as a sequential DAG (`PRECEDES`) |
+| `GET` | `/api/context-substrate/amendments/{contract_id}/{clause_name}` | Resolve latest governing rate by traversing `SUPERSEDES` relationships |
+| `GET` | `/api/context-substrate/providers` | List active Context Provider sandbox namespaces |
+| `POST` | `/api/context-substrate/providers` | Register a new Context Provider with customized extraction settings |
+| `DELETE` | `/api/context-substrate/providers/{provider_id}` | Remove a Context Provider sandbox namespace |
+
+### Query Substrate Request
+
+```http
+POST /api/context-substrate/query
+Content-Type: application/json
+```
+
+```json
+{
+  "query": "What is the revised bandwidth rate in Amendment 1?",
+  "provider_id": "procureai",
+  "contract_id": "doc_msa_apex",
+  "max_hops": 2,
+  "min_confidence": 0.70
+}
+```
+
+### Response Shape
+
+Returns `ContextSubstrateQueryResponse`:
+- `answer`: Grounded synthesis from verbatim contract clauses.
+- `reasoning_subgraph`: Graph nodes and directed edges (`SUPERSEDES`, `GOVERNED_BY`, `BILLED_ON`) used for visual inspection.
+- `pass_card`: 5-Stage scorecard (Knowledge Store, Context Graph, Procedure Store, Fusion Layer, Generation Groundedness) with `hallucination_probability_pct`.
+- `sources`: Verbatim clause chunks and citation metadata.
+

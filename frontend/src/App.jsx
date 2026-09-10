@@ -2,16 +2,20 @@
  * ProcureAI - File Summary
  * 
  * What it does:
- * Main App component defining paths and layouts.
+ * Main App component defining routes and layouts.
  * 
  * What it means:
  * React entry routing shell, integrating AppLayout and dashboard pages.
  * 
  * Importance in Project:
  * Critical. Houses React Router definitions and global hooks.
+ *
+ * Fix #5: Replaced manual useState view management with react-router-dom Routes.
+ * Now supports URL-based navigation, bookmarks, deep linking, and browser back/forward.
  */
 
-import { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useState, useCallback } from 'react';
 import AppLayout from './components/layout/AppLayout';
 import Upload from './pages/Upload';
 import AuditRunning from './pages/AuditRunning';
@@ -27,114 +31,150 @@ import Compare from './pages/Compare';
 import { getAuditStatus } from './api';
 import { useToast } from './components/ui/ToastProvider';
 
-export default function App() {
-  const { toast } = useToast();
-  const [currentView, setCurrentView] = useState('list');
-  const [activeAuditId, setActiveAuditId] = useState(null);
-  const [completedReport, setCompletedReport] = useState(null);
-  const [activeSupplierName, setActiveSupplierName] = useState(null);
-  const [historyBackPath, setHistoryBackPath] = useState('scorecard');
 
-  const handleSelectAudit = async (id, status) => {
-    setActiveAuditId(id);
-    if (status === 'COMPLETE') {
-      try {
-        const data = await getAuditStatus(id);
-        const reportWithRulebook = { ...data.audit_report, rulebook: data.partial_results?.rulebook };
-        setCompletedReport(reportWithRulebook);
-        setCurrentView('report');
-      } catch {
-        toast('Failed to load audit report details', 'error');
-      }
-    } else if (status === 'FAILED') {
-      setCompletedReport(null);
-      setCurrentView('running');
-    } else {
-      setCompletedReport(null);
-      setCurrentView('running');
-    }
-  };
+// --- Wrapper components that extract route params and wire up navigation ---
 
-  const handleAuditStarted = (id) => {
-    setActiveAuditId(id);
-    setCompletedReport(null);
-    setCurrentView('running');
-  };
-
-  const handleAuditComplete = (report) => {
-    setCompletedReport(report);
-    setCurrentView('report');
-  };
-
-  const handleNewAudit = () => {
-    setActiveAuditId(null);
-    setCompletedReport(null);
-    setCurrentView('upload');
-  };
+function AuditRunningRoute() {
+  const { auditId } = useParams();
+  const navigate = useNavigate();
+  const handleComplete = useCallback((report) => {
+    navigate(`/audit/${auditId}/report`, { state: { report } });
+  }, [auditId, navigate]);
 
   return (
-    <AppLayout
-      currentView={currentView}
-      onNavigate={setCurrentView}
-      onNewAudit={handleNewAudit}
-    >
-      {currentView === 'list' && (
-        <AuditList
-          onSelectAudit={handleSelectAudit}
-          onNewAudit={handleNewAudit}
-        />
-      )}
-      {currentView === 'upload' && (
-        <Upload onAuditStarted={handleAuditStarted} />
-      )}
-      {currentView === 'running' && (
-        <AuditRunning
-          auditId={activeAuditId}
-          onBack={() => setCurrentView('list')}
-          onComplete={handleAuditComplete}
-        />
-      )}
-      {currentView === 'report' && (
-        <AuditReport
-          report={completedReport}
-          onBack={() => setCurrentView('list')}
-        />
-      )}
-      {currentView === 'scorecard' && (
-        <SupplierScorecard
-          onSelectSupplier={(name) => {
-            setActiveSupplierName(name);
-            setHistoryBackPath('scorecard');
-            setCurrentView('history');
-          }}
-        />
-      )}
-      {currentView === 'history' && (
-        <SupplierHistory
-          supplierName={activeSupplierName}
-          onBack={() => setCurrentView(historyBackPath)}
-          backLabel={historyBackPath === 'library' ? 'Back to Contract Library' : 'Back to Scorecard'}
-          onSelectAudit={handleSelectAudit}
-        />
-      )}
-      {currentView === 'library' && (
-        <ContractLibrary
-          onSelectSupplier={(name) => {
-            setActiveSupplierName(name);
-            setHistoryBackPath('library');
-            setCurrentView('history');
-          }}
-        />
-      )}
-      {currentView === 'auto-audit' && (
-        <AutoAudit
-          onSelectAudit={handleSelectAudit}
-          onGoToLibrary={() => setCurrentView('library')}
-        />
-      )}
-      {currentView === 'analytics' && <Analytics />}
-      {currentView === 'settings' && <Settings />}
-      {currentView === 'compare' && <Compare />}
+    <AuditRunning
+      auditId={auditId}
+      onBack={() => navigate('/audits')}
+      onComplete={handleComplete}
+    />
+  );
+}
+
+function AuditReportRoute() {
+  const { auditId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(!report);
+
+  // Load report if not passed via navigation state
+  useState(() => {
+    (async () => {
+      try {
+        const data = await getAuditStatus(auditId);
+        if (data.audit_report) {
+          const reportWithRulebook = { ...data.audit_report, rulebook: data.partial_results?.rulebook };
+          setReport(reportWithRulebook);
+        }
+      } catch {
+        toast('Failed to load audit report details', 'error');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [auditId]);
+
+  if (loading && !report) return null;
+  return <AuditReport report={report} onBack={() => navigate('/audits')} />;
+}
+
+function SupplierHistoryRoute({ backPath = '/suppliers' }) {
+  const { supplierName } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSelectAudit = useCallback(async (id, status) => {
+    if (status === 'COMPLETE') {
+      navigate(`/audit/${id}/report`);
+    } else {
+      navigate(`/audit/${id}`);
+    }
+  }, [navigate]);
+
+  return (
+    <SupplierHistory
+      supplierName={decodeURIComponent(supplierName)}
+      onBack={() => navigate(backPath)}
+      backLabel={backPath === '/library' ? 'Back to Contract Library' : 'Back to Scorecard'}
+      onSelectAudit={handleSelectAudit}
+    />
+  );
+}
+
+
+export default function App() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSelectAudit = useCallback(async (id, status) => {
+    if (status === 'COMPLETE') {
+      navigate(`/audit/${id}/report`);
+    } else {
+      navigate(`/audit/${id}`);
+    }
+  }, [navigate]);
+
+  const handleAuditStarted = useCallback((id) => {
+    navigate(`/audit/${id}`);
+  }, [navigate]);
+
+  const handleNewAudit = useCallback(() => {
+    navigate('/upload');
+  }, [navigate]);
+
+  return (
+    <AppLayout onNewAudit={handleNewAudit}>
+      <Routes>
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/audits" replace />} />
+
+        {/* Audit routes */}
+        <Route path="/audits" element={
+          <AuditList
+            onSelectAudit={handleSelectAudit}
+            onNewAudit={handleNewAudit}
+          />
+        } />
+        <Route path="/upload" element={
+          <Upload onAuditStarted={handleAuditStarted} />
+        } />
+        <Route path="/audit/:auditId" element={<AuditRunningRoute />} />
+        <Route path="/audit/:auditId/report" element={<AuditReportRoute />} />
+
+        {/* Supplier routes */}
+        <Route path="/suppliers" element={
+          <SupplierScorecard
+            onSelectSupplier={(name) => navigate(`/suppliers/${encodeURIComponent(name)}/history`)}
+          />
+        } />
+        <Route path="/suppliers/:supplierName/history" element={
+          <SupplierHistoryRoute backPath="/suppliers" />
+        } />
+
+        {/* Contract routes */}
+        <Route path="/library" element={
+          <ContractLibrary
+            onSelectSupplier={(name) => navigate(`/library/suppliers/${encodeURIComponent(name)}/history`)}
+          />
+        } />
+        <Route path="/library/suppliers/:supplierName/history" element={
+          <SupplierHistoryRoute backPath="/library" />
+        } />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/auto-audit" element={
+          <AutoAudit
+            onSelectAudit={handleSelectAudit}
+            onGoToLibrary={() => navigate('/library')}
+          />
+        } />
+
+        {/* Analytics & Settings */}
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/settings" element={<Settings />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/audits" replace />} />
+      </Routes>
     </AppLayout>
   );
 }
