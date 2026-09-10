@@ -57,10 +57,13 @@ class Base(DeclarativeBase):
     pass
 
 # Dependency to get db session in routes
+# Fix #15: Now commits on success and rolls back on exception.
+# Routes using Depends(get_db) no longer need manual session.commit() calls.
 async def get_db():
     async with AsyncSessionLocal() as session:
         try:
             yield session
+            await session.commit()
         except Exception:
             await session.rollback()
             raise
