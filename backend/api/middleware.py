@@ -89,9 +89,17 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
+    """
+    Per-client-IP rate limiting middleware.
+    Fix #10: Evicts stale client entries after their window expires to prevent
+    unbounded memory growth from unique client IPs.
+    """
+    MAX_TRACKED_CLIENTS = 10_000  # Safety cap to prevent memory abuse
+
     def __init__(self, app):
         super().__init__(app)
         self.requests_by_client = defaultdict(deque)
+        self._last_cleanup = time.monotonic()
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if RATE_LIMIT_REQUESTS <= 0:
@@ -100,6 +108,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client = request.client.host if request.client else "unknown"
         now = time.monotonic()
         window = self.requests_by_client[client]
+
+        # Expire old entries from this client's window
         while window and now - window[0] > RATE_LIMIT_WINDOW_SECONDS:
             window.popleft()
 
@@ -110,4 +120,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
 
         window.append(now)
+
+        # Periodic cleanup: evict all clients with empty windows (every 60s)
+        if now - self._last_cleanup > 60.0:
+            self._last_cleanup = now
+            stale_keys = [k for k, v in self.requests_by_client.items() if not v]
+            for k in stale_keys:
+                del self.requests_by_client[k]
+
+        # Safety cap: if too many unique clients, drop oldest entries
+        if len(self.requests_by_client) > self.MAX_TRACKED_CLIENTS:
+            excess = len(self.requests_by_client) - self.MAX_TRACKED_CLIENTS
+            keys_to_remove = list(self.requests_by_client.keys())[:excess]
+            for k in keys_to_remove:
+                del self.requests_by_client[k]
+
         return await call_next(request)
+

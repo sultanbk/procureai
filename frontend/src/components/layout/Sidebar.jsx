@@ -1,60 +1,72 @@
+/**
+ * ProcureAI - Sidebar Navigation
+ *
+ * Fix #5: Replaced prop-based onNavigate/currentView with React Router's
+ * useNavigate/useLocation for URL-based navigation with bookmarks and deep linking.
+ */
+
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, Award, BarChart2, FolderOpen, Columns, Zap, Settings, Plus, Menu, X } from 'lucide-react';
 
 const NAV_GROUPS = [
   {
     label: 'Audits',
     items: [
-      { id: 'list', label: 'Audit History', icon: FileText, alsoActive: ['running', 'report'] },
+      { path: '/audits', label: 'Audit History', icon: FileText, alsoActive: ['/audit/', '/upload'] },
     ],
   },
   {
     label: 'Suppliers',
     items: [
-      { id: 'scorecard', label: 'Scorecard', icon: Award, alsoActive: ['history'] },
-      { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+      { path: '/suppliers', label: 'Scorecard', icon: Award, alsoActive: ['/suppliers/'] },
+      { path: '/analytics', label: 'Analytics', icon: BarChart2 },
     ],
   },
   {
     label: 'Contracts',
     items: [
-      { id: 'library', label: 'Contract Library', icon: FolderOpen },
-      { id: 'compare', label: 'Compare', icon: Columns },
-      { id: 'auto-audit', label: 'Auto-Audit', icon: Zap },
+      { path: '/library', label: 'Contract Library', icon: FolderOpen },
+      { path: '/compare', label: 'Compare', icon: Columns },
+      { path: '/auto-audit', label: 'Auto-Audit', icon: Zap },
     ],
   },
   {
     label: 'System',
     items: [
-      { id: 'settings', label: 'Settings', icon: Settings },
+      { path: '/settings', label: 'Settings', icon: Settings },
     ],
   },
 ];
 
-function isItemActive(item, currentView) {
-  if (item.id === currentView) return true;
-  if (item.alsoActive?.includes(currentView)) return true;
+function isItemActive(item, pathname) {
+  if (pathname === item.path) return true;
+  if (item.alsoActive?.some(prefix => pathname.startsWith(prefix))) return true;
   return false;
 }
 
-function isAuditFlowActive(currentView) {
-  return ['upload', 'running', 'report'].includes(currentView);
+function isAuditFlowActive(pathname) {
+  return ['/upload'].includes(pathname) || pathname.startsWith('/audit/');
 }
 
-function NavContent({ currentView, onNavigate, onNewAudit, onClose }) {
-  const handleNav = (view) => {
-    onNavigate(view);
+function NavContent({ onNewAudit, onClose }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  const handleNav = (path) => {
+    navigate(path);
     onClose?.();
   };
 
-  const auditFlowActive = isAuditFlowActive(currentView);
+  const auditFlowActive = isAuditFlowActive(pathname);
 
   return (
     <div className="flex flex-col h-full">
       <div className="p-5 border-b border-slate-200">
         <button
           type="button"
-          onClick={() => handleNav('list')}
+          onClick={() => handleNav('/audits')}
           className="flex items-center gap-3 w-full text-left group animate-fade-in"
         >
           <img src="/Prodapt-icon-logo.png" alt="Prodapt Logo" className="h-12 w-12 object-contain" />
@@ -100,12 +112,12 @@ function NavContent({ currentView, onNavigate, onNewAudit, onClose }) {
             </p>
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const active = isItemActive(item, currentView);
+                const active = isItemActive(item, pathname);
                 return (
-                   <li key={item.id}>
+                   <li key={item.path}>
                     <button
                       type="button"
-                      onClick={() => handleNav(item.id)}
+                      onClick={() => handleNav(item.path)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-150 ${active
                         ? 'bg-teal-50 text-teal-800 border-l-4 border-teal-600 rounded-l-none'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l-4 border-transparent'
@@ -137,15 +149,16 @@ function NavContent({ currentView, onNavigate, onNewAudit, onClose }) {
   );
 }
 
-export default function Sidebar({ currentView, onNavigate, onNewAudit }) {
+export default function Sidebar({ onNewAudit }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:hidden">
         <button
           type="button"
-          onClick={() => onNavigate('list')}
+          onClick={() => navigate('/audits')}
           className="flex items-center gap-2"
         >
           <img src="/Prodapt-icon-logo.png" alt="Prodapt Logo" className="h-6 w-6 object-contain" />
@@ -178,8 +191,6 @@ export default function Sidebar({ currentView, onNavigate, onNewAudit }) {
               <X className="h-4 w-4 stroke-[1.5]" />
             </button>
             <NavContent
-              currentView={currentView}
-              onNavigate={onNavigate}
               onNewAudit={onNewAudit}
               onClose={() => setMobileOpen(false)}
             />
@@ -189,8 +200,6 @@ export default function Sidebar({ currentView, onNavigate, onNewAudit }) {
 
       <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 bg-white border-r border-slate-200 h-screen sticky top-0 print:hidden">
         <NavContent
-          currentView={currentView}
-          onNavigate={onNavigate}
           onNewAudit={onNewAudit}
         />
       </aside>

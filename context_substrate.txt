@@ -11,7 +11,7 @@ Entities, concepts, propositions, procedures as DAGs, and relationships between 
 📄
 Milvus KS
 Knowledge Store
-Embedded document chunks for semantic text search. Raw source material indexed by meaning.
+Embedded document chunks for semacantic text search. Raw source material indexed by meaning.
 📋
 Milvus PS
 Procedural Store

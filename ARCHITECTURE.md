@@ -1,4 +1,4 @@
-﻿# Architecture
+# Architecture
 
 **Audience:** Developers and solution architects.
 
@@ -18,9 +18,11 @@ ProcureAI audits supplier invoices against contract terms. Users upload contract
 | Agent implementations | `backend/agents/*` | Contract parsing, invoice extraction, validation, compliance, reverse sweep, cross-invoice analysis, report generation |
 | Core utilities | `backend/core/` | Config, database, LLM client, PDF extraction, logging, prompts, tasks |
 | Services | `backend/services/` | Analytics, notifications, file watcher, contract chunking, comparison, disputes, scoring |
+| Context Substrate | `backend/core/context_substrate_client.py` | Trident MCP & TriStore client, amendment supersession, SOP DAGs, 5-stage pass card |
+| Context Substrate Routes | `backend/api/routes/context_substrate.py` | REST endpoints for status, TriStore queries, reasoning subgraphs, SOPs, providers |
 | ORM models | `backend/models/audit.py` | Database tables |
-| Pydantic schemas | `backend/models/schemas.py` | API and pipeline contracts |
-| Frontend app | `frontend/src/` | React UI, API client, pages, reusable components |
+| Pydantic schemas | `backend/models/schemas.py` | API, pipeline, graph, pass card, and procedure contracts |
+| Frontend app | `frontend/src/` | React UI, API client, pages, visual reasoning subgraph, pass card components |
 | Scripts | `scripts/` | Database initialization, migration, synthetic data, cleanup helpers |
 
 ## Deployment Shape
@@ -147,6 +149,8 @@ Main views:
 
 | Integration | Implementation | Notes |
 |---|---|---|
+| Prodapt SynaptAI Context Substrate | `backend/core/context_substrate_client.py` | Governed 4-store epistemic brain (Neo4j + Milvus KS/PS/GN). Connects to live TriStore (`beta.synapt.ai`, provider `procureai`) via Trident MCP and REST, with automatic embedded fallback. |
+| Trident MCP Registered Agent SDK | `context_substrate/demo-agent-ipl/` | Model Context Protocol agent integration for S2S connectivity and CLI querying (`query.py`). |
 | Gemini Developer API | `backend/core/llm_client.py` | Used when `GEMINI_API_KEY` is set |
 | Vertex AI | `backend/core/llm_client.py` | Used when no API key is set and Google Cloud config is available |
 | Mock LLM | `backend/core/mock_router.py` | Enabled only when `MOCK_LLM=true` and `ALLOW_MOCK_LLM=true` |
@@ -154,9 +158,25 @@ Main views:
 | SMTP email | `backend/services/notifier.py` | Optional notification email |
 | File watcher | `backend/services/file_watcher.py` | Watches `watched_invoices/` for new invoice PDFs |
 
+## Dual-Brain Architecture & Context Substrate Integration
+
+ProcureAI pairs two specialized engines:
+1. **Deterministic Financial Math Engine (`backend/core/rule_engine.py`):** Python `Decimal` performs 100% of financial arithmetic. LLMs and vector stores are strictly prohibited from performing calculations (Zero-Math Invariant).
+2. **SynaptAI Context Substrate (`backend/core/context_substrate_client.py`):** Governs legal and procedural truth across four unified stores:
+   - **Neo4j Concept Graph:** Tracks entities, rate clauses, and directed relationships (`SUPERSEDES`, `GOVERNED_BY`, `BILLED_ON`, `PRECEDES`). Solves the "Amendment Trap" by resolving temporal overrides.
+   - **Milvus Knowledge Store (KS):** Dense embeddings of contract chunks for verbatim clause citations and semantic passage retrieval.
+   - **Milvus Procedure Store (PS):** Corporate Standard Operating Procedures represented as Directed Acyclic Graphs (DAGs) for dispute recovery workflows.
+   - **Milvus Graph Node Index (GN):** Semantic vector index of graph node signatures mapped directly to Neo4j Node IDs for instant graph entry.
+
+Detailed documentation: [Context Substrate Guide](docs/CONTEXT_SUBSTRATE_GUIDE.md) and [Context Substrate Project Reference](docs/CONTEXT_SUBSTRATE_PROJECT_REFERENCE.md).
+
 ## Security Boundary
 
-FastAPI currently mounts permissive CORS in `backend/main.py` with `allow_origins=["*"]`. API-key and rate-limit middleware are implemented but not registered by the app. File access for audit runs is limited to configured upload paths and `data/synthetic`.
+The backend mounts a configurable middleware stack in `backend/main.py`:
+- Configured CORS via `CORS_ALLOW_ORIGINS`.
+- Request logging middleware (`X-Request-ID` and execution timing).
+- Optional API-key verification (`APIKeyMiddleware`) and IP rate limiting (`RateLimitMiddleware`).
+- File access for audit runs is strictly limited to configured upload paths and `data/synthetic`.
 
 See [docs/SECURITY.md](docs/SECURITY.md) for operational guidance and implementation caveats.
 

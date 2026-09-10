@@ -22,6 +22,8 @@ from sqlalchemy import select
 from backend.agents.invoice_extractor.tools import extract_invoice_metadata, validate_invoice_arithmetic, vote_on_invoice_data
 from backend.core.config import SELF_CONSISTENCY_PASSES
 from backend.core.audit_logger import log_audit_event
+from backend.core.input_sanitizer import sanitize_pdf_text, INSTRUCTION_DEFENSE_PREAMBLE
+from backend.core.token_budget import TokenBudgetExceeded
 
 logger = structlog.get_logger()
 
@@ -52,13 +54,14 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
             
         # Initialize LLM and Prompt
         llm = get_llm()
+        budget = state.get("token_budget")
         llm_status = llm.status_label() if hasattr(llm, "status_label") else "LLM"
         await log_audit_event(audit_id, f"Invoice extractor LLM backend: {llm_status}.", "INFO", "invoice_extractor")
         prompt_template = load_prompt("invoice_extractor", "prompt_extract_invoice.txt")
         
-        # Inject schema into prompt
+        # Inject schema into prompt with instruction defense preamble
         schema_json = json.dumps(InvoiceData.model_json_schema(), indent=2)
-        system_prompt = prompt_template.replace("{schema}", schema_json)
+        system_prompt = INSTRUCTION_DEFENSE_PREAMBLE + prompt_template.replace("{schema}", schema_json)
         
         extracted_invoices = []
         
@@ -67,6 +70,32 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
         # Process each invoice text sequentially
         for idx, (inv_path, inv_text) in enumerate(zip(invoice_paths, invoice_texts), 1):
             await log_audit_event(audit_id, f"Processing invoice {idx} of {len(invoice_texts)}: extracting structure and mapping line items.", "INFO", "invoice_extractor")
+
+            # Guardrail 1: Input sanitization & prompt injection defense
+            sanitized = sanitize_pdf_text(inv_text, source_label=f"invoice_{idx}")
+            inv_text = sanitized.clean_text
+            if "input_sanitization" not in state or state["input_sanitization"] is None:
+                state["input_sanitization"] = {"warnings": [], "injection_detected": False}
+
+            if sanitized.injection_detected:
+                state["input_sanitization"]["injection_detected"] = True
+                state["input_sanitization"]["warnings"].extend(sanitized.warnings)
+                state.setdefault("errors", []).append(
+                    AgentError(
+                        agent="invoice_extractor",
+                        error_type="injection_detected",
+                        message=f"Prompt injection patterns detected and neutralized in invoice {idx} ({len(sanitized.warnings)} occurrence(s)).",
+                        recoverable=True,
+                        partial_data={"warnings": sanitized.warnings},
+                    ).model_dump()
+                )
+                await log_audit_event(
+                    audit_id,
+                    f"Security warning: Prompt injection patterns detected and neutralized in invoice {idx} ({len(sanitized.warnings)} warnings).",
+                    "WARNING",
+                    "invoice_extractor",
+                )
+
             invoice_metadata = extract_invoice_metadata(inv_text)
             
             def _read_pdf():
@@ -87,8 +116,8 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
                         f"Running 2 extraction passes (temperatures 0.0 and 0.1) for invoice {idx} self-consistency.",
                         "INFO", "invoice_extractor"
                     )
-                    pass0_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.0)
-                    pass1_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.1)
+                    pass0_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.0, budget=budget)
+                    pass1_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.1, budget=budget)
                     
                     # Apply metadata to both passes
                     for p_obj in [pass0_obj, pass1_obj]:
@@ -193,9 +222,15 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
     except Exception as e:
         await log_audit_event(audit_id, f"Invoice Extractor agent failed: {str(e)}", "ERROR", "invoice_extractor")
 
+        err_type = "llm_call_failed"
+        if isinstance(e, TokenBudgetExceeded) or "token budget" in str(e).lower():
+            err_type = "token_budget_exceeded"
+        elif "validation" in str(e).lower():
+            err_type = "validation_failed"
+
         error = AgentError(
             agent="invoice_extractor",
-            error_type="validation_failed" if "validation" in str(e).lower() else "llm_call_failed",
+            error_type=err_type,
             message=str(e),
             recoverable=False
         )
@@ -213,7 +248,7 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
                 
     return state
 
-async def extract_single_invoice(llm, system_prompt: str, input_contents: list, temperature: float = 0.0) -> InvoiceData:
+async def extract_single_invoice(llm, system_prompt: str, input_contents: list, temperature: float = 0.0, budget=None) -> InvoiceData:
     """
     Calls LLM to extract invoice data. Employs correction-prompt retry logic on validation failures.
     """
@@ -224,7 +259,8 @@ async def extract_single_invoice(llm, system_prompt: str, input_contents: list, 
             response_mime_type="application/json",
             response_schema=InvoiceData.model_json_schema(),
             temperature=temperature
-        )
+        ),
+        budget=budget
     )
     
     try:
@@ -248,7 +284,8 @@ async def extract_single_invoice(llm, system_prompt: str, input_contents: list, 
                 response_mime_type="application/json",
                 response_schema=InvoiceData.model_json_schema(),
                 temperature=0.0
-            )
+            ),
+            budget=budget
         )
         # Attempt validation again. If it fails, let it raise the error to be caught by caller.
         return InvoiceData.model_validate_json(retry_response.text)

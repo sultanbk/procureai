@@ -1,4 +1,4 @@
-﻿# API Reference
+# API Reference
 
 **Audience:** Developers integrating with the backend or maintaining the frontend.
 
@@ -99,6 +99,7 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/audit/{audit_id}/report` | Completed `AuditReport` only |
+| `POST` | `/api/audit/{audit_id}/approve` | Approve audit in `PENDING_REVIEW` and transition to `COMPLETE` |
 | `GET` | `/api/audit/{audit_id}/documents` | List contract and invoice documents for an audit |
 | `GET` | `/api/audit/{audit_id}/documents/{document_id}` | Inline PDF response for `contract` or `invoice-{index}` |
 | `GET` | `/api/audit/{audit_id}/breach-pages/{finding_id}` | Download contract pages related to a finding |
@@ -108,6 +109,27 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 | `POST` | `/api/predict/risk` | Supplier risk prediction by supplier name or invoice file ID |
 | `POST` | `/api/audit/{audit_id}/findings/{finding_id}/feedback` | Store human review verdict |
 | `WS` | `/api/audit/{audit_id}/ws` | Stream status and audit logs |
+
+### Approve Audit
+
+```http
+POST /api/audit/{audit_id}/approve
+```
+
+Used by authorized reviewers to approve an audit that is held in `PENDING_REVIEW` state due to `CRITICAL` severity findings. Transitions the audit status to `COMPLETE`.
+
+Response (`200 OK`):
+```json
+{
+  "message": "Audit aud_1234abcd approved successfully",
+  "audit_id": "aud_1234abcd",
+  "status": "COMPLETE"
+}
+```
+
+Error Responses:
+- `404 Not Found`: Audit does not exist.
+- `400 Bad Request`: Audit is not in `PENDING_REVIEW` state (e.g. already `COMPLETE` or `FAILED`).
 
 ### Finding Feedback
 
@@ -121,6 +143,18 @@ Returns `AuditStatusResponse`, including status, progress percentage, current ag
 ```
 
 Allowed verdict values are documented in code comments as `CORRECT`, `FALSE_POSITIVE`, `FALSE_NEGATIVE`, and `ADJUSTED`.
+
+### Audit Lifecycle Statuses
+
+| Status | Description |
+|---|---|
+| `PENDING` | Audit registered in database and queued for execution |
+| `RUNNING` | Audit pipeline currently executing through agent graph |
+| `PENDING_REVIEW` | Audit pipeline finished, but one or more `CRITICAL` severity discrepancies were identified; held awaiting auditor approval |
+| `COMPLETE` | Audit finished and fully approved/cleared; reports and dispute letters unlocked |
+| `FAILED` | Pipeline crashed or unrecoverable error encountered |
+| `CANCELLED` | Audit cancelled by operator |
+
 
 ## Contract Library
 
@@ -229,3 +263,45 @@ Retry body:
   "contract_id": "ctr_supplier_abcd"
 }
 ```
+
+## Context Substrate & Knowledge Graph
+
+Endpoints providing access to the Prodapt SynaptAI 4-Store TriStore, visual reasoning subgraphs, 5-stage retrieval pass cards, corporate dispute recovery SOP DAGs, and Context Provider management.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/context-substrate/status` | Read Substrate connection health, active mode, and store statistics |
+| `POST` | `/api/context-substrate/query` | Execute grounded semantic query across TriStore (returns answer, subgraph, pass card) |
+| `GET` | `/api/context-substrate/graph/{contract_id}` | Fetch full entity-relationship graph for a contract |
+| `GET` | `/api/context-substrate/subgraph/discrepancy/{finding_id}` | Generate focused visual proof subgraph for an invoice audit finding |
+| `GET` | `/api/context-substrate/procedures/{intent}` | Retrieve corporate Standard Operating Procedure as a sequential DAG (`PRECEDES`) |
+| `GET` | `/api/context-substrate/amendments/{contract_id}/{clause_name}` | Resolve latest governing rate by traversing `SUPERSEDES` relationships |
+| `GET` | `/api/context-substrate/providers` | List active Context Provider sandbox namespaces |
+| `POST` | `/api/context-substrate/providers` | Register a new Context Provider with customized extraction settings |
+| `DELETE` | `/api/context-substrate/providers/{provider_id}` | Remove a Context Provider sandbox namespace |
+
+### Query Substrate Request
+
+```http
+POST /api/context-substrate/query
+Content-Type: application/json
+```
+
+```json
+{
+  "query": "What is the revised bandwidth rate in Amendment 1?",
+  "provider_id": "procureai",
+  "contract_id": "doc_msa_apex",
+  "max_hops": 2,
+  "min_confidence": 0.70
+}
+```
+
+### Response Shape
+
+Returns `ContextSubstrateQueryResponse`:
+- `answer`: Grounded synthesis from verbatim contract clauses.
+- `reasoning_subgraph`: Graph nodes and directed edges (`SUPERSEDES`, `GOVERNED_BY`, `BILLED_ON`) used for visual inspection.
+- `pass_card`: 5-Stage scorecard (Knowledge Store, Context Graph, Procedure Store, Fusion Layer, Generation Groundedness) with `hallucination_probability_pct`.
+- `sources`: Verbatim clause chunks and citation metadata.
+

@@ -85,6 +85,17 @@ export const getAuditStatus = async (auditId) => {
   return response.json();
 };
 
+export const approveAudit = async (auditId) => {
+  const response = await authFetch(`${API_BASE}/audit/${auditId}/approve`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to approve audit");
+  }
+  return response.json();
+};
+
 export const getAudits = async () => {
   const response = await authFetch(`${API_BASE}/audits`);
   if (!response.ok) {
@@ -468,3 +479,104 @@ export const submitFindingFeedback = async (auditId, findingId, payload) => {
   }
   return response.json();
 };
+
+// ==============================================================================
+// SynaptAI Context Substrate API Endpoints
+// ==============================================================================
+
+export const getContextSubstrateStatus = async () => {
+  const response = await authFetch(`${API_BASE}/context-substrate/status`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch Context Substrate status");
+  }
+  return response.json();
+};
+
+export const queryContextSubstrate = async (payload) => {
+  const response = await authFetch(`${API_BASE}/context-substrate/query`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Context Substrate query failed");
+  }
+  return response.json();
+};
+
+export const getContractGraph = async (contractId) => {
+  const response = await authFetch(`${API_BASE}/context-substrate/graph/${encodeURIComponent(contractId)}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch contract graph");
+  }
+  return response.json();
+};
+
+export const getDiscrepancySubgraph = async (findingId, params = {}) => {
+  const query = new URLSearchParams();
+  if (params.auditId) query.set("audit_id", params.auditId);
+  if (params.description) query.set("description", params.description);
+  if (params.clauseRef) query.set("clause_ref", params.clauseRef);
+  if (params.delta) query.set("delta", params.delta);
+
+  const response = await authFetch(
+    `${API_BASE}/context-substrate/subgraph/discrepancy/${encodeURIComponent(findingId)}?${query.toString()}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch discrepancy subgraph");
+  }
+  return response.json();
+};
+
+export const getProcedureDAG = async (intent) => {
+  const response = await authFetch(`${API_BASE}/context-substrate/procedures/${encodeURIComponent(intent)}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch procedural DAG");
+  }
+  return response.json();
+};
+
+export const getAmendmentHierarchy = async (contractId, clauseName) => {
+  const response = await authFetch(
+    `${API_BASE}/context-substrate/amendments/${encodeURIComponent(contractId)}/${encodeURIComponent(clauseName)}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch amendment hierarchy");
+  }
+  return response.json();
+};
+
+export const getContextProviders = async () => {
+  const response = await authFetch(`${API_BASE}/context-substrate/providers`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch Context Providers");
+  }
+  return response.json();
+};
+
+export const createContextProvider = async (payload) => {
+  const response = await authFetch(`${API_BASE}/context-substrate/providers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Failed to create Context Provider");
+  }
+  return response.json();
+};
+
+export const deleteContextProvider = async (providerId) => {
+  const response = await authFetch(`${API_BASE}/context-substrate/providers/${encodeURIComponent(providerId)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Failed to delete Context Provider");
+  }
+  return response.json();
+};
+
+

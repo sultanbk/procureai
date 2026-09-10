@@ -28,6 +28,9 @@ from backend.core.prompt_loader import load_prompt
 from backend.core.db import AsyncSessionLocal
 from backend.core.time import utc_now, utc_now_iso
 from backend.models.audit import Audit
+from backend.core.output_filter import filter_output
+from backend.core.config import COMPLIANCE_CONFIDENCE_THRESHOLD
+from backend.core.token_budget import TokenBudgetExceeded
 from backend.agents.report_generator.tools import (
     calculate_aggregate_stats,
     sort_discrepancies_by_severity
@@ -116,11 +119,10 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
         
         # 3. Call LLM to generate executive summary & recommendations
         llm = get_llm()
+        budget = state.get("token_budget")
         llm_status = llm.status_label() if hasattr(llm, "status_label") else "LLM"
         await log_audit_event(audit_id, f"Generating executive summary narrative and recommendations using {llm_status}.", "INFO", "report_generator")
-        prompt_template = load_prompt("report_generator", "prompt_executive_summary.txt")
-
-        
+        prompt_template = load_prompt("report_generator", "prompt_generate_report.txt")
         schema_json = json.dumps(ReportShorthand.model_json_schema(), indent=2)
         system_prompt = prompt_template.replace("{schema}", schema_json)
         
@@ -153,7 +155,8 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
                 response_mime_type="application/json",
                 response_schema=ReportShorthand.model_json_schema(),
                 temperature=0.0
-            )
+            ),
+            budget=budget
         )
         
         try:
@@ -173,7 +176,8 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
                     response_mime_type="application/json",
                     response_schema=ReportShorthand.model_json_schema(),
                     temperature=0.0
-                )
+                ),
+                budget=budget
             )
             shorthand = ReportShorthand.model_validate_json(retry_response.text)
             
@@ -193,6 +197,22 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             2
         )
         
+        # Guardrail 2: Output Content Filtering
+        filtered_summary = filter_output(shorthand.executive_summary, context="summary")
+        filtered_recommendations = [
+            filter_output(rec, context="recommendation").clean_text
+            for rec in shorthand.recommendations
+        ]
+        if filtered_summary.flagged:
+            logger.warning("Executive summary filtered", redactions=filtered_summary.redactions)
+
+        # Guardrail 3: Confidence-based gating stats
+        rulebook_rules = rulebook_raw.get("rules", []) if isinstance(rulebook_raw, dict) else []
+        low_confidence_count = sum(
+            1 for r in rulebook_rules
+            if r.get("needs_human_review") or (r.get("extraction_confidence") is not None and float(r.get("extraction_confidence")) < COMPLIANCE_CONFIDENCE_THRESHOLD)
+        )
+
         summary = AuditSummary(
             supplier_name=rulebook_raw.get("supplier_name", "Unknown"),
             contract_id=rulebook_raw.get("contract_id", "Unknown"),
@@ -206,7 +226,8 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             critical_count=critical_count,
             high_count=high_count,
             medium_count=medium_count,
-            executive_summary=shorthand.executive_summary
+            low_confidence_count=low_confidence_count,
+            executive_summary=filtered_summary.clean_text
         )
         
         # v4: Collect data from reverse sweep and cross-invoice analyzer
@@ -221,7 +242,7 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             summary=summary,
             discrepancies=sorted_discrepancies,
             compliant_lines=compliant_lines,
-            recommendations=shorthand.recommendations,
+            recommendations=filtered_recommendations,
             report_generated_at=report_generated_at,
             data_required_flags=data_required_flags,
             review_flags=review_flags,
@@ -233,7 +254,7 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
         # 5. Write back to state
         state["audit_report"] = audit_report_obj.model_dump()
         
-        # 6. Save in database and set status to COMPLETE
+        # 6. Save in database and set status (Guardrail 5: Human-in-the-Loop for CRITICAL)
         async with AsyncSessionLocal() as session:
             stmt = select(Audit).where(Audit.id == audit_id)
             result = await session.execute(stmt)
@@ -241,8 +262,19 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             if db_audit:
                 db_audit.audit_report = json.dumps(audit_report_obj.model_dump(), default=str)
                 db_audit.total_leakage = float(total_leakage)
-                db_audit.status = "COMPLETE"
-                db_audit.completed_at = utc_now()
+
+                # Guardrail 5: Audits with CRITICAL findings require human approval
+                if audit_report_obj.summary.critical_count > 0:
+                    db_audit.status = "PENDING_REVIEW"
+                    await log_audit_event(
+                        audit_id,
+                        f"Audit has {audit_report_obj.summary.critical_count} CRITICAL findings — held for human review (status: PENDING_REVIEW).",
+                        "WARNING",
+                        "report_generator"
+                    )
+                else:
+                    db_audit.status = "COMPLETE"
+                    db_audit.completed_at = utc_now()
 
                 from backend.services.scoring import compute_score
                 score_val = compute_score(audit_report_obj)
@@ -298,9 +330,15 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
         
     except Exception as e:
         await log_audit_event(audit_id, f"Report generator agent failed: {str(e)}", "ERROR", "report_generator")
+        err_type = "llm_call_failed"
+        if isinstance(e, TokenBudgetExceeded) or "token budget" in str(e).lower():
+            err_type = "token_budget_exceeded"
+        elif "validation" in str(e).lower():
+            err_type = "validation_failed"
+
         error = AgentError(
             agent="report_generator",
-            error_type="llm_call_failed",
+            error_type=err_type,
             message=str(e),
             recoverable=False
         )

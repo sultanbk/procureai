@@ -146,10 +146,14 @@ This alert was sent automatically by ProcureAI.
     msg["To"] = settings.email_to
 
     try:
+        # Fix #9: Decrypt SMTP password before use
+        from backend.core.encryption import decrypt_value
+        smtp_password = decrypt_value(settings.smtp_password) if settings.smtp_password else None
+
         with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
             server.starttls()
-            if settings.smtp_user and settings.smtp_password:
-                server.login(settings.smtp_user, settings.smtp_password)
+            if settings.smtp_user and smtp_password:
+                server.login(settings.smtp_user, smtp_password)
             server.send_message(msg)
             logger.info("Email notification sent successfully.")
     except Exception as e:

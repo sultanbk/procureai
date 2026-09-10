@@ -10,15 +10,57 @@ import os
 import time
 import json
 import structlog
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List
 
 import google.generativeai as genai
 
 from backend.core.config import LLM_RETRY_ATTEMPTS, LLM_RETRY_DELAY_SECONDS
 from backend.core.mock_router import get_mock_response
 from backend.core.schema_utils import clean_vertex_schema
+from backend.core.token_budget import TokenBudget
+from backend.core.llm_rate_limiter import get_rate_limiter
 
 logger = structlog.get_logger()
+
+
+# --- Fix #13: Proper response wrapper dataclasses (replaces dynamic type() objects) ---
+
+@dataclass
+class StreamDelta:
+    content: str = ""
+
+@dataclass
+class StreamChoice:
+    delta: StreamDelta = field(default_factory=StreamDelta)
+
+@dataclass
+class StreamChunk:
+    choices: List[StreamChoice] = field(default_factory=list)
+
+@dataclass
+class ResponseMessage:
+    content: str = ""
+
+@dataclass
+class ResponseChoice:
+    message: ResponseMessage = field(default_factory=ResponseMessage)
+
+@dataclass
+class ResponseUsage:
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    candidates_token_count: int = 0
+
+@dataclass
+class CompatibleResponse:
+    choices: List[ResponseChoice] = field(default_factory=list)
+    usage: ResponseUsage = field(default_factory=ResponseUsage)
+
+@dataclass
+class MockChunkObj:
+    text: str = ""
 
 
 class OpenAICompatibleClient:
@@ -68,7 +110,7 @@ class OpenAICompatibleClient:
                                                 delta = choices[0].get("delta", {})
                                                 content = delta.get("content", "")
                                                 if content:
-                                                    yield type("Chunk", (), {"choices": [type("Choice", (), {"delta": type("Delta", (), {"content": content})()})]})()
+                                                    yield StreamChunk(choices=[StreamChoice(delta=StreamDelta(content=content))])
                                         except Exception:
                                             continue
                     return stream_generator()
@@ -106,26 +148,14 @@ class OpenAICompatibleClient:
                                     except Exception:
                                         continue
 
-                            class MessageObj:
-                                def __init__(self, content):
-                                    self.content = content
-
-                            class ChoiceObj:
-                                def __init__(self, message):
-                                    self.message = message
-
-                            class UsageObj:
-                                def __init__(self, prompt, completion):
-                                    self.prompt_tokens = prompt
-                                    self.completion_tokens = completion
-                                    self.candidates_token_count = completion
-
-                            class ResponseObj:
-                                def __init__(self, content, prompt_t, comp_t):
-                                    self.choices = [ChoiceObj(MessageObj(content))]
-                                    self.usage = UsageObj(prompt_t, comp_t)
-
-                            return ResponseObj(full_content, prompt_tokens, completion_tokens)
+                            return CompatibleResponse(
+                                choices=[ResponseChoice(message=ResponseMessage(content=full_content))],
+                                usage=ResponseUsage(
+                                    prompt_tokens=prompt_tokens,
+                                    completion_tokens=completion_tokens,
+                                    candidates_token_count=completion_tokens,
+                                ),
+                            )
 
                         # Otherwise standard JSON response
                         try:
@@ -133,28 +163,17 @@ class OpenAICompatibleClient:
                         except Exception as exc:
                             raise RuntimeError(f"OmniRoute returned non-JSON payload: {raw_text[:200]}") from exc
 
-                        class MessageObj:
-                            def __init__(self, content):
-                                self.content = content
-
-                        class ChoiceObj:
-                            def __init__(self, message):
-                                self.message = message
-
-                        class UsageObj:
-                            def __init__(self, usage_dict):
-                                self.prompt_tokens = usage_dict.get("prompt_tokens", 0)
-                                self.completion_tokens = usage_dict.get("completion_tokens", 0)
-                                self.total_tokens = usage_dict.get("total_tokens", 0)
-
-                        class ResponseObj:
-                            def __init__(self, raw):
-                                choices = raw.get("choices", [])
-                                msg_content = choices[0].get("message", {}).get("content", "") if choices else ""
-                                self.choices = [ChoiceObj(MessageObj(msg_content))]
-                                self.usage = UsageObj(raw.get("usage", {}))
-
-                        return ResponseObj(data)
+                        raw_choices = data.get("choices", [])
+                        msg_content = raw_choices[0].get("message", {}).get("content", "") if raw_choices else ""
+                        raw_usage = data.get("usage", {})
+                        return CompatibleResponse(
+                            choices=[ResponseChoice(message=ResponseMessage(content=msg_content))],
+                            usage=ResponseUsage(
+                                prompt_tokens=raw_usage.get("prompt_tokens", 0),
+                                completion_tokens=raw_usage.get("completion_tokens", 0),
+                                total_tokens=raw_usage.get("total_tokens", 0),
+                            ),
+                        )
 
 
 class GroqResponseWrapper:
@@ -197,6 +216,32 @@ class SmartGenerativeModel:
         self.model_name = model_name
         self.project = project
         self.location = location
+        self.rate_limiter = get_rate_limiter()
+
+    def _record_tokens(self, response, budget: Optional[TokenBudget] = None):
+        """Helper to extract token usage and update TokenBudget and LLMRateLimiter."""
+        if response is None:
+            return response
+        prompt_tok = 0
+        comp_tok = 0
+        um = getattr(response, "usage_metadata", None)
+        if um:
+            prompt_tok = getattr(um, "prompt_token_count", 0) or 0
+            comp_tok = getattr(um, "candidates_token_count", 0) or 0
+        elif hasattr(response, "usage") and response.usage:
+            prompt_tok = getattr(response.usage, "prompt_tokens", 0) or 0
+            comp_tok = getattr(response.usage, "completion_tokens", 0) or 0
+
+        # Approximate if usage metadata missing
+        if prompt_tok == 0 and comp_tok == 0 and hasattr(response, "text") and response.text:
+            comp_tok = max(1, len(response.text) // 4)
+            prompt_tok = 100
+
+        if budget is not None:
+            budget.record(prompt_tokens=prompt_tok, completion_tokens=comp_tok, agent=self.model_name or "llm")
+        if self.rate_limiter is not None:
+            self.rate_limiter.record_usage(prompt_tok + comp_tok)
+        return response
 
     def status_label(self) -> str:
         if is_mock_llm_enabled():
@@ -209,16 +254,16 @@ class SmartGenerativeModel:
             return f"Gemini Developer API ({self.model_name})"
         return "No live LLM configured"
 
-    def generate_content(self, contents, generation_config=None):
+    def generate_content(self, contents, generation_config=None, budget: Optional[TokenBudget] = None):
         try:
             if is_mock_llm_enabled():
                 logger.info("MOCK_LLM is set to true. Forcing mock LLM response.")
-                return get_mock_response(contents, generation_config)
+                return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
 
             if self.real_model:
                 # Handle Groq provider (OpenAI-compatible API)
                 if self.provider == "groq":
-                    return self._groq_generate_content(contents, generation_config)
+                    return self._record_tokens(self._groq_generate_content(contents, generation_config), budget=budget)
 
                 # Handle Google providers
                 # If generation_config is a google.generativeai.GenerationConfig, convert it to a dictionary
@@ -237,7 +282,7 @@ class SmartGenerativeModel:
                 last_error = None
                 for attempt in range(1, max(LLM_RETRY_ATTEMPTS, 1) + 1):
                     try:
-                        return self.real_model.generate_content(contents, generation_config=generation_config)
+                        return self._record_tokens(self.real_model.generate_content(contents, generation_config=generation_config), budget=budget)
                     except Exception as exc:
                         last_error = exc
                         if attempt >= max(LLM_RETRY_ATTEMPTS, 1):
@@ -254,13 +299,13 @@ class SmartGenerativeModel:
                 if not is_mock_llm_enabled():
                     raise RuntimeError("No real generative model initialized. Check Vertex AI / API credentials.")
                 logger.warning("No real generative model initialized. Falling back to mock generator.")
-                return get_mock_response(contents, generation_config)
+                return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
         except Exception as e:
             if not is_mock_llm_enabled():
                 logger.error("GenerativeModel call failed.", error=str(e))
                 raise e
             logger.warning("GenerativeModel call failed. Falling back to mock response.", error=str(e))
-            return get_mock_response(contents, generation_config)
+            return self._record_tokens(get_mock_response(contents, generation_config), budget=budget)
 
     def _groq_generate_content(self, contents, generation_config=None):
         """Generate content using Groq's OpenAI-compatible API."""
@@ -364,17 +409,22 @@ class SmartGenerativeModel:
 
         return messages
 
-    async def async_generate_content(self, contents, generation_config=None):
+    async def async_generate_content(self, contents, generation_config=None, budget: Optional[TokenBudget] = None):
         """
-        Non-blocking async wrapper around generate_content with timeout.
+        Non-blocking async wrapper around generate_content with rate limiting and timeout.
         Runs the synchronous LLM API call in a thread pool to avoid blocking
         the asyncio event loop (critical for FastAPI concurrent request handling).
         Raises asyncio.TimeoutError if the call exceeds LLM_CALL_TIMEOUT_SECONDS.
         """
         import asyncio
         from backend.core.config import LLM_CALL_TIMEOUT_SECONDS
+        if self.rate_limiter is not None:
+            try:
+                await self.rate_limiter.acquire(estimated_tokens=1000)
+            except Exception as exc:
+                logger.warning("LLM rate limiter warning", error=str(exc))
         return await asyncio.wait_for(
-            asyncio.to_thread(self.generate_content, contents, generation_config),
+            asyncio.to_thread(self.generate_content, contents, generation_config, budget),
             timeout=LLM_CALL_TIMEOUT_SECONDS
         )
 
@@ -439,19 +489,16 @@ class SmartGenerativeModel:
         response = self.real_model.chat.completions.create(**params)
         for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
-                yield type('MockChunk', (), {'text': chunk.choices[0].delta.content})()
+                yield MockChunkObj(text=chunk.choices[0].delta.content)
 
     def _mock_stream(self, contents, generation_config=None):
         import time
         mock_resp = get_mock_response(contents, generation_config)
         text = mock_resp.text
         words = text.split(" ")
-        class MockChunk:
-            def __init__(self, text):
-                self.text = text
         for i in range(0, len(words), 3):
             chunk_text = " ".join(words[i:i+3]) + (" " if i+3 < len(words) else "")
-            yield MockChunk(chunk_text)
+            yield MockChunkObj(text=chunk_text)
             time.sleep(0.02)
 
 
@@ -603,3 +650,14 @@ def get_llm():
         location=location,
     )
     return _llm_instance
+
+
+def reset_llm() -> None:
+    """
+    Fix #14: Clears the cached LLM singleton so the next call to get_llm()
+    re-initializes with current environment settings. Call this when LLM
+    provider configuration changes at runtime (e.g. via the Settings page).
+    """
+    global _llm_instance
+    _llm_instance = None
+    logger.info("LLM client singleton cleared. Next get_llm() call will re-initialize.")

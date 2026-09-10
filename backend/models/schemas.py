@@ -7,7 +7,7 @@ CRITICAL LOGIC: Implements custom BeforeValidator (normalize_decimal / CleanDeci
 """
 
 import re
-from typing import TypedDict, Optional, List, Dict, Literal, Annotated, NotRequired
+from typing import TypedDict, Optional, List, Dict, Literal, Annotated, NotRequired, Any
 from pydantic import BaseModel, Field, BeforeValidator
 from decimal import Decimal
 
@@ -113,6 +113,9 @@ class PipelineState(TypedDict):
     unit_conversions: NotRequired[Optional[Dict]]       # {line_id: {rule_id: conversion_info}}
     reverse_sweep: NotRequired[Optional[Dict]]          # ReverseSweepResult
     cross_invoice: NotRequired[Optional[Dict]]          # CrossInvoiceResult
+    # Guardrail additions
+    token_usage: NotRequired[Optional[Dict]]            # Token usage & budget stats
+    input_sanitization: NotRequired[Optional[Dict]]     # Sanitization warnings & flags
 
 # --- AGENT ERROR SCHEMA ---
 
@@ -126,7 +129,9 @@ class AgentError(BaseModel):
         "no_rules_found",
         "no_line_items_found",
         "hallucinated_clause",
-        "timeout"
+        "timeout",
+        "injection_detected",
+        "token_budget_exceeded"
     ]
     message: str       # Human-readable explanation
     recoverable: bool  # True = pipeline can continue, False = must halt
@@ -175,6 +180,7 @@ class PricingRule(BaseModel):
     cap_applies_to: Optional[str] = None   # what the cap governs
 
     extraction_confidence: float        # 0.0 – 1.0, agent's confidence in extraction
+    needs_human_review: bool = False    # True if extraction confidence < threshold
 
     # v4: Clause byte anchoring — character offsets in the original contract_text
     clause_start_offset: Optional[int] = None   # char position where clause_text begins
@@ -310,6 +316,7 @@ class AuditSummary(BaseModel):
     critical_count: int
     high_count: int
     medium_count: int
+    low_confidence_count: int = 0    # Number of rules flagged for low confidence
     executive_summary: str          # 2–3 sentences for CFO
 
 class AuditReport(BaseModel):
@@ -438,6 +445,7 @@ class DisputeLetterResponse(BaseModel):
     findings_count: int
     total_disputed: str
     supplier_email: Optional[str] = None
+    procedure_dag:  Optional[Any] = None
 
 class ChatMessage(BaseModel):
     role: Literal["user", "model", "assistant"]
@@ -521,3 +529,128 @@ class NegotiationBrief(BaseModel):
     risk_rating:          Literal["LOW","MEDIUM","HIGH"]
     recommended_stance:   Literal["AGGRESSIVE","FIRM","COLLABORATIVE"]
     stance_rationale:     str
+
+
+# ==============================================================================
+# SynaptAI Context Substrate Schemas
+# ==============================================================================
+
+class GraphNode(BaseModel):
+    id: str
+    label: str
+    type: str  # Entity, Concept, Proposition, Procedure, Step, Chunk, Document, Rule
+    properties: Dict[str, Any] = Field(default_factory=dict)
+    is_anchor: bool = False
+
+
+class GraphEdge(BaseModel):
+    id: Optional[str] = None
+    source: str
+    target: str
+    type: str  # GOVERNED_BY, DEFINES, PRECEDES, SUPERSEDES, BILLED_ON, HAS_STEP, etc.
+    properties: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ReasoningSubgraph(BaseModel):
+    nodes: List[GraphNode] = Field(default_factory=list)
+    edges: List[GraphEdge] = Field(default_factory=list)
+    anchor_node_ids: List[str] = Field(default_factory=list)
+
+
+class StageScore(BaseModel):
+    score: float  # 0 to 100
+    confidence: float  # 0.0 to 1.0
+    quality_signals: Dict[str, float] = Field(default_factory=dict)
+    risk_signals: Dict[str, float] = Field(default_factory=dict)
+
+
+class RetrievalPassCard(BaseModel):
+    knowledge_store: StageScore
+    context_graph: StageScore
+    procedure_store: StageScore
+    fusion_layer: StageScore
+    generation: StageScore
+    overall_confidence: float
+
+
+class ProcedureStep(BaseModel):
+    step_id: str
+    title: str
+    description: str
+    order: int
+    required_role: Optional[str] = None
+    status: Literal["PENDING", "IN_PROGRESS", "COMPLETED", "SKIPPED"] = "PENDING"
+
+
+class ProcedureDAG(BaseModel):
+    procedure_id: str
+    name: str
+    intent: str
+    version: str = "1.0"
+    steps: List[ProcedureStep] = Field(default_factory=list)
+    edges: List[Dict[str, str]] = Field(default_factory=list)
+
+
+class ContextSubstrateQueryRequest(BaseModel):
+    query: str
+    provider_id: Optional[str] = None
+    top_k: int = 5
+    hops: int = 2
+    contract_id: Optional[str] = None
+
+
+class ContextSubstrateQueryResponse(BaseModel):
+    query: str
+    answer: str
+    confidence: str
+    reasoning_subgraph: ReasoningSubgraph
+    retrieval_pass_card: RetrievalPassCard
+    procedure_dag: Optional[ProcedureDAG] = None
+    citations: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class ContextSubstrateStatusResponse(BaseModel):
+    enabled: bool
+    mode: str
+    status: str
+    provider_id: str
+    tri_store_url: str
+    neo4j_connected: bool
+    milvus_connected: bool
+    node_count: int = 0
+    edge_count: int = 0
+    procedures_count: int = 0
+
+
+class ContextProviderCreate(BaseModel):
+    # Step 1: Provider Identity & Knowledge Pack
+    name: str
+    description: Optional[str] = ""
+    extraction_mode: Literal["fast", "balanced", "max_extraction", "deep", "fact_dense", "precise", "auto"] = "balanced"
+    knowledge_pack_source: Literal["system-defined-types", "user-defined"] = "system-defined-types"
+    knowledge_pack_packet: str = "default"  # clougovernance, cobol_ingestion, cobol_source code, default, incidenthandling, learningpack, minitoring, source code, test_pack_003, vehicle pack
+    entity_types: List[str] = Field(default_factory=lambda: ["Organization", "Vendor", "Customer", "Contract", "Rule", "SLA", "Policy"])
+    relationship_types: List[str] = Field(default_factory=lambda: ["GOVERNED_BY", "DEFINES", "SUPERSEDES", "BILLED_ON", "PRECEDES", "HAS_STEP"])
+
+    # Step 2: Context Scope
+    stores_included: List[str] = Field(default_factory=lambda: ["Knowledge Store (Milvus KS)", "Context Graph (Neo4j)", "Procedure Store (Milvus PS)"])
+    entity_types_exposed: List[str] = Field(default_factory=lambda: ["customer", "order", "product", "policy"])
+    context_depth_limit: int = 2  # default 2 hops
+    max_results_per_query: int = 50  # default 50
+
+    # Step 3: Client ID & Access Control
+    client_id: Optional[str] = None
+    rate_limit_rpm: int = 120
+    token_ttl_hours: int = 24
+    target_platform: Literal["agentcraft", "langgraph", "crewai", "custom api"] = "langgraph"
+
+
+class ContextProviderResponse(ContextProviderCreate):
+    id: str
+    client_id: str
+    status: str = "ACTIVE"
+    created_at: str
+    node_count: int = 0
+    edge_count: int = 0
+
+

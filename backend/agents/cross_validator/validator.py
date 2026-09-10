@@ -4,6 +4,7 @@ MODULE ROLE: Deterministic cross-validation gate (Node 3) that runs BEFORE any i
 SYSTEM BOUNDARY: Pure Python logic. No LLM integration. Updates PipelineState.
 """
 
+import re
 import structlog
 from decimal import Decimal
 from rapidfuzz import fuzz
@@ -77,6 +78,16 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                     score_mapped_desc = fuzzy_score(item.mapped_contract_item, rule.description)
                     best_score = max(score_raw_applies, score_raw_desc, score_mapped_applies, score_mapped_desc)
                     
+                    if best_score < 60 and rule.clause_text:
+                        desc_words = set(re.findall(r"\w+", (item.raw_description or "").lower())) - {
+                            "services", "service", "the", "and", "or", "of", "for", "in", "to", "a"
+                        }
+                        clause_words = set(re.findall(r"\w+", (rule.clause_text or "").lower()))
+                        if desc_words and clause_words:
+                            overlap = len(desc_words & clause_words) / len(desc_words)
+                            if overlap >= 0.5:
+                                best_score = max(best_score, 65.0)
+                    
                     if best_score >= 60:
                         # v4: Unit compatibility check
                         r_unit = rule_units.get(rule.rule_id)
@@ -111,6 +122,18 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                         
                         candidates.append(rule.rule_id)
                 
+                # Tier rule fallback: if any candidate lacks pricing details (e.g. empty volume_tier rule),
+                # include any volume tier rules with actual tiers from the rulebook.
+                rules_by_id = {r.rule_id: r for r in rulebook.rules}
+                has_incomplete_rule = any(
+                    rules_by_id[cid].rule_type == "volume_tier" and not rules_by_id[cid].tiers
+                    for cid in candidates if cid in rules_by_id
+                )
+                if has_incomplete_rule or not candidates:
+                    for r in rulebook.rules:
+                        if r.rule_type == "volume_tier" and r.tiers and r.rule_id not in candidates:
+                            candidates.append(r.rule_id)
+                
                 if not candidates:
                     unmapped_line_details.append({"line_id": item.line_id, "desc": item.raw_description})
                 else:
@@ -118,7 +141,6 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                     matched_rule_ids.update(candidates)
                     
         # 2. Conditional rules without supporting data
-        import re
         DATE_PATTERN = re.compile(
             r"(?:\b\d{1,2}[-/\s]\d{1,2}[-/\s]\d{2,4}\b)|"
             r"(?:\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-/\s]?\d{1,2}(?:st|nd|rd|th)?[-/\s]?,?\s?\d{2,4}\b)|"

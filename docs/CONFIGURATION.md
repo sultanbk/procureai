@@ -16,6 +16,9 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `LLM_RETRY_ATTEMPTS` | `3` | LLM retry count |
 | `LLM_RETRY_DELAY_SECONDS` | `2.0` | Delay between LLM retries |
 | `LLM_CALL_TIMEOUT_SECONDS` | `120` | Async LLM call timeout |
+| `MAX_TOKENS_PER_AUDIT` | `500000` | Maximum cumulative LLM tokens per audit pipeline run before safe halt (`TokenBudgetExceeded`) |
+| `LLM_RPM_LIMIT` | `60` | Maximum LLM requests per minute (sliding 60-second window across agents) |
+| `LLM_TPM_LIMIT` | `100000` | Maximum LLM tokens per minute (sliding 60-second window across agents) |
 | `PIPELINE_MAX_LLM_CALLS` | `100` | Configured maximum call count; verify enforcement before relying on it operationally |
 | `PIPELINE_TIMEOUT_SECONDS` | `600` | Configured pipeline timeout; verify enforcement before relying on it operationally |
 | `SELF_CONSISTENCY_PASSES` | `3` | Contract/invoice extraction self-consistency pass count |
@@ -37,9 +40,20 @@ Configuration is loaded by `backend/core/config.py`. It reads `.env` from the re
 | `GROQ_BASE_URL` | unset | Optional custom base URL for OpenAI-compatible proxies (e.g. `http://localhost:20128/v1` for OmniRoute, vLLM, Ollama) |
 | `GROQ_MODEL` | `llama-3.1-70b-versatile` | Model name for Groq / OpenAI-compatible provider |
 | `GEMINI_API_KEY` | unset | Gemini Developer API key |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model name |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Gemini model name |
 | `GOOGLE_CLOUD_PROJECT` | `procureai` in `llm_client.py` fallback | Vertex AI project |
-| `GOOGLE_CLOUD_LOCATION` | `us-central1` | Vertex AI region |
+| `GOOGLE_CLOUD_LOCATION` | `global` (or `us-central1`) | Vertex AI region / location |
+| `CONTEXT_SUBSTRATE_ENABLED` | `true` | Enables/disables Context Substrate epistemic brain |
+| `CONTEXT_SUBSTRATE_MODE` | `auto` | Substrate operating mode: `auto` (preferred: tries live, falls back to embedded), `live`, or `mock` |
+| `CONTEXT_SUBSTRATE_URL` | `https://beta.synapt.ai` | SynaptAI TriStore REST API base URL |
+| `CONTEXT_SUBSTRATE_PROVIDER_ID` | `procureai` | Active Context Provider knowledge sandbox namespace |
+| `CONTEXT_SUBSTRATE_API_KEY` | unset | User/Agent Bearer authentication token for TriStore REST queries |
+| `SYNAPT_MCP_URL` | `https://beta.synapt.ai/api/mcp` | Base URL for Model Context Protocol (MCP) streamable HTTP service |
+| `SYNAPT_PROVIDER_ID` | `procureai` | Provider ID namespace for Trident MCP queries |
+| `SYNAPT_AGENT_CLIENT_ID` | unset | Registered Agent Client ID for MCP authentication |
+| `SYNAPT_AGENT_CLIENT_SECRET` | unset | Optional client secret for automated token exchange |
+| `SYNAPT_AGENT_TOKEN` | unset | Pre-generated static Bearer token for Trident MCP S2S client |
+| `SYNAPT_VERIFY_SSL` | `false` | When false, disables strict TLS inspection on internal domains |
 
 ## Frontend Environment Variables
 
@@ -92,7 +106,80 @@ GEMINI_MODEL=gemini-3.7-flash
 ```ini
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=us-central1
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.7-flash
 ```
 
 Assumption: Vertex AI authentication is provided through the Google SDK environment, such as `GOOGLE_APPLICATION_CREDENTIALS` or application default credentials. The code initializes `vertexai.init(project=..., location=...)` but does not manage credential files itself.
+
+## Context Substrate & Trident MCP Configuration
+
+Context Substrate connects ProcureAI to Prodapt's governed 4-store knowledge brain (Neo4j Concept Graph, Milvus KS, Milvus PS, and Milvus GN).
+
+### 1. Recommended Auto-Fallback Mode (Zero-Fail Invariant)
+
+In `auto` mode, the client attempts to connect to the live TriStore at `beta.synapt.ai`. If remote credentials expire or the network is unavailable, it seamlessly falls back to the embedded 4-store engine:
+
+```ini
+# =====================================================================
+# SynaptAI Context Substrate (Trident MCP & 4-Store TriStore)
+# =====================================================================
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=auto
+CONTEXT_SUBSTRATE_URL=https://beta.synapt.ai
+CONTEXT_SUBSTRATE_PROVIDER_ID=procureai
+CONTEXT_SUBSTRATE_API_KEY=your-user-session-or-agent-token
+
+# Trident MCP Settings (Official Prodapt IPL SDK)
+SYNAPT_MCP_URL=https://beta.synapt.ai/api/mcp
+SYNAPT_PROVIDER_ID=procureai
+SYNAPT_AGENT_CLIENT_ID=your-registered-client-id
+SYNAPT_AGENT_TOKEN=your-user-session-or-agent-token
+SYNAPT_VERIFY_SSL=false
+```
+
+### 2. Strict Live Mode
+
+In `live` mode, all queries and status probes strictly require valid authorization headers from the live SynaptAI service:
+
+```ini
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=live
+CONTEXT_SUBSTRATE_URL=https://beta.synapt.ai
+CONTEXT_SUBSTRATE_PROVIDER_ID=procureai
+CONTEXT_SUBSTRATE_API_KEY=your-active-jwt-token
+```
+
+### 3. Standalone Embedded / Mock Mode
+
+Runs completely locally with zero external network dependencies, serving the verified benchmark dataset (Apex Telecom MSA, Amendment 1, SLA credits, and recovery DAG):
+
+```ini
+CONTEXT_SUBSTRATE_ENABLED=true
+CONTEXT_SUBSTRATE_MODE=mock
+```
+
+## Guardrails & Resource Safety Configuration
+
+ProcureAI provides fine-grained controls over LLM rate limits, token cost caps, and confidence gating. Detailed architectural mechanisms are documented in [docs/GUARDRAILS.md](GUARDRAILS.md).
+
+```ini
+# =====================================================================
+# Guardrails, Safety Limits & Rate Governance
+# =====================================================================
+
+# Maximum cumulative LLM tokens per single audit run (default: 500,000)
+# A warning is logged at 80% (400,000 tokens). If exceeded, raises TokenBudgetExceeded.
+MAX_TOKENS_PER_AUDIT=500000
+
+# In-memory sliding 60-second window provider rate limits
+# Throttles concurrent agent calls before hitting provider HTTP 429 errors
+LLM_RPM_LIMIT=60
+LLM_TPM_LIMIT=100000
+
+# Minimum confidence required for extracted pricing rules before tagging for human review
+COMPLIANCE_CONFIDENCE_THRESHOLD=0.70
+
+# Minimum rupee discrepancy required to record a finding (filters out rounding noise)
+MINIMUM_MATERIAL_THRESHOLD=100.0
+```
+

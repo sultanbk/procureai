@@ -12,14 +12,24 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Bell, Mail, Save, Sliders, AlertCircle, CheckCircle2, RefreshCw, Eye, EyeOff } from 'lucide-react';
-import { getNotificationSettings, updateNotificationSettings, testSlack, testEmail } from '../api';
+import {
+  Bell, Mail, Save, Sliders, AlertCircle, CheckCircle2, RefreshCw, Eye, EyeOff,
+  Network, Database, GitBranch, Sparkles, ShieldCheck, Play, Plus, Trash2, Key, Check, Copy, Layers
+} from 'lucide-react';
+import {
+  getNotificationSettings, updateNotificationSettings, testSlack, testEmail,
+  getContextSubstrateStatus, queryContextSubstrate,
+  getContextProviders, deleteContextProvider
+} from '../api';
 import PageHeader from '../components/layout/PageHeader';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Spinner from '../components/ui/Spinner';
 import { useToast } from '../components/ui/ToastProvider';
+import ReasoningSubgraphModal from '../components/ReasoningSubgraphModal';
+import RetrievalPassCard from '../components/RetrievalPassCard';
+import CreateProviderModal from '../components/CreateProviderModal';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -32,8 +42,20 @@ export default function Settings() {
   const [emailStatus, setEmailStatus] = useState(null); // { success: bool, message: str }
   const [error, setError] = useState(null);
 
-  const [activeTab, setActiveTab] = useState('notifications'); // 'notifications' | 'rules'
+  const [activeTab, setActiveTab] = useState('notifications'); // 'notifications' | 'rules' | 'substrate'
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
+
+  // Context Substrate Diagnostics State
+  const [substrateStatus, setSubstrateStatus] = useState(null);
+  const [substrateLoading, setSubstrateLoading] = useState(false);
+  const [diagnosticResult, setDiagnosticResult] = useState(null);
+  const [testingDiagnostic, setTestingDiagnostic] = useState(false);
+  const [isDiagnosticGraphOpen, setIsDiagnosticGraphOpen] = useState(false);
+
+  // Context Provider State
+  const [providers, setProviders] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeProviderId, setActiveProviderId] = useState('procureai-default');
 
   // Form States
   const [slackEnabled, setSlackEnabled] = useState(false);
@@ -75,6 +97,21 @@ export default function Settings() {
         setError(err.message || 'Failed to load settings.');
         setLoading(false);
       });
+
+    // Load Substrate Status
+    getContextSubstrateStatus()
+      .then(setSubstrateStatus)
+      .catch((err) => console.warn('Context Substrate status check:', err));
+
+    // Load Registered Context Providers
+    getContextProviders()
+      .then((list) => {
+        setProviders(list);
+        if (list.length > 0 && !list.some((p) => p.id === activeProviderId)) {
+          setActiveProviderId(list[0].id);
+        }
+      })
+      .catch((err) => console.warn('Failed to load Context Providers:', err));
   }, []);
 
   // Save Settings Handler
@@ -206,6 +243,18 @@ export default function Settings() {
           }`}
         >
           Compliance Alerts &amp; Filters
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('substrate')}
+          className={`pb-3 font-semibold text-xs uppercase tracking-wider transition-all relative border-b-2 flex items-center gap-1.5 ${
+            activeTab === 'substrate'
+              ? 'text-indigo-600 border-indigo-600'
+              : 'text-slate-500 border-transparent hover:text-slate-800'
+          }`}
+        >
+          <Network className="w-3.5 h-3.5 text-indigo-500" />
+          Context Substrate (Knowledge Brain)
         </button>
       </div>
 
@@ -491,6 +540,351 @@ export default function Settings() {
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* Section 3: SynaptAI Context Substrate (4-Store Epistemic Brain) */}
+        {activeTab === 'substrate' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* System Status & Diagnostics Card */}
+            <Card className="space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-3 -mt-2">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wide">
+                    <Network className="h-4 w-4 text-indigo-600 stroke-[1.5]" />
+                    SynaptAI Context Substrate Engine
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Governed 4-store knowledge substrate: Neo4j Concept Graph + Milvus KS/PS/GN.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {substrateStatus?.status?.toUpperCase() || 'ACTIVE (EMBEDDED)'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      getContextSubstrateStatus().then(setSubstrateStatus);
+                      toast('Status refreshed.', 'info');
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    title="Refresh Substrate Status"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Substrate Metadata Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Engine Mode</span>
+                  <p className="text-sm font-mono font-bold text-indigo-600 mt-1 uppercase">
+                    {substrateStatus?.mode || 'AUTO-FALLBACK'}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Neo4j Concept Graph</span>
+                  <p className="text-sm font-mono font-bold text-emerald-600 mt-1">
+                    Connected ({substrateStatus?.node_count || 11} nodes)
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Milvus Procedural (PS)</span>
+                  <p className="text-sm font-mono font-bold text-indigo-600 mt-1">
+                    {substrateStatus?.procedures_count || 2} SOP DAGs Active
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Provider Subgraph ID</span>
+                  <p className="text-xs font-mono font-semibold text-slate-700 mt-1 truncate">
+                    {substrateStatus?.provider_id || 'procureai-default'}
+                  </p>
+                </div>
+              </div>
+
+              {/* 4-Store Architecture Breakdown */}
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  4-Store Unified Epistemic Topology
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-indigo-50/40 border border-indigo-100 rounded-lg space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-indigo-900 text-xs">
+                      <Network className="w-3.5 h-3.5 text-indigo-600" />
+                      1. Neo4j Concept Graph
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Entities, concepts, propositions, and multi-hop relationships. Governs amendment supersessions via <code className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 text-red-600">SUPERSEDES</code> and <code className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 text-emerald-600">GOVERNED_BY</code> edges.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-blue-50/40 border border-blue-100 rounded-lg space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-blue-900 text-xs">
+                      <Database className="w-3.5 h-3.5 text-blue-600" />
+                      2. Milvus KS (Knowledge Store)
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Dense text embeddings across contract chunks. Provides semantic passage retrieval, heading hierarchy, and verbatim evidence citations.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-pink-50/40 border border-pink-100 rounded-lg space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-pink-900 text-xs">
+                      <GitBranch className="w-3.5 h-3.5 text-pink-600" />
+                      3. Milvus PS (Procedural Store)
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Corporate Standard Operating Procedures indexed as Directed Acyclic Graphs (DAGs) with <code className="font-mono bg-white px-1 py-0.5 rounded border border-pink-200 text-pink-700">PRECEDES</code> sequential steps for dispute recovery.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-purple-50/40 border border-purple-100 rounded-lg space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-purple-900 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      4. Milvus GN (Graph Node Index)
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Embedded node signatures mapped directly to Neo4j IDs. Bridges semantic vector search directly to graph anchor entry points without fuzzy string matching.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Diagnostic Test Runner */}
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Live Subgraph Traversal Diagnostic
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Send a benchmark multi-hop question to verify graph anchoring, BFS expansion, and 5-stage pass scoring.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={testingDiagnostic}
+                    onClick={async () => {
+                      setTestingDiagnostic(true);
+                      try {
+                        const res = await queryContextSubstrate({
+                          query: "What is the revised bandwidth rate under Amendment 1?",
+                          provider_id: substrateStatus?.provider_id || "procureai-default",
+                          top_k: 5,
+                          hops: 2,
+                        });
+                        setDiagnosticResult(res);
+                        toast('Diagnostic traversal completed successfully.', 'success');
+                      } catch (err) {
+                        toast(err.message || 'Diagnostic failed', 'error');
+                      } finally {
+                        setTestingDiagnostic(false);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    {testingDiagnostic ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    <span>{testingDiagnostic ? 'Traversing Graph...' : 'Run Diagnostic Query'}</span>
+                  </Button>
+                </div>
+
+                {/* Diagnostic Result Display */}
+                {diagnosticResult && (
+                  <div className="mt-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 space-y-4 animate-in fade-in duration-200">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wide font-bold text-indigo-600">
+                          Grounded Response
+                        </span>
+                        <p className="text-xs text-slate-900 font-medium mt-1 leading-relaxed">
+                          {diagnosticResult.answer}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => setIsDiagnosticGraphOpen(true)}
+                        size="sm"
+                        className="bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 flex items-center gap-1 font-semibold text-xs"
+                      >
+                        <Network className="w-3.5 h-3.5 text-indigo-600" />
+                        View Subgraph
+                      </Button>
+                    </div>
+
+                    {/* Embed 5-Stage Retrieval Pass Card */}
+                    {diagnosticResult.retrieval_pass_card && (
+                      <RetrievalPassCard passCard={diagnosticResult.retrieval_pass_card} />
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Context Providers & Client IDs Card */}
+            <Card className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-3 -mt-2">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wide">
+                    <Layers className="h-4 w-4 text-indigo-600 stroke-[1.5]" />
+                    Context Providers &amp; S2S Client Credentials
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Isolated knowledge namespaces. Each provider owns its own Neo4j subgraph, vector collections, and Client ID.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="flex items-center gap-1.5 font-bold bg-indigo-600 hover:bg-indigo-700 text-white text-xs shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create Provider</span>
+                </Button>
+              </div>
+
+              {/* Provider List Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                {providers.map((p) => {
+                  const isActive = activeProviderId === p.id;
+                  const isDefault = p.id === 'procureai-default';
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                        isActive
+                          ? 'bg-indigo-50/40 border-indigo-300 shadow-sm'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-slate-900 text-xs">{p.name}</h4>
+                              {isActive && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" /> Active Namespace
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                              {p.description || 'No description provided'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">
+                            packet: {p.knowledge_pack_packet}
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
+                            mode: {p.extraction_mode}
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+                            platform: {p.target_platform}
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                            depth: {p.context_depth_limit} hops
+                          </span>
+                        </div>
+
+                        {/* Client ID Pill */}
+                        <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Key className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span className="text-[10px] font-mono text-slate-600 truncate font-semibold">
+                              {p.client_id}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(p.client_id);
+                              toast('Client ID copied to clipboard.', 'info');
+                            }}
+                            className="text-slate-400 hover:text-slate-700 p-1"
+                            title="Copy Client ID"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Card Actions Footer */}
+                      <div className="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-xs">
+                        {!isActive ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveProviderId(p.id);
+                              toast(`Switched active provider to: ${p.name}`, 'success');
+                            }}
+                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                          >
+                            Set as Active Scope
+                          </button>
+                        ) : (
+                          <span className="text-[11px] font-medium text-slate-400">Current Scope</span>
+                        )}
+
+                        {!isDefault && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (window.confirm(`Are you sure you want to delete '${p.name}'?`)) {
+                                try {
+                                  await deleteContextProvider(p.id);
+                                  setProviders(providers.filter((x) => x.id !== p.id));
+                                  toast('Provider deleted.', 'info');
+                                } catch (err) {
+                                  toast(err.message || 'Failed to delete provider', 'error');
+                                }
+                              }
+                            }}
+                            className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                            title="Delete Provider"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Create Provider 3-Step Wizard Modal */}
+            <CreateProviderModal
+              isOpen={isCreateModalOpen}
+              onClose={() => setIsCreateModalOpen(false)}
+              onCreated={(newProvider) => {
+                setProviders((prev) => [...prev, newProvider]);
+                setActiveProviderId(newProvider.id);
+                toast(`Provider '${newProvider.name}' successfully provisioned!`, 'success');
+              }}
+            />
+
+            {/* Diagnostic Subgraph Modal */}
+            <ReasoningSubgraphModal
+              isOpen={isDiagnosticGraphOpen}
+              onClose={() => setIsDiagnosticGraphOpen(false)}
+              subgraph={diagnosticResult?.reasoning_subgraph}
+              title="Context Substrate: Diagnostic Traversal Subgraph"
+              subtitle="Live Neo4j concept graph slice with semantic anchors"
+            />
           </div>
         )}
 

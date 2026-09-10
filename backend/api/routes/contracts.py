@@ -519,16 +519,44 @@ async def chat_stream_generator(audit_id: str, request: ChatRequest):
         confidence = extract_confidence(full_answer)
         citations = build_rule_citations(full_answer, rulebook)
         citations = await add_chunk_citations(audit_id, full_answer, citations)
+
+        # Enrich with SynaptAI Context Substrate (Reasoning Subgraph, Pass Card, SOP DAG)
+        reasoning_subgraph = None
+        retrieval_pass_card = None
+        procedure_dag = None
+        try:
+            from backend.core.context_substrate_client import get_context_substrate_client
+            from backend.core.mock_substrate_data import generate_default_pass_card
+
+            client = get_context_substrate_client()
+            subgraph_obj = client.get_contract_graph(audit_id)
+            if subgraph_obj:
+                reasoning_subgraph = subgraph_obj.model_dump()
+            retrieval_pass_card = generate_default_pass_card(request.question, confidence or "HIGH")
+
+            if any(term in request.question.lower() for term in ["dispute", "penalty", "sla", "overcharge", "recover", "notice"]):
+                proc_obj = client.get_procedure_dag("dispute_recovery")
+                if proc_obj:
+                    procedure_dag = proc_obj.model_dump()
+        except Exception as e:
+            logger.debug("Context Substrate stream enrichment skipped", error=str(e))
+
         suffix_data = {
             "citations": citations,
             "confidence": confidence,
             "answer": clean_answer_for_client(full_answer),
+            "reasoning_subgraph": reasoning_subgraph,
+            "retrieval_pass_card": retrieval_pass_card,
+            "procedure_dag": procedure_dag,
         }
     except Exception:
         suffix_data = {
             "citations": [],
             "confidence": "not_found",
             "answer": clean_answer_for_client(full_answer),
+            "reasoning_subgraph": None,
+            "retrieval_pass_card": None,
+            "procedure_dag": None,
         }
 
     yield f"\n\n---CITATIONS---\n{json.dumps(suffix_data)}"

@@ -1,4 +1,4 @@
-﻿# Documentation Coverage Checklist
+# Documentation Coverage Checklist
 
 **Audience:** Documentation maintainers and developers.
 
@@ -18,6 +18,7 @@
 | Testing | Covered | `TESTING.md` |
 | Deployment | Partially covered | `docs/DEPLOYMENT.md` |
 | Security | Covered with caveats | `docs/SECURITY.md` |
+| Guardrails & Safety | Covered | `docs/GUARDRAILS.md` |
 | User workflows | Covered | `docs/USER_GUIDE.md` |
 | Troubleshooting | Covered | `docs/TROUBLESHOOTING.md` |
 | Auto-audit watcher | Covered | `docs/USER_GUIDE.md`, `docs/API.md`, `ARCHITECTURE.md` |
@@ -50,6 +51,7 @@ The following documents are the maintained documentation set and should remain l
 | `docs/USER_GUIDE.md` | Required | User-facing workflows and limitations |
 | `docs/DATABASE.md` | Required | Local database lifecycle and retention behavior |
 | `docs/SECURITY.md` | Required | Security boundary and production caveats |
+| `docs/GUARDRAILS.md` | Required | 6-layer defense-in-depth safety architecture and operational guide |
 | `docs/TROUBLESHOOTING.md` | Required | Recovery guidance for common failures |
 | `docs/DEPLOYMENT.md` | Required | Local deployment and explicit production gaps |
 | `TESTING.md` | Required | Backend, frontend, and evaluation commands |

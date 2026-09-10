@@ -1,8 +1,10 @@
-﻿# Human Review Guide
+# Human Review Guide
 
 **Audience:** Developers, auditors, and business reviewers.
 
-The human review loop lets ProcureAI keep a finding visible while marking it as needing human judgment. This is used when the deterministic math finds a discrepancy but contract language, source data, or business context may require reviewer interpretation.
+The human review loop in ProcureAI operates at two complementary levels:
+1. **Item-Level Review:** For individual discrepancies flagged by the LLM Critic or flagged by low-confidence contract extraction rules (`extraction_confidence < 0.70`).
+2. **Audit-Level Release Gate (`PENDING_REVIEW`):** For audits that uncover `CRITICAL` severity discrepancies, preventing automated release or closure until signed off by a human auditor.
 
 ## Implementation Summary
 
@@ -11,16 +13,24 @@ flowchart TD
     A[Invoice line and matched rule] --> B[Python rule engine]
     B --> C{Material discrepancy?}
     C -- no --> D[Compliant line]
-    C -- yes --> E[LLM critic]
+    C -- yes --> CR{Rule flagged<br/>needs_human_review?}
+    CR -- yes (Low Confidence) --> H[Force NEEDS_HUMAN_REVIEW<br/>(Bypass Critic)]
+    CR -- no --> E[LLM critic]
     E --> F{Critic status}
     F -- CONFIRMED --> G[Confirmed discrepancy]
-    F -- NEEDS_HUMAN_REVIEW --> H[Discrepancy plus review flag]
+    F -- NEEDS_HUMAN_REVIEW --> H
     G --> I[Audit report]
     H --> I
+    I --> CG{Any CRITICAL<br/>findings?}
+    CG -- yes --> PR["Audit Status: PENDING_REVIEW<br/>(Amber Review Banner)"]
+    CG -- no --> AC["Audit Status: COMPLETE"]
+    PR --> Appr["POST /api/audit/{id}/approve<br/>(Click 'Approve Audit')"]
+    Appr --> AC
     I --> J[Frontend review UI]
     J --> K[POST finding feedback]
     K --> L[finding_feedback table]
 ```
+
 
 ## Key Code Paths
 
@@ -76,3 +86,12 @@ Use human review for cases such as:
 - Historical false-positive patterns.
 
 A reviewer should leave enough reason text for future auditors to understand the decision.
+
+## Audit-Level Release Gate (`PENDING_REVIEW`)
+
+When an audit uncovers one or more findings with `severity == Severity.CRITICAL` (such as major unapproved rate increases, billing discrepancies exceeding ₹50,000, or invalid contract clauses), the system places the entire audit on hold:
+
+1. **State Transition:** The audit is assigned `status = "PENDING_REVIEW"` instead of `COMPLETE`.
+2. **Review Alert:** The report page (`AuditReport.jsx`) displays an Amber Warning Banner indicating that critical discrepancies require procurement management approval.
+3. **Approval Action:** Clicking the **"Approve Audit"** button calls `POST /api/audit/{audit_id}/approve`. Upon receiving approval, the audit status updates to `COMPLETE`, clearing the hold and finalizing the report.
+
