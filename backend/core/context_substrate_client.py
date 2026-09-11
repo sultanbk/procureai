@@ -127,10 +127,33 @@ class ContextSubstrateClient:
 
     def _init_default_providers(self):
         """Initializes default pre-configured Context Providers."""
+        self._providers["premium-cold-foods"] = ContextProviderResponse(
+            id="premium-cold-foods",
+            name="Premium Cold Foods & Sysco Corporation",
+            description="Master Food Supply & Cold Chain Agreement (CTR-SYSCO-PCF-2026-002), wholesale produce rates, frozen volume rebates, fuel caps, and cold-chain recovery SOPs.",
+            extraction_mode="deep",
+            knowledge_pack_source="system-defined-types",
+            knowledge_pack_packet="cold-chain-logistics",
+            entity_types=["Organization", "Vendor", "Customer", "Contract", "Rule", "SLA", "Produce", "FrozenFood", "FuelCap"],
+            relationship_types=["GOVERNED_BY", "DEFINES", "SUPERSEDES", "BILLED_ON", "PRECEDES", "HAS_STEP"],
+            stores_included=["Knowledge Store (Milvus KS)", "Context Graph (Neo4j)", "Procedure Store (Milvus PS)"],
+            entity_types_exposed=["customer", "order", "product", "policy"],
+            context_depth_limit=3,
+            max_results_per_query=50,
+            client_id="client_procureai_auditor_s2s",
+            rate_limit_rpm=120,
+            token_ttl_hours=24,
+            target_platform="langgraph",
+            status="ACTIVE",
+            created_at="2026-06-01T09:00:00Z",
+            node_count=12,
+            edge_count=12,
+        )
+
         self._providers["procureai-default"] = ContextProviderResponse(
             id="procureai-default",
-            name="ProcureAI Enterprise",
-            description="Primary procurement knowledge substrate covering global MSAs, SOW rate sheets, and recovery playbooks.",
+            name="ProcureAI Enterprise Hub",
+            description="Primary enterprise procurement knowledge substrate covering global MSAs, volume rate schedules, and recovery playbooks.",
             extraction_mode="balanced",
             knowledge_pack_source="system-defined-types",
             knowledge_pack_packet="default",
@@ -146,31 +169,8 @@ class ContextSubstrateClient:
             target_platform="langgraph",
             status="ACTIVE",
             created_at="2024-01-15T09:00:00Z",
-            node_count=11,
-            edge_count=11,
-        )
-
-        self._providers["apex-telecom"] = ContextProviderResponse(
-            id="apex-telecom",
-            name="Apex Telecom & Cloud Infrastructure",
-            description="Telecom DIA circuits, bandwidth tier rates, cross-connect schedules, and circuit decommission SOPs.",
-            extraction_mode="deep",
-            knowledge_pack_source="system-defined-types",
-            knowledge_pack_packet="clougovernance",
-            entity_types=["Vendor", "Circuit", "Bandwidth", "Datacenter", "MRC", "SLA", "Penalty"],
-            relationship_types=["GOVERNED_BY", "DEFINES", "SUPERSEDES", "BILLED_ON", "TERMINATES_AT"],
-            stores_included=["Knowledge Store (Milvus KS)", "Context Graph (Neo4j)", "Procedure Store (Milvus PS)"],
-            entity_types_exposed=["customer", "product", "policy"],
-            context_depth_limit=3,
-            max_results_per_query=50,
-            client_id="client_apex_7a19c3b8e",
-            rate_limit_rpm=120,
-            token_ttl_hours=48,
-            target_platform="agentcraft",
-            status="ACTIVE",
-            created_at="2024-03-01T14:30:00Z",
-            node_count=8,
-            edge_count=9,
+            node_count=12,
+            edge_count=12,
         )
 
     def list_providers(self) -> List[ContextProviderResponse]:
@@ -438,28 +438,52 @@ class ContextSubstrateClient:
         # Determine confidence level
         confidence = "HIGH" if any(w in q_lower for w in ["rate", "price", "mrc", "bandwidth", "amendment", "sla", "penalty", "circuit", "dispute"]) else "MEDIUM"
         
-        # Build answer
-        if "amendment" in q_lower or "supersede" in q_lower or "revised" in q_lower or "4.1" in q_lower:
+        # Build answer for Premium Cold Foods / Sysco Contract
+        if "fuel" in q_lower or "surcharge" in q_lower or "cap" in q_lower or "6.2" in q_lower:
             answer = (
-                "According to **Amendment 1 (Section 2)**, the base Monthly Recurring Charge (MRC) for 100Mbps dedicated ports "
-                "was revised to **$950.00/month**, explicitly superseding the original Section 4.1 rate of $1,200.00/month "
-                "effective June 1, 2024. [CONFIDENCE: HIGH]"
+                "Under **Section 6.2 of CTR-SYSCO-PCF-2026-002**, monthly fuel surcharges are subject to a strict ceiling cap of "
+                "**USD 2,000.00**. Under no circumstances may Sysco Corporation be billed a fuel surcharge higher than USD 2,000.00. [CONFIDENCE: HIGH]"
             )
-        elif "sla" in q_lower or "uptime" in q_lower or "penalty" in q_lower:
+        elif "volume" in q_lower or "frozen" in q_lower or "5.1" in q_lower or "4.3" in q_lower or "tier" in q_lower:
             answer = (
-                "Under **Schedule B (SLA Performance Standards)**, service availability is committed at 99.9%. "
-                "If monthly availability drops below 99.5%, a **10% invoice credit** applies to all affected DIA circuits. [CONFIDENCE: HIGH]"
+                "Under **Section 4.3**, Standard Frozen Food cases are billed at **USD 5.80/case**. "
+                "However, under **Section 5.1 (Volume-Based Discounts)**, if the monthly volume exceeds 10,000 cases, a discounted rate of "
+                "**USD 5.00/case** explicitly supersedes the standard rate for all frozen cases billed that month. [CONFIDENCE: HIGH]"
+            )
+        elif "produce" in q_lower or "4.2" in q_lower or "box" in q_lower:
+            answer = (
+                "Under **Section 4.2**, Standard Produce Boxes delivered to Sysco regional distribution hubs are billed at a flat rate of "
+                "**USD 4.50 per box** for the initial contract term. [CONFIDENCE: HIGH]"
+            )
+        elif "sla" in q_lower or "temperature" in q_lower or "7.1" in q_lower or "credit" in q_lower:
+            answer = (
+                "Under **Section 7.1 (SLA Temperature Compliance)**, Supplier guarantees a monthly temperature compliance rate of at least **98.0%**. "
+                "If compliance drops below 98.0%, Supplier must issue a penalty credit equal to **8.0% of that month's total invoice amount**. [CONFIDENCE: HIGH]"
+            )
+        elif "milestone" in q_lower or "delay" in q_lower or "8.2" in q_lower:
+            answer = (
+                "Under **Section 8.2**, if the 'Mid-West Cold Chain Integration' milestone is delayed past November 1, 2026, "
+                "Supplier must credit Client liquidated damages of **USD 1,500.00 per calendar day** of delay. [CONFIDENCE: HIGH]"
+            )
+        elif "prompt" in q_lower or "9.2" in q_lower or "early" in q_lower or "discount" in q_lower:
+            answer = (
+                "Under **Section 9.2**, a **3.0% prompt payment discount** applies to Standard Produce Box charges if settled within 12 days of invoice date. [CONFIDENCE: HIGH]"
             )
         elif "dispute" in q_lower or "overcharge" in q_lower:
             answer = (
-                "Per corporate SOP **'Enterprise Overcharge Recovery Playbook'** and Section 12.3 of the Master Agreement, "
-                "disputed line items require a formal Dispute Notice with a 14-day cure period. Accounts Payable is authorized "
-                "to withhold the disputed delta while remitting undisputed charges. [CONFIDENCE: HIGH]"
+                "Per corporate SOP **'Food Supply & Cold Chain Discrepancy Recovery Playbook'** and Section 10 of CTR-SYSCO-PCF-2026-002, "
+                "disputed line items (fuel surcharge excess or volume tier overcharges) require a formal Dispute Notice with a 14-day cure period. "
+                "Accounts Payable is authorized to withhold the disputed delta while releasing undisputed charges. [CONFIDENCE: HIGH]"
+            )
+        elif "amendment" in q_lower or "supersede" in q_lower or "4.1" in q_lower:
+            answer = (
+                "Under Section 5.1, monthly volume over 10,000 cases supersedes Section 4.3 frozen rates ($5.80 to $5.00/case). "
+                "Additionally, under historical Amendment 1 (Section 2), bandwidth rates were revised to $950.00/month. [CONFIDENCE: HIGH]"
             )
         else:
             answer = (
                 f"Based on Context Substrate graph traversal across {len(subgraph.nodes)} nodes and {len(subgraph.edges)} relationships, "
-                f"the agreement specifies standard commercial governance under governing terms with Apex Telecom Ltd. [CONFIDENCE: {confidence}]"
+                f"the agreement specifies standard commercial governance under CTR-SYSCO-PCF-2026-002 between Sysco Corporation and Premium Cold Foods, Inc. [CONFIDENCE: {confidence}]"
             )
 
         pass_card_dict = generate_default_pass_card(query, confidence)
@@ -467,11 +491,18 @@ class ContextSubstrateClient:
 
         citations = [
             {
-                "rule_id": "RULE_AMEND_1_SEC_2",
-                "clause_reference": "Amendment 1, Section 2",
-                "clause_text": "Effective June 1, 2024, Section 4.1 of the Master Agreement is hereby superseded. The revised Monthly Recurring Charge for 100Mbps DIA ports shall be $950.00.",
-                "confidence": 0.96,
-                "graph_node_id": "node_rule_amend_1_sec_2"
+                "rule_id": "RULE_PCF_SEC_5_1",
+                "clause_reference": "Section 5.1",
+                "clause_text": "If the monthly volume of Frozen Food cases shipped to Sysco hubs exceeds 10,000 cases in any calendar month, a discounted rate of USD 5.00 per case shall apply to all Frozen Food cases billed in that month.",
+                "confidence": 0.98,
+                "graph_node_id": "node_rule_sec_5_1"
+            },
+            {
+                "rule_id": "RULE_PCF_SEC_6_2",
+                "clause_reference": "Section 6.2",
+                "clause_text": "Fuel surcharges applied to any monthly invoice shall not exceed USD 2,000.00. Under no circumstances shall Sysco be billed a fuel surcharge higher than USD 2,000.00.",
+                "confidence": 0.99,
+                "graph_node_id": "node_rule_sec_6_2"
             }
         ]
 
@@ -581,8 +612,19 @@ class ContextSubstrateClient:
         Checks Neo4j Concept Graph for any active SUPERSEDES relationships
         affecting the specified clause.
         """
-        # In benchmark dataset, Section 4.1 is superseded by Amendment 1
-        if "4.1" in clause_name or "bandwidth" in clause_name.lower() or "base" in clause_name.lower():
+        c_lower = clause_name.lower()
+        if "5.1" in c_lower or "volume" in c_lower or "frozen" in c_lower or "4.3" in c_lower:
+            return {
+                "is_superseded": True,
+                "active_clause": "Section 5.1 (Volume Rebate Tier)",
+                "original_clause": "Section 4.3 (Standard Frozen Food Cases)",
+                "effective_date": "2026-06-01",
+                "edge_type": "SUPERSEDES",
+                "superseding_rate": "$5.00/case (> 10,000 cases)",
+                "original_rate": "$5.80/case",
+                "governing_document": "CTR-SYSCO-PCF-2026-002",
+            }
+        elif "4.1" in c_lower or "bandwidth" in c_lower or "base" in c_lower:
             return {
                 "is_superseded": True,
                 "active_clause": "Amendment 1, Section 2",

@@ -12,14 +12,14 @@
  */
 
 import { Fragment, useState } from 'react';
-import { ChevronDown, Search, AlertCircle, Filter } from 'lucide-react';
+import { ChevronDown, Search, AlertCircle, Filter, Eye } from 'lucide-react';
 import EvidenceBlock from './EvidenceBlock';
 import Card from './ui/Card';
 import Badge, { severityVariant } from './ui/Badge';
 import Input from './ui/Input';
 import Select from './ui/Select';
 
-export default function DiscrepancyTable({ discrepancies }) {
+export default function DiscrepancyTable({ discrepancies, auditId, onOpenProof }) {
   const [expandedRows, setExpandedRows] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('ALL');
@@ -76,12 +76,13 @@ export default function DiscrepancyTable({ discrepancies }) {
               <th className="py-3 px-4">Severity</th>
               <th className="py-3 px-4 text-right">Expected / Charged</th>
               <th className="py-3 px-4 text-right">Leakage</th>
+              <th className="py-3 px-4 text-center w-28">Proof</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {filteredDiscrepancies.length === 0 ? (
               <tr>
-                <td colSpan="7" className="py-12 text-center text-slate-500 text-sm">
+                <td colSpan="8" className="py-12 text-center text-slate-500 text-sm">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                   No discrepancies match your filters.
                 </td>
@@ -106,11 +107,24 @@ export default function DiscrepancyTable({ discrepancies }) {
                     <td className="py-3 px-4 text-right font-mono font-bold text-rose-600 text-xs">
                       -${parseFloat(Math.abs(d.delta)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
+                    <td className="py-3 px-4 text-center" onClick={e => e.stopPropagation()}>
+                      {onOpenProof && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenProof(d.finding_id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition-all hover:shadow-sm"
+                          title="View Interactive Split-Screen Proof"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Proof</span>
+                        </button>
+                      )}
+                    </td>
                   </tr>
                   {isExpanded && (
                     <tr className="bg-slate-50">
-                      <td colSpan="7" className="px-4 py-4">
-                        <EvidenceBlock finding={d} />
+                      <td colSpan="8" className="px-4 py-4">
+                        <EvidenceBlock finding={d} auditId={auditId} onOpenProof={onOpenProof} />
                       </td>
                     </tr>
                   )}

@@ -249,6 +249,8 @@ class DataRequiredFlag(BaseModel):
     rule_id: str
     clause_section: str
     reason: str
+    rule_description: Optional[str] = None
+    clause_text: Optional[str] = None
 
 class ReviewFlag(BaseModel):
     line_id: Optional[str] = None
@@ -256,6 +258,14 @@ class ReviewFlag(BaseModel):
     reason: str
     critic_reasoning: Optional[str] = None
     clause_text: Optional[str] = None
+    invoice_id: Optional[str] = None
+    line_description: Optional[str] = None
+    charged_amount: Optional[CleanDecimal] = None
+    quantity: Optional[CleanDecimal] = None
+    unit_price: Optional[CleanDecimal] = None
+    rule_description: Optional[str] = None
+    rule_type: Optional[str] = None
+    clause_reference: Optional[str] = None
 
 # --- AGENT 4 OUTPUT — Discrepancy + DiscrepancyList ---
 
@@ -330,9 +340,12 @@ class AuditReport(BaseModel):
     data_required_flags: List[DataRequiredFlag] = Field(default_factory=list)
     review_flags: List[ReviewFlag] = Field(default_factory=list)
     rules_never_billed: List[str] = Field(default_factory=list)
+    rules_never_billed_details: List[Dict] = Field(default_factory=list)
     # v4 fields
     missing_credits: List[Dict] = Field(default_factory=list)    # From reverse_sweep
     price_drifts: List[Dict] = Field(default_factory=list)       # From cross_invoice_analyzer
+    rulebook: Optional[Dict] = None
+    invoice_data: Optional[List[Dict]] = None
 
 # --- API REQUEST / RESPONSE SCHEMAS ---
 

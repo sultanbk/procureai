@@ -95,13 +95,85 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
         cv_result = state.get("cross_validation", {})
         rules_never_billed = cv_result.get("rules_never_billed", [])
         
-        data_required_flags: List[DataRequiredFlag] = [
-            DataRequiredFlag.model_validate(f) for f in state.get("data_required_flags", [])
-        ]
-        
-        review_flags: List[ReviewFlag] = [
-            ReviewFlag.model_validate(f) for f in state.get("review_flags", [])
-        ]
+        # Build lookup tables for human-readable enrichment
+        rules_dict = {}
+        if isinstance(rulebook_raw, dict):
+            for r in rulebook_raw.get("rules", []):
+                if isinstance(r, dict) and "rule_id" in r:
+                    rules_dict[r["rule_id"]] = r
+                elif hasattr(r, "rule_id"):
+                    rules_dict[r.rule_id] = r.model_dump() if hasattr(r, "model_dump") else r.__dict__
+
+        line_items_dict = {}
+        for inv in invoices:
+            for item in inv.line_items:
+                line_items_dict[item.line_id] = {
+                    "invoice_id": inv.invoice_id,
+                    "line_description": item.raw_description,
+                    "charged_amount": item.line_total_charged,
+                    "quantity": item.quantity,
+                    "unit_price": item.unit_price_charged,
+                }
+
+        # Enrich review_flags
+        enriched_review_flags: List[ReviewFlag] = []
+        for rf_raw in state.get("review_flags", []):
+            rf_dict = dict(rf_raw) if isinstance(rf_raw, dict) else (rf_raw.model_dump() if hasattr(rf_raw, "model_dump") else dict(rf_raw))
+            lid = rf_dict.get("line_id")
+            if lid and lid in line_items_dict:
+                info = line_items_dict[lid]
+                if not rf_dict.get("line_description"):
+                    rf_dict["line_description"] = info["line_description"]
+                if not rf_dict.get("invoice_id"):
+                    rf_dict["invoice_id"] = info["invoice_id"]
+                if rf_dict.get("charged_amount") is None:
+                    rf_dict["charged_amount"] = info["charged_amount"]
+                if rf_dict.get("quantity") is None:
+                    rf_dict["quantity"] = info["quantity"]
+                if rf_dict.get("unit_price") is None:
+                    rf_dict["unit_price"] = info["unit_price"]
+
+            rid = rf_dict.get("rule_id")
+            if rid and rid in rules_dict:
+                r_info = rules_dict[rid]
+                if not rf_dict.get("rule_description"):
+                    rf_dict["rule_description"] = r_info.get("description")
+                if not rf_dict.get("rule_type"):
+                    rf_dict["rule_type"] = r_info.get("rule_type")
+                if not rf_dict.get("clause_reference"):
+                    rf_dict["clause_reference"] = r_info.get("clause_reference")
+                if not rf_dict.get("clause_text"):
+                    rf_dict["clause_text"] = r_info.get("clause_text")
+
+            enriched_review_flags.append(ReviewFlag.model_validate(rf_dict))
+
+        # Enrich data_required_flags
+        enriched_data_required_flags: List[DataRequiredFlag] = []
+        for drf_raw in state.get("data_required_flags", []):
+            drf_dict = dict(drf_raw) if isinstance(drf_raw, dict) else (drf_raw.model_dump() if hasattr(drf_raw, "model_dump") else dict(drf_raw))
+            rid = drf_dict.get("rule_id")
+            if rid and rid in rules_dict:
+                r_info = rules_dict[rid]
+                if not drf_dict.get("rule_description"):
+                    drf_dict["rule_description"] = r_info.get("description")
+                if not drf_dict.get("clause_text"):
+                    drf_dict["clause_text"] = r_info.get("clause_text")
+            enriched_data_required_flags.append(DataRequiredFlag.model_validate(drf_dict))
+
+        # Build rules_never_billed_details
+        rules_never_billed_details = []
+        for rid in rules_never_billed:
+            r_info = rules_dict.get(rid, {})
+            rules_never_billed_details.append({
+                "rule_id": rid,
+                "description": r_info.get("description", "Contracted pricing or SLA term"),
+                "rule_type": r_info.get("rule_type", "pricing_rule"),
+                "clause_reference": r_info.get("clause_reference", "N/A"),
+                "clause_text": r_info.get("clause_text", "")
+            })
+
+        data_required_flags = enriched_data_required_flags
+        review_flags = enriched_review_flags
         
         # 1. Compute aggregate stats in Python using tools
         (
@@ -247,8 +319,11 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             data_required_flags=data_required_flags,
             review_flags=review_flags,
             rules_never_billed=rules_never_billed,
+            rules_never_billed_details=rules_never_billed_details,
             missing_credits=missing_credits,
             price_drifts=price_drifts,
+            rulebook=rulebook_raw if isinstance(rulebook_raw, dict) else None,
+            invoice_data=[inv.model_dump() for inv in invoices] if invoices else None,
         )
         
         # 5. Write back to state

@@ -65,7 +65,8 @@ function AuditReportRoute() {
         if (data.audit_report) {
           const reportWithRulebook = {
             ...data.audit_report,
-            rulebook: data.partial_results?.rulebook,
+            rulebook: data.audit_report?.rulebook || data.partial_results?.rulebook,
+            invoice_data: data.audit_report?.invoice_data || data.partial_results?.invoice_data,
             status: data.status,
           };
           setReport(reportWithRulebook);

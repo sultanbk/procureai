@@ -18,15 +18,15 @@ from typing import Dict, Any, List
 # Standard Operating Procedures as DAGs (Milvus PS + Neo4j)
 MOCK_PROCEDURE_DAGS: Dict[str, Dict[str, Any]] = {
     "dispute_recovery": {
-        "procedure_id": "proc_sop_overcharge_001",
-        "name": "Enterprise Overcharge & SLA Penalty Recovery Playbook",
-        "intent": "Standard operating procedure to formalize invoice overcharges, apply contractual credits, and initiate vendor dispute resolution.",
+        "procedure_id": "proc_sop_coldchain_001",
+        "name": "Food Supply & Cold Chain Discrepancy Recovery Playbook",
+        "intent": "Standard operating procedure to formalize produce/frozen billing overcharges, apply cold chain SLA credits, and enforce contract caps per CTR-SYSCO-PCF-2026-002.",
         "version": "2.1",
         "steps": [
             {
                 "step_id": "step_1",
                 "title": "Evidence Verification & Delta Reconciliation",
-                "description": "Cross-reference invoice line item against governing Contract Schedule / Amendment and extract verbatim clause text.",
+                "description": "Cross-reference invoice line item against Section 5.1 (volume rebate $5.00/case), Section 6.2 ($2,000 fuel cap), or Section 7.1 (temperature telemetry logs).",
                 "order": 1,
                 "required_role": "Procurement Auditor",
                 "status": "COMPLETED"
@@ -34,23 +34,23 @@ MOCK_PROCEDURE_DAGS: Dict[str, Dict[str, Any]] = {
             {
                 "step_id": "step_2",
                 "title": "Draft Formal Dispute Notice",
-                "description": "Generate formal Notice of Dispute specifying invoice ID, overcharge delta, clause citation, and 14-day cure deadline.",
+                "description": "Generate formal Notice of Dispute specifying invoice ID, overcharge delta, clause citations (Section 5.1/6.2/7.1), and 14-day cure deadline to Premium Cold Foods, Inc.",
                 "order": 2,
                 "required_role": "Procurement Auditor",
                 "status": "IN_PROGRESS"
             },
             {
                 "step_id": "step_3",
-                "title": "Escrow / Payment Withholding Authorization",
-                "description": "Notify Accounts Payable to withhold disputed balance while releasing undisputed charges per Section 12.3.",
+                "title": "Payment Withholding Authorization",
+                "description": "Instruct Accounts Payable to withhold the unearned fuel surcharge excess ($500) and volume delta while releasing undisputed balance per Section 10.",
                 "order": 3,
                 "required_role": "Finance Director",
                 "status": "PENDING"
             },
             {
                 "step_id": "step_4",
-                "title": "Vendor Account Remediation Meeting",
-                "description": "Convene formal review with Vendor Account Director to secure credit memo or revised billing invoice.",
+                "title": "Cold Chain & Logistics Account Review",
+                "description": "Convene formal review with Premium Cold Foods Account Director to validate delivery temperature logs and secure 8% SLA credit note.",
                 "order": 4,
                 "required_role": "Head of Strategic Sourcing",
                 "status": "PENDING"
@@ -58,7 +58,7 @@ MOCK_PROCEDURE_DAGS: Dict[str, Dict[str, Any]] = {
             {
                 "step_id": "step_5",
                 "title": "Credit Memo Execution & Ledger Reconciliation",
-                "description": "Validate receipt of signed credit note and verify credit application against the subsequent billing cycle.",
+                "description": "Validate receipt of signed credit note and verify credit application against the subsequent Sysco monthly billing cycle.",
                 "order": 5,
                 "required_role": "Procurement Auditor",
                 "status": "PENDING"
@@ -118,101 +118,129 @@ MOCK_PROCEDURE_DAGS: Dict[str, Dict[str, Any]] = {
     }
 }
 
-# Master graph of entities, concepts, clauses, and amendments
-SAMPLE_KNOWLEDGE_GRAPH: Dict[str, Any] = {
+# Master graph of entities, concepts, clauses, and amendments (Primary: Premium Cold Foods & Sysco Corporation)
+PREMIUM_COLD_FOODS_KNOWLEDGE_GRAPH: Dict[str, Any] = {
     "nodes": [
         {
-            "id": "node_org_apex",
-            "label": "Apex Telecom Ltd",
+            "id": "node_org_pcf",
+            "label": "Premium Cold Foods, Inc.",
             "type": "Entity",
-            "properties": {"category": "Vendor", "description": "Global tier-1 telecommunications and cloud provider"},
+            "properties": {"category": "Vendor", "state": "Delaware", "facility": "Wilmington, DE", "description": "Wholesale organic produce & cold-chain logistics supplier"},
             "is_anchor": False
         },
         {
-            "id": "node_org_procure",
-            "label": "ProcureAI Enterprise",
+            "id": "node_org_sysco",
+            "label": "Sysco Corporation",
             "type": "Entity",
-            "properties": {"category": "Customer", "description": "Contracting enterprise customer"},
+            "properties": {"category": "Customer", "headquarters": "Houston, TX", "description": "Global food distributor and contracting enterprise customer"},
             "is_anchor": False
         },
         {
-            "id": "node_doc_msa",
-            "label": "Master Services Agreement (MSA-2024)",
+            "id": "node_doc_pcf_msa",
+            "label": "Master Food Supply Agreement (CTR-SYSCO-PCF-2026-002)",
             "type": "Document",
-            "properties": {"effective_date": "2024-01-01", "status": "Active"},
+            "properties": {"effective_date": "2026-06-01", "status": "Active", "governing_law": "Delaware", "jurisdiction": "AAA Arbitration"},
             "is_anchor": False
         },
         {
-            "id": "node_doc_amend_1",
-            "label": "Amendment 1 (Rate Reduction & Bandwidth)",
-            "type": "Document",
-            "properties": {"effective_date": "2024-06-01", "status": "Active", "priority": 1},
-            "is_anchor": False
-        },
-        {
-            "id": "node_concept_mrc",
-            "label": "Monthly Recurring Charge (MRC)",
-            "type": "Concept",
-            "properties": {"definition": "Fixed recurring baseline fee billed on the first day of each calendar billing cycle", "aliases": ["Monthly Fee", "Base Charge"]},
-            "is_anchor": False
-        },
-        {
-            "id": "node_rule_sec_4_1",
-            "label": "Clause 4.1: Base Circuit Bandwidth Rate ($1,200/mo)",
+            "id": "node_rule_sec_4_2",
+            "label": "Section 4.2: Standard Produce Boxes ($4.50/box)",
             "type": "Rule",
-            "properties": {"rate": "$1,200/mo", "superseded_by": "node_rule_amend_1_sec_2", "clause_ref": "Section 4.1"},
-            "is_anchor": False
-        },
-        {
-            "id": "node_rule_amend_1_sec_2",
-            "label": "Amendment 1 - Section 2: Revised Rate ($950/mo)",
-            "type": "Rule",
-            "properties": {"rate": "$950/mo", "effective_date": "2024-06-01", "clause_ref": "Amend 1, Sec 2"},
+            "properties": {"rate": "$4.50/box", "product": "Standard Produce Boxes", "clause_ref": "Section 4.2", "packaging": "Wholesale organic harvest"},
             "is_anchor": True
         },
         {
-            "id": "node_rule_sla_penalty",
-            "label": "Schedule B: SLA Uptime & 10% Outage Credit",
+            "id": "node_rule_sec_4_3",
+            "label": "Section 4.3: Frozen Food Standard Rate ($5.80/case)",
             "type": "Rule",
-            "properties": {"uptime_threshold": "99.9%", "penalty": "10% invoice credit for monthly availability < 99.5%"},
+            "properties": {"rate": "$5.80/case", "product": "Standard Frozen Food Cases", "clause_ref": "Section 4.3", "temp_req": "0°F or lower"},
             "is_anchor": False
         },
         {
-            "id": "node_entity_circuit_448",
-            "label": "Dedicated DIA Link (CID-44821)",
-            "type": "Entity",
-            "properties": {"bandwidth": "100Mbps", "carrier": "Apex Telecom", "datacenter": "LON-CE-01"},
+            "id": "node_rule_sec_5_1",
+            "label": "Section 5.1: Volume Tier Discount ($5.00/case > 10k)",
+            "type": "Rule",
+            "properties": {"rate": "$5.00/case", "threshold": "> 10,000 cases/mo", "clause_ref": "Section 5.1", "supersedes_rate": "$5.80/case"},
             "is_anchor": True
         },
         {
-            "id": "node_chunk_sec_4_1",
-            "label": "Chunk: Section 4.1 Original Rate Table",
-            "type": "Chunk",
-            "properties": {"tokens": 142, "text": "Customer shall pay a Monthly Recurring Charge of $1,200.00 for each dedicated 100Mbps DIA port installed."},
+            "id": "node_rule_sec_6_2",
+            "label": "Section 6.2: Fuel Surcharge Ceiling ($2,000.00 Max Cap)",
+            "type": "Rule",
+            "properties": {"ceiling_cap": "$2,000.00/month", "clause_ref": "Section 6.2", "condition": "Strict maximum monthly allowable fuel cost"},
+            "is_anchor": True
+        },
+        {
+            "id": "node_rule_sec_7_1",
+            "label": "Section 7.1: Cold Chain Temperature SLA (98% / 8% Credit)",
+            "type": "Rule",
+            "properties": {"sla_threshold": "98.0%", "penalty_credit": "8.0% of monthly invoice total", "clause_ref": "Section 7.1"},
+            "is_anchor": True
+        },
+        {
+            "id": "node_rule_sec_8_2",
+            "label": "Section 8.2: Mid-West Integration Milestone Delay ($1,500/day)",
+            "type": "Rule",
+            "properties": {"target_date": "2026-11-01", "liquidated_damages": "$1,500.00 per calendar day", "clause_ref": "Section 8.2"},
             "is_anchor": False
         },
         {
-            "id": "node_chunk_amend_1",
-            "label": "Chunk: Amendment 1 Superseding Schedule",
+            "id": "node_rule_sec_9_2",
+            "label": "Section 9.2: Prompt Payment Discount (3.0% Net-12)",
+            "type": "Rule",
+            "properties": {"discount_pct": "3.0%", "payment_window": "Within 12 days", "clause_ref": "Section 9.2"},
+            "is_anchor": False
+        },
+        {
+            "id": "node_chunk_sec_5_1",
+            "label": "Chunk: Section 5.1 Volume Rebate Schedule",
             "type": "Chunk",
-            "properties": {"tokens": 185, "text": "Effective June 1, 2024, Section 4.1 of the Master Agreement is hereby superseded. The revised Monthly Recurring Charge for 100Mbps DIA ports shall be $950.00."},
+            "properties": {"tokens": 156, "text": "If monthly volume of Frozen Food cases shipped exceeds 10,000 cases, a discounted rate of USD 5.00 per case shall apply to all Frozen Food cases billed."},
+            "is_anchor": True
+        },
+        {
+            "id": "node_chunk_sec_6_2",
+            "label": "Chunk: Section 6.2 Fuel Surcharge Monthly Ceiling Cap",
+            "type": "Chunk",
+            "properties": {"tokens": 112, "text": "Fuel surcharges applied to any monthly invoice shall not exceed USD 2,000.00. Under no circumstances shall Sysco be billed a fuel surcharge higher than USD 2,000.00."},
             "is_anchor": True
         }
     ],
     "edges": [
-        {"source": "node_doc_msa", "target": "node_org_apex", "type": "GOVERNED_BY"},
-        {"source": "node_doc_msa", "target": "node_doc_amend_1", "type": "SUPERSEDES"},
-        {"source": "node_rule_amend_1_sec_2", "target": "node_rule_sec_4_1", "type": "SUPERSEDES"},
-        {"source": "node_doc_amend_1", "target": "node_rule_amend_1_sec_2", "type": "CONTAINS"},
-        {"source": "node_doc_msa", "target": "node_rule_sec_4_1", "type": "CONTAINS"},
-        {"source": "node_doc_msa", "target": "node_rule_sla_penalty", "type": "CONTAINS"},
-        {"source": "node_rule_amend_1_sec_2", "target": "node_concept_mrc", "type": "DEFINES"},
-        {"source": "node_entity_circuit_448", "target": "node_rule_amend_1_sec_2", "type": "BILLED_ON"},
-        {"source": "node_chunk_sec_4_1", "target": "node_rule_sec_4_1", "type": "MENTIONS"},
-        {"source": "node_chunk_amend_1", "target": "node_rule_amend_1_sec_2", "type": "ASSERTS"},
-        {"source": "node_chunk_amend_1", "target": "node_chunk_sec_4_1", "type": "SUPERSEDES"}
+        {"source": "node_doc_pcf_msa", "target": "node_org_pcf", "type": "GOVERNED_BY"},
+        {"source": "node_doc_pcf_msa", "target": "node_org_sysco", "type": "GOVERNED_BY"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_4_2", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_4_3", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_5_1", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_6_2", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_7_1", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_8_2", "type": "CONTAINS"},
+        {"source": "node_doc_pcf_msa", "target": "node_rule_sec_9_2", "type": "CONTAINS"},
+        {"source": "node_rule_sec_5_1", "target": "node_rule_sec_4_3", "type": "SUPERSEDES"},
+        {"source": "node_chunk_sec_5_1", "target": "node_rule_sec_5_1", "type": "ASSERTS"},
+        {"source": "node_chunk_sec_6_2", "target": "node_rule_sec_6_2", "type": "ASSERTS"}
     ]
 }
+
+# Legacy benchmark graph kept for fallback reference
+APEX_TELECOM_KNOWLEDGE_GRAPH = {
+    "nodes": [
+        {"id": "node_org_apex", "label": "Apex Telecom Ltd", "type": "Entity", "properties": {"category": "Vendor"}, "is_anchor": False},
+        {"id": "node_doc_msa", "label": "Master Services Agreement", "type": "Document", "properties": {"status": "Active"}, "is_anchor": False},
+        {"id": "node_doc_amend_1", "label": "Amendment 1", "type": "Document", "properties": {"status": "Active"}, "is_anchor": False},
+        {"id": "node_rule_sec_4_1", "label": "Section 4.1: Rate ($1,200/mo)", "type": "Rule", "properties": {"rate": "$1,200/mo"}, "is_anchor": False},
+        {"id": "node_rule_amend_1_sec_2", "label": "Amendment 1: Rate ($950/mo)", "type": "Rule", "properties": {"rate": "$950/mo"}, "is_anchor": True},
+    ],
+    "edges": [
+        {"source": "node_doc_msa", "target": "node_doc_amend_1", "type": "SUPERSEDES"},
+        {"source": "node_rule_amend_1_sec_2", "target": "node_rule_sec_4_1", "type": "SUPERSEDES"},
+        {"source": "node_doc_msa", "target": "node_org_apex", "type": "GOVERNED_BY"},
+    ]
+}
+
+# Default knowledge graph points directly to Premium Cold Foods
+SAMPLE_KNOWLEDGE_GRAPH: Dict[str, Any] = PREMIUM_COLD_FOODS_KNOWLEDGE_GRAPH
+
 
 def generate_default_pass_card(query: str, confidence_level: str = "HIGH") -> Dict[str, Any]:
     """Generates a realistic 5-stage Retrieval Pass Card based on Context Substrate spec."""

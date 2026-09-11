@@ -232,6 +232,9 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                 line_id = mapping.line_id
                 applicable_rule_ids = mapping.applicable_rule_ids
                 
+                # Find the line item
+                line_item = next((item for item in invoice.line_items if item.line_id == line_id), None)
+                
                 # v3 gate: if ALL candidates score below threshold → review_flags
                 if mapping.confidence < RULE_MATCH_CONFIDENCE_THRESHOLD:
                     await log_audit_event(
@@ -245,14 +248,17 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         review_flags = []
                     review_flags.append({
                         "line_id": line_id,
+                        "invoice_id": invoice.invoice_id,
+                        "line_description": line_item.raw_description if line_item else None,
+                        "charged_amount": float(line_item.line_total_charged) if line_item else None,
+                        "quantity": float(line_item.quantity) if line_item else None,
+                        "unit_price": float(line_item.unit_price_charged) if line_item else None,
                         "reason": f"No high-confidence rule match (best confidence: {mapping.confidence:.2f}, "
                                   f"threshold: {RULE_MATCH_CONFIDENCE_THRESHOLD})",
                     })
                     state["review_flags"] = review_flags
                     continue
                 
-                # Find the line item
-                line_item = next((item for item in invoice.line_items if item.line_id == line_id), None)
                 if not line_item:
                     await log_audit_event(audit_id, f"Warning: Mapped line ID {line_id} not found in invoice {invoice.invoice_id}.", "WARNING", "compliance_checker")
                     continue
@@ -339,6 +345,15 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                             review_flags.append({
                                 "line_id": line_id,
                                 "rule_id": rule_id,
+                                "invoice_id": invoice.invoice_id,
+                                "line_description": line_item.raw_description if line_item else None,
+                                "charged_amount": float(line_item.line_total_charged) if line_item else None,
+                                "quantity": float(line_item.quantity) if line_item else None,
+                                "unit_price": float(line_item.unit_price_charged) if line_item else None,
+                                "rule_description": getattr(rule, "description", None),
+                                "rule_type": getattr(rule, "rule_type", None),
+                                "clause_reference": getattr(rule, "clause_reference", None),
+                                "clause_text": getattr(rule, "clause_text", None),
                                 "reason": critic_result.reasoning
                             })
                             state["review_flags"] = review_flags
@@ -472,6 +487,11 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                             review_flags.append({
                                 "line_id": "N/A",
                                 "rule_id": rule_id,
+                                "invoice_id": invoice.invoice_id,
+                                "rule_description": getattr(rule, "description", None),
+                                "rule_type": getattr(rule, "rule_type", None),
+                                "clause_reference": getattr(rule, "clause_reference", None),
+                                "clause_text": getattr(rule, "clause_text", None),
                                 "reason": critic_result.reasoning
                             })
                             state["review_flags"] = review_flags

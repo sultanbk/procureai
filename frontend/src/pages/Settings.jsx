@@ -673,8 +673,8 @@ export default function Settings() {
                       setTestingDiagnostic(true);
                       try {
                         const res = await queryContextSubstrate({
-                          query: "What is the revised bandwidth rate under Amendment 1?",
-                          provider_id: substrateStatus?.provider_id || "procureai-default",
+                          query: "What is the standard produce box rate, frozen food volume discount, and monthly fuel surcharge cap under the Premium Cold Foods contract?",
+                          provider_id: substrateStatus?.provider_id || "procureai",
                           top_k: 5,
                           hops: 2,
                         });

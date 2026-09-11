@@ -15,7 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeft, FileCheck, Terminal, ChevronDown, ChevronUp,
   ListChecks, MessageSquare, AlertTriangle, ShieldAlert, FileQuestion,
-  Award, CheckCircle, ShieldCheck
+  Award, CheckCircle, ShieldCheck, Eye
 } from 'lucide-react';
 import SummaryCard from '../components/SummaryCard';
 import DiscrepancyTable from '../components/DiscrepancyTable';
@@ -24,6 +24,7 @@ import AuditLogConsole from '../components/AuditLogConsole';
 import DisputeLetterModal from '../components/DisputeLetterModal';
 import ContractQADrawer from '../components/ContractQADrawer';
 import AuditDocumentPanel from '../components/AuditDocumentPanel';
+import SplitScreenProofModal from '../components/SplitScreenProofModal';
 import { getAuditLogs, submitFindingFeedback, approveAudit } from '../api';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -45,7 +46,14 @@ export default function AuditReport({ report, onBack }) {
   const [showLogs, setShowLogs] = useState(false);
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isProofModalOpen, setIsProofModalOpen] = useState(false);
+  const [activeProofFindingId, setActiveProofFindingId] = useState(null);
   const [selectedRule, setSelectedRule] = useState(null);
+
+  const handleOpenProof = (findingId) => {
+    setActiveProofFindingId(findingId || report?.discrepancies?.[0]?.finding_id);
+    setIsProofModalOpen(true);
+  };
 
   // Collapsible section states (collapsed by default)
   const [showRecoveryPlan, setShowRecoveryPlan] = useState(false);
@@ -127,8 +135,68 @@ export default function AuditReport({ report, onBack }) {
     }
   };
 
-  const handleRuleClick = (ruleId) => {
+  // Lookups for rules and line items to provide rich human-readable metadata
+  const ruleMap = useMemo(() => {
+    const map = {};
     if (report?.rulebook?.rules) {
+      report.rulebook.rules.forEach((r) => {
+        map[r.rule_id] = r;
+      });
+    }
+    if (report?.rules_never_billed_details) {
+      report.rules_never_billed_details.forEach((r) => {
+        if (!map[r.rule_id]) map[r.rule_id] = r;
+      });
+    }
+    if (report?.discrepancies) {
+      report.discrepancies.forEach((d) => {
+        if (d.rule_id && !map[d.rule_id]) {
+          map[d.rule_id] = {
+            rule_id: d.rule_id,
+            description: d.description,
+            clause_reference: d.clause_reference,
+            clause_text: d.clause_text,
+            rule_type: d.discrepancy_type
+          };
+        }
+      });
+    }
+    return map;
+  }, [report]);
+
+  const lineMap = useMemo(() => {
+    const map = {};
+    if (report?.invoice_data) {
+      report.invoice_data.forEach((inv) => {
+        (inv.line_items || []).forEach((item) => {
+          map[item.line_id] = {
+            ...item,
+            invoice_id: inv.invoice_id
+          };
+        });
+      });
+    }
+    if (report?.discrepancies) {
+      report.discrepancies.forEach((d) => {
+        if (d.line_id && !map[d.line_id]) {
+          map[d.line_id] = {
+            line_id: d.line_id,
+            invoice_id: d.invoice_id,
+            raw_description: d.description,
+            line_total_charged: d.line_total_charged,
+            quantity: d.quantity,
+            unit_price_charged: d.unit_price_charged
+          };
+        }
+      });
+    }
+    return map;
+  }, [report]);
+
+  const handleRuleClick = (ruleId) => {
+    if (ruleMap[ruleId]) {
+      setSelectedRule(ruleMap[ruleId]);
+    } else if (report?.rulebook?.rules) {
       const rule = report.rulebook.rules.find((r) => r.rule_id === ruleId);
       if (rule) {
         setSelectedRule(rule);
@@ -221,6 +289,17 @@ export default function AuditReport({ report, onBack }) {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {report.discrepancies?.length > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200"
+              onClick={() => handleOpenProof()}
+              title="Open Interactive Split-Screen 'Click-to-Proof' View"
+            >
+              <Eye className="h-4 w-4 stroke-[1.5]" /> Visual Proof View
+            </Button>
+          )}
           <Button variant="secondary" size="sm" className="flex items-center gap-1.5" onClick={() => setIsChatOpen(true)}>
             <MessageSquare className="h-4 w-4 stroke-[1.5]" /> Ask About Contract
           </Button>
@@ -277,7 +356,13 @@ export default function AuditReport({ report, onBack }) {
             </Card>
           )}
 
-          {report.discrepancies?.length > 0 && <DiscrepancyTable discrepancies={report.discrepancies} />}
+          {report.discrepancies?.length > 0 && (
+            <DiscrepancyTable
+              discrepancies={report.discrepancies}
+              auditId={report.audit_id}
+              onOpenProof={handleOpenProof}
+            />
+          )}
         </SummaryCard>
 
         {(report.review_flags?.length > 0 || report.data_required_flags?.length > 0 || report.rules_never_billed?.length > 0) && (
@@ -314,6 +399,21 @@ export default function AuditReport({ report, onBack }) {
                       const resolution = resolvedFlags[i];
                       const isEditing = activeReviewIdx === i;
 
+                      const isLineItem = Boolean(flag.line_id && flag.line_id !== 'N/A');
+                      const lineInfo = (flag.line_id && lineMap[flag.line_id]) || {};
+                      const ruleInfo = (flag.rule_id && ruleMap[flag.rule_id]) || {};
+
+                      const lineDescription = flag.line_description || lineInfo.raw_description || lineInfo.line_description;
+                      const invoiceId = flag.invoice_id || lineInfo.invoice_id;
+                      const chargedAmount = flag.charged_amount !== undefined && flag.charged_amount !== null ? flag.charged_amount : lineInfo.line_total_charged;
+                      const quantity = flag.quantity !== undefined && flag.quantity !== null ? flag.quantity : lineInfo.quantity;
+                      const unitPrice = flag.unit_price !== undefined && flag.unit_price !== null ? flag.unit_price : lineInfo.unit_price_charged;
+
+                      const ruleDescription = flag.rule_description || ruleInfo.description;
+                      const ruleType = flag.rule_type || ruleInfo.rule_type;
+                      const clauseRef = flag.clause_reference || ruleInfo.clause_reference;
+                      const clauseText = flag.clause_text || ruleInfo.clause_text;
+
                       return (
                         <div
                           key={i}
@@ -326,18 +426,35 @@ export default function AuditReport({ report, onBack }) {
                                 : 'border-orange-100 hover:border-orange-300 hover:shadow-md'
                             }`}
                         >
-                          <div className="flex justify-between items-start gap-2">
-                            <div>
-                              <p className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
-                                {flag.rule_id || flag.line_id || 'Audit Item'}
-                                {!isResolved && (
-                                  <span className="flex h-2 w-2 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                                  </span>
-                                )}
-                              </p>
-                              <p className="text-slate-500 text-xs mt-0.5">{flag.reason}</p>
+                          {/* Card Category Header */}
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {isLineItem && (
+                                <Badge variant="brand" className="font-mono text-[10px]">
+                                  Invoice Line: {flag.line_id}
+                                </Badge>
+                              )}
+                              {flag.rule_id && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                  Rule: {flag.rule_id}
+                                </span>
+                              )}
+                              {ruleType && (
+                                <Badge variant="secondary" className="text-[9px] capitalize">
+                                  {ruleType.replace(/_/g, ' ')}
+                                </Badge>
+                              )}
+                              {invoiceId && (
+                                <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                                  {invoiceId}
+                                </span>
+                              )}
+                              {!isResolved && (
+                                <span className="flex h-2 w-2 relative ml-1">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                </span>
+                              )}
                             </div>
 
                             {isResolved && (
@@ -347,9 +464,89 @@ export default function AuditReport({ report, onBack }) {
                             )}
                           </div>
 
-                          {flag.clause_text && (
-                            <div className="mt-2.5 bg-slate-50 p-2.5 rounded border border-slate-100 font-mono text-[10px] text-slate-600 line-clamp-3 italic">
-                              &ldquo;{flag.clause_text}&rdquo;
+                          {/* Human-readable Title & Context */}
+                          <div className="mb-2">
+                            {isLineItem ? (
+                              <div>
+                                <h5 className="font-semibold text-slate-900 text-sm">
+                                  {lineDescription || `Line Item ${flag.line_id}`}
+                                </h5>
+                                {chargedAmount !== undefined && chargedAmount !== null && (
+                                  <p className="text-xs text-slate-600 mt-0.5">
+                                    Billed Amount: <span className="font-semibold text-slate-800">INR {Number(chargedAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                    {quantity !== undefined && quantity !== null && unitPrice !== undefined && unitPrice !== null && (
+                                      <span className="text-slate-500 font-normal ml-1.5">
+                                        {" "}({quantity} units @ INR {Number(unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })})
+                                      </span>
+                                    )}
+                                  </p>
+                                )}
+                                {ruleDescription && (
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    Target Rule: <span className="font-medium text-slate-700">{flag.rule_id} – {ruleDescription}</span>
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                <h5 className="font-semibold text-slate-900 text-sm">
+                                  {ruleDescription || `Contract Rule ${flag.rule_id || 'Review Item'}`}
+                                </h5>
+                                {clauseRef && (
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    Clause Reference: <span className="font-medium text-slate-700">{clauseRef}</span>
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Highlighted Reason for Review */}
+                          <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-2.5 text-xs text-amber-950 space-y-1">
+                            <p className="font-bold text-[10px] text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                              Review Reason
+                            </p>
+                            <p className="text-xs text-amber-900 leading-relaxed pl-4">
+                              {flag.reason}
+                            </p>
+                          </div>
+
+                          {/* Quoted Contract Clause / Excerpt */}
+                          {clauseText && (
+                            <div className="mt-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                  Contract Clause Quote {clauseRef ? `(${clauseRef})` : ''}
+                                </span>
+                                {flag.rule_id && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRuleClick(flag.rule_id)}
+                                    className="text-[10px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-0.5 hover:underline"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Inspect Rule
+                                  </button>
+                                )}
+                              </div>
+                              <p className="font-mono text-[10px] italic text-slate-600 leading-relaxed bg-white p-2 rounded border border-slate-100">
+                                &ldquo;{clauseText}&rdquo;
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Inspect action if rule_id exists but no clauseText was rendered */}
+                          {flag.rule_id && !clauseText && (
+                            <div className="mt-2 flex items-center justify-start">
+                              <button
+                                type="button"
+                                onClick={() => handleRuleClick(flag.rule_id)}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Inspect full rule {flag.rule_id} details
+                              </button>
                             </div>
                           )}
 
@@ -435,15 +632,32 @@ export default function AuditReport({ report, onBack }) {
                   </h4>
                   <div className="space-y-3">
                     {report.data_required_flags?.length > 0 ? (
-                      report.data_required_flags.map((flag, i) => (
-                        <div key={i} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-                          <p className="font-semibold text-slate-800 text-sm flex justify-between items-center">
-                            <span>{flag.rule_id}</span>
-                            <Badge variant="brand" className="text-[9px] font-mono">{flag.clause_section}</Badge>
-                          </p>
-                          <p className="text-slate-600 text-xs mt-1.5 leading-relaxed">{flag.reason}</p>
-                        </div>
-                      ))
+                      report.data_required_flags.map((flag, i) => {
+                        const rule = ruleMap[flag.rule_id] || {};
+                        const ruleTitle = rule.description || flag.rule_description || `Rule ${flag.rule_id}`;
+                        return (
+                          <div key={i} className="bg-white p-3.5 rounded-xl border border-blue-100 shadow-sm space-y-2">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Badge variant="brand" className="font-mono text-[10px]">{flag.rule_id}</Badge>
+                                  <Badge variant="secondary" className="text-[9px] font-mono">{flag.clause_section}</Badge>
+                                </div>
+                                <p className="font-semibold text-slate-800 text-xs">{ruleTitle}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRuleClick(flag.rule_id)}
+                                className="text-[10px] text-blue-600 hover:text-blue-800 font-medium hover:underline shrink-0 flex items-center gap-0.5 px-2 py-1 bg-blue-50 rounded border border-blue-100"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Inspect
+                              </button>
+                            </div>
+                            <p className="text-slate-600 text-xs leading-relaxed">{flag.reason}</p>
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="bg-white p-6 rounded-xl border border-dashed border-slate-200 text-center text-slate-500">
                         <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2 stroke-[1.5]" />
@@ -455,28 +669,60 @@ export default function AuditReport({ report, onBack }) {
 
                 {report.rules_never_billed?.length > 0 && (
                   <div className="border-t border-slate-200 pt-5">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                      Rules Never Triggered
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <ListChecks className="h-4 w-4 text-slate-600" />
+                      Rules Never Triggered ({report.rules_never_billed.length})
                     </h4>
                     <p className="text-slate-500 text-xs mb-3">
-                      The following pricing rules or SLAs were parsed from the contract but never billed on any invoice:
+                      The following pricing rules or SLAs were parsed from the contract but never billed or claimed on any invoice:
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {report.rules_never_billed.map((ruleId, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleRuleClick(ruleId)}
-                          className="focus:outline-none transition-colors"
-                        >
-                          <Badge
-                            variant="secondary"
-                            className="bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50 cursor-pointer text-xs"
+                    <div className="space-y-2.5">
+                      {report.rules_never_billed.map((ruleId, i) => {
+                        const rule = ruleMap[ruleId] || {};
+                        const ruleTitle = rule.description || `Rule ${ruleId}`;
+                        return (
+                          <div
+                            key={i}
+                            className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-all space-y-1.5"
                           >
-                            {ruleId}
-                          </Badge>
-                        </button>
-                      ))}
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                  <Badge variant="secondary" className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100">
+                                    {ruleId}
+                                  </Badge>
+                                  {rule.rule_type && (
+                                    <Badge variant="brand" className="text-[9px] capitalize">
+                                      {rule.rule_type.replace(/_/g, ' ')}
+                                    </Badge>
+                                  )}
+                                  {rule.clause_reference && (
+                                    <span className="text-[10px] text-slate-500 font-mono">
+                                      {rule.clause_reference}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs font-semibold text-slate-800">
+                                  {ruleTitle}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRuleClick(ruleId)}
+                                className="text-[10px] text-blue-600 hover:text-blue-800 font-medium hover:underline shrink-0 px-2 py-1 bg-blue-50 rounded border border-blue-100 flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" />
+                                View Clause
+                              </button>
+                            </div>
+                            {rule.clause_text && (
+                              <p className="text-[10px] text-slate-500 italic bg-slate-50 p-2 rounded border border-slate-100 line-clamp-2">
+                                &ldquo;{rule.clause_text}&rdquo;
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -972,11 +1218,15 @@ export default function AuditReport({ report, onBack }) {
                     The following pricing rules and SLA templates did not result in billing operations or penalty triggers during this billing cycle:
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {report.rules_never_billed.map((ruleId, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded font-mono text-[9px]">
-                        {ruleId}
-                      </span>
-                    ))}
+                    {report.rules_never_billed.map((ruleId, i) => {
+                      const r = ruleMap[ruleId];
+                      return (
+                        <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[9px] flex items-center gap-1">
+                          <strong className="font-mono">{ruleId}</strong>
+                          {r?.description && <span className="text-slate-500 truncate max-w-[200px]">&ndash; {r.description}</span>}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1054,6 +1304,14 @@ export default function AuditReport({ report, onBack }) {
       </div>
 
       <ContractQADrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} auditId={report.audit_id} supplierName={report.summary?.supplier_name || ''} />
+
+      <SplitScreenProofModal
+        isOpen={isProofModalOpen}
+        onClose={() => setIsProofModalOpen(false)}
+        auditId={report.audit_id}
+        initialFindingId={activeProofFindingId}
+        discrepancies={report.discrepancies}
+      />
 
       <Modal isOpen={!!selectedRule} onClose={() => setSelectedRule(null)} title={`Rule Details: ${selectedRule?.rule_id || ''}`}>
         {selectedRule && (

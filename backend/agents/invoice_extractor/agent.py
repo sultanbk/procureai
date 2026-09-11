@@ -98,16 +98,21 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
 
             invoice_metadata = extract_invoice_metadata(inv_text)
             
-            def _read_pdf():
-                with open(inv_path, "rb") as f:
-                    return f.read()
-            pdf_bytes = await asyncio.to_thread(_read_pdf)
-            pdf_part = llm.create_document_part(pdf_bytes, "application/pdf")
-            
-            input_contents = [
-                f"=== INVOICE TEXT (Fallback) ===\n{inv_text}",
-                pdf_part
-            ]
+            # Prefer clean extracted text for speed and reliability.
+            # Only attach raw PDF binary if extracted text is empty or sparse (e.g. scanned images).
+            has_rich_text = bool(inv_text and len(inv_text.strip()) > 50)
+            if has_rich_text:
+                input_contents = [f"=== INVOICE TEXT ===\n{inv_text}"]
+            else:
+                def _read_pdf():
+                    with open(inv_path, "rb") as f:
+                        return f.read()
+                pdf_bytes = await asyncio.to_thread(_read_pdf)
+                pdf_part = llm.create_document_part(pdf_bytes, "application/pdf")
+                input_contents = [
+                    f"=== INVOICE TEXT (Fallback) ===\n{inv_text}",
+                    pdf_part
+                ]
             
             try:
                 if SELF_CONSISTENCY_PASSES > 1:
@@ -117,6 +122,7 @@ async def run_invoice_extractor(state: PipelineState) -> PipelineState:
                         "INFO", "invoice_extractor"
                     )
                     pass0_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.0, budget=budget)
+                    await asyncio.sleep(2.0)  # Brief pause to prevent 429 quota exhaustion on Vertex AI
                     pass1_obj = await extract_single_invoice(llm, system_prompt, input_contents, temperature=0.1, budget=budget)
                     
                     # Apply metadata to both passes

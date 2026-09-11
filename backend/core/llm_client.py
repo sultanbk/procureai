@@ -287,13 +287,15 @@ class SmartGenerativeModel:
                         last_error = exc
                         if attempt >= max(LLM_RETRY_ATTEMPTS, 1):
                             raise
+                        delay = LLM_RETRY_DELAY_SECONDS * (2 ** (attempt - 1))
                         logger.warning(
-                            "GenerativeModel call failed; retrying.",
+                            "GenerativeModel call failed; retrying with backoff.",
                             attempt=attempt,
                             max_attempts=LLM_RETRY_ATTEMPTS,
+                            retry_delay=delay,
                             error=str(exc),
                         )
-                        time.sleep(LLM_RETRY_DELAY_SECONDS)
+                        time.sleep(delay)
                 raise last_error
             else:
                 if not is_mock_llm_enabled():
@@ -423,10 +425,14 @@ class SmartGenerativeModel:
                 await self.rate_limiter.acquire(estimated_tokens=1000)
             except Exception as exc:
                 logger.warning("LLM rate limiter warning", error=str(exc))
-        return await asyncio.wait_for(
-            asyncio.to_thread(self.generate_content, contents, generation_config, budget),
-            timeout=LLM_CALL_TIMEOUT_SECONDS
-        )
+        try:
+            return await asyncio.wait_for(
+                asyncio.to_thread(self.generate_content, contents, generation_config, budget),
+                timeout=LLM_CALL_TIMEOUT_SECONDS
+            )
+        except asyncio.TimeoutError:
+            logger.error("LLM call timed out", timeout_seconds=LLM_CALL_TIMEOUT_SECONDS)
+            raise TimeoutError(f"LLM generation timed out after {LLM_CALL_TIMEOUT_SECONDS}s")
 
     def generate_content_stream(self, contents, generation_config=None):
         try:
@@ -535,7 +541,7 @@ def get_llm():
     # 1. Prioritize Vertex AI if requested explicitly (e.g. LLM_PROVIDER=vertex, vertexai, gcp)
     if provider_pref in {"vertex", "vertexai", "gcp"}:
         project = os.getenv("GOOGLE_CLOUD_PROJECT", "supplierguard")
-        location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+        location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
         model_name = os.getenv("VERTEX_MODEL") or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         if cred_path and os.path.exists(cred_path):

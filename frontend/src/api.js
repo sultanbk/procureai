@@ -579,4 +579,25 @@ export const deleteContextProvider = async (providerId) => {
   return response.json();
 };
 
+// --- SPLIT-SCREEN CLICK-TO-PROOF API ---
+
+export const getFindingProof = async (auditId, findingId) => {
+  const response = await authFetch(`${API_BASE}/audit/${encodeURIComponent(auditId)}/proof/${encodeURIComponent(findingId)}`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to fetch finding proof coordinates");
+  }
+  return response.json();
+};
+
+export const getAllFindingProofs = async (auditId) => {
+  const response = await authFetch(`${API_BASE}/audit/${encodeURIComponent(auditId)}/proofs`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to fetch audit proofs");
+  }
+  return response.json();
+};
+
+
 

@@ -21,10 +21,10 @@ import RetrievalPassCard from './RetrievalPassCard';
 const DELIMITER = '\n\n---CITATIONS---\n';
 
 const suggestedQuestions = [
-  "What's our unit price for 1,000 units?",
-  'When does the SLA penalty apply?',
-  'Is there an early payment discount?',
-  "What's the contract period?",
+  "What is the standard produce box rate and frozen food case rate?",
+  "What volume discount applies if Frozen Food cases exceed 10,000?",
+  "What is the monthly fuel surcharge ceiling cap?",
+  "When does the 8% SLA temperature penalty credit apply?",
 ];
 
 function parseStreamPayload(rawText) {

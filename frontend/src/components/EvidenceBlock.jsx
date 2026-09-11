@@ -13,12 +13,12 @@
  */
 
 import React, { useState } from 'react';
-import { Quote, AlertCircle, CheckSquare, Target, Network, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Quote, AlertCircle, CheckSquare, Target, Network, ShieldCheck, ExternalLink, Eye } from 'lucide-react';
 import Badge from './ui/Badge';
 import ReasoningSubgraphModal from './ReasoningSubgraphModal';
 import { getDiscrepancySubgraph } from '../api';
 
-export default function EvidenceBlock({ finding, auditId }) {
+export default function EvidenceBlock({ finding, auditId, onOpenProof }) {
   const {
     finding_id, description, clause_reference, clause_text, quantity,
     unit_price_charged, unit_price_expected, line_total_charged,
@@ -75,17 +75,31 @@ export default function EvidenceBlock({ finding, auditId }) {
           </div>
         </div>
 
-        {/* Context Substrate Provenance Trigger */}
-        <button
-          type="button"
-          onClick={handleOpenGraph}
-          disabled={isLoadingGraph}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all shrink-0 hover:shadow-sm"
-          title="Inspect Neo4j Concept Graph & Clause Provenance"
-        >
-          <Network className="w-3.5 h-3.5 text-indigo-600" />
-          <span>{isLoadingGraph ? 'Loading Trace...' : 'Graph Provenance'}</span>
-        </button>
+        {/* Actions: Split-Screen Proof & Context Substrate Provenance */}
+        <div className="flex items-center gap-2 shrink-0">
+          {onOpenProof && (
+            <button
+              type="button"
+              onClick={() => onOpenProof(finding_id)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200/80 transition-all hover:shadow-sm"
+              title="Open Interactive Split-Screen PDF Proof with Visual Bounding Boxes"
+            >
+              <Eye className="w-3.5 h-3.5 text-teal-600" />
+              <span>Split-Screen Proof</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleOpenGraph}
+            disabled={isLoadingGraph}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all hover:shadow-sm"
+            title="Inspect Neo4j Concept Graph & Clause Provenance"
+          >
+            <Network className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{isLoadingGraph ? 'Loading Trace...' : 'Graph Provenance'}</span>
+          </button>
+        </div>
       </div>
 
       {clause_text && (

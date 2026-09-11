@@ -127,6 +127,141 @@ def find_breach_pages(pdf_path: str, finding: dict | None) -> tuple[list[int], s
     highlight_text = str(finding.get("clause_text") or finding.get("description") or "")
     return matched_pages, highlight_text
 
+
+def find_proof_location_in_pdf(pdf_path: str, targets: list[str]) -> dict:
+    """
+    Scans a PDF document to locate the exact 1-indexed page number and calculates
+    approximate vertical bounding box coordinates (top_percent, height_percent).
+    """
+    clean_targets = [normalize_search_text(t) for t in targets if t and t.strip()]
+    default_res = {"page_number": 1, "total_pages": 1, "top_percent": 35.0, "height_percent": 8.0}
+    if not pdf_path or not os.path.exists(pdf_path):
+        return default_res
+
+    try:
+        reader = PdfReader(pdf_path)
+        total_pages = len(reader.pages)
+        if total_pages == 0:
+            return default_res
+
+        for page_idx, page in enumerate(reader.pages):
+            text = page.extract_text() or ""
+            norm_text = normalize_search_text(text)
+            for target in clean_targets:
+                if not target:
+                    continue
+                match_pos = norm_text.find(target)
+                if match_pos < 0 and len(target) > 50:
+                    match_pos = norm_text.find(target[:50])
+                if match_pos < 0 and len(target) > 25:
+                    match_pos = norm_text.find(target[:25])
+
+                if match_pos >= 0:
+                    lines = text.split("\n")
+                    target_line_idx = 0
+                    for l_idx, l in enumerate(lines):
+                        if target in normalize_search_text(l) or normalize_search_text(l) in target:
+                            target_line_idx = l_idx
+                            break
+                    total_lines = max(len(lines), 1)
+                    top_pct = max(12.0, min(80.0, (target_line_idx / total_lines) * 100.0))
+                    return {
+                        "page_number": page_idx + 1,
+                        "total_pages": total_pages,
+                        "top_percent": round(top_pct, 1),
+                        "height_percent": 8.0,
+                    }
+
+        return {"page_number": 1, "total_pages": total_pages, "top_percent": 35.0, "height_percent": 8.0}
+    except Exception:
+        return default_res
+
+
+def resolve_finding_proof(db_audit: Audit, finding_id: str) -> dict:
+    if not db_audit.audit_report:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audit report not ready")
+
+    report = AuditReport.model_validate_json(db_audit.audit_report)
+    finding = next((f for f in report.discrepancies if f.finding_id == finding_id), None)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Finding {finding_id} not found")
+
+    contract_path = ""
+    if db_audit.contract_file:
+        try:
+            contract_path = validate_uploaded_file_path(db_audit.contract_file, "Contract")
+        except Exception:
+            contract_path = ""
+
+    invoice_files = []
+    try:
+        invoice_files = json.loads(db_audit.invoice_files or "[]")
+    except Exception:
+        invoice_files = []
+
+    # Resolve Contract Proof
+    contract_loc = find_proof_location_in_pdf(
+        contract_path,
+        [finding.clause_text or "", finding.clause_reference or "", finding.description or ""]
+    )
+
+    # Resolve Invoice Proof
+    matched_inv_idx = 0
+    inv_id_clean = (finding.invoice_id or "").lower()
+    for idx, ifile in enumerate(invoice_files):
+        if inv_id_clean in ifile.lower():
+            matched_inv_idx = idx
+            break
+
+    matched_inv_doc_id = f"invoice-{matched_inv_idx}"
+    matched_inv_path = invoice_files[matched_inv_idx] if invoice_files else ""
+    invoice_loc = find_proof_location_in_pdf(
+        matched_inv_path,
+        [finding.line_id or "", str(finding.unit_price_charged or ""), str(finding.line_total_charged or ""), finding.description or ""]
+    )
+
+    return {
+        "finding_id": finding.finding_id,
+        "audit_id": db_audit.id,
+        "discrepancy_type": finding.discrepancy_type,
+        "severity": finding.severity,
+        "recommendation": finding.recommendation,
+        "delta": str(finding.delta),
+        "description": finding.description,
+        "contract": {
+            "document_id": "contract",
+            "filename": os.path.basename(contract_path) if contract_path else "Contract.pdf",
+            "page_number": contract_loc["page_number"],
+            "total_pages": contract_loc["total_pages"],
+            "clause_reference": finding.clause_reference,
+            "clause_text": finding.clause_text,
+            "pdf_url": f"/api/audit/{db_audit.id}/documents/contract#page={contract_loc['page_number']}",
+            "bounding_box": {
+                "top_percent": contract_loc["top_percent"],
+                "height_percent": contract_loc["height_percent"],
+                "label": f"Contract Clause: {finding.clause_reference or 'Governing Rule'}"
+            }
+        },
+        "invoice": {
+            "document_id": matched_inv_doc_id,
+            "filename": os.path.basename(matched_inv_path) if matched_inv_path else "Invoice.pdf",
+            "invoice_id": finding.invoice_id,
+            "line_id": finding.line_id,
+            "page_number": invoice_loc["page_number"],
+            "total_pages": invoice_loc["total_pages"],
+            "unit_price_charged": str(finding.unit_price_charged),
+            "unit_price_expected": str(finding.unit_price_expected),
+            "quantity": str(finding.quantity),
+            "pdf_url": f"/api/audit/{db_audit.id}/documents/{matched_inv_doc_id}#page={invoice_loc['page_number']}",
+            "bounding_box": {
+                "top_percent": invoice_loc["top_percent"],
+                "height_percent": invoice_loc["height_percent"],
+                "label": f"Billed Line Item ({finding.line_id})"
+            }
+        }
+    }
+
+
 async def run_audit_pipeline(audit_id: str, contract_path: str, invoice_paths: List[str]):
     try:
         await log_audit_event(audit_id, "Initializing document audit pipeline.", "INFO", "system")
@@ -299,12 +434,12 @@ async def get_audit_status(audit_id: str):
     status_map = {
         "PENDING": (5, "init", []),
         "EXTRACTING_PDF": (15, "pdf_extractor", []),
-        "EXTRACTING_INVOICES": (30, "invoice_extractor", []),
-        "PARSING_CONTRACT": (50, "contract_parser", ["invoice_extractor"]),
-        "CROSS_VALIDATING": (70, "cross_validator", ["invoice_extractor", "contract_parser"]),
-        "CHECKING_COMPLIANCE": (80, "compliance_checker", ["invoice_extractor", "contract_parser", "cross_validator"]),
-        "GENERATING_REPORT": (90, "report_generator", ["invoice_extractor", "contract_parser", "cross_validator", "compliance_checker"]),
-        "COMPLETE": (100, "report_generator", ["invoice_extractor", "contract_parser", "cross_validator", "compliance_checker", "report_generator"]),
+        "EXTRACTING_INVOICES": (30, "invoice_extractor", ["pdf_extractor"]),
+        "PARSING_CONTRACT": (50, "contract_parser", ["pdf_extractor", "invoice_extractor"]),
+        "CROSS_VALIDATING": (70, "cross_validator", ["pdf_extractor", "invoice_extractor", "contract_parser"]),
+        "CHECKING_COMPLIANCE": (80, "compliance_checker", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator"]),
+        "GENERATING_REPORT": (90, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "compliance_checker"]),
+        "COMPLETE": (100, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "compliance_checker", "report_generator"]),
         "FAILED": (100, None, [])
     }
     
@@ -314,9 +449,11 @@ async def get_audit_status(audit_id: str):
     
     # Load partial results if available
     partial_results = {}
+    rb = None
     if db_audit.rulebook:
         try:
             rb = json.loads(db_audit.rulebook)
+            partial_results["rulebook"] = rb
             partial_results["rulebook_rule_count"] = len(rb.get("rules", []))
             if db_audit.supplier_name == "Extracting...":
                 # update supplier name dynamically from rulebook in memory
@@ -324,18 +461,33 @@ async def get_audit_status(audit_id: str):
         except json.JSONDecodeError:
             pass
             
+    invs = None
     if db_audit.invoice_data:
         try:
             invs = json.loads(db_audit.invoice_data)
+            partial_results["invoice_data"] = invs
             partial_results["invoice_line_count"] = sum(len(i.get("line_items", [])) for i in invs)
         except json.JSONDecodeError:
+            pass
+
+    if db_audit.discrepancies:
+        try:
+            disc_data = json.loads(db_audit.discrepancies)
+            disc_list = disc_data.get("discrepancies", []) if isinstance(disc_data, dict) else (disc_data if isinstance(disc_data, list) else [])
+            partial_results["discrepancy_count"] = len(disc_list)
+            partial_results["potential_leakage"] = sum(float(d.get("leakage_amount", 0) or 0) for d in disc_list)
+        except Exception:
             pass
             
     # Parse report if complete
     audit_report = None
-    if db_audit.status == "COMPLETE" and db_audit.audit_report:
+    if (db_audit.status == "COMPLETE" or db_audit.status == "PENDING_REVIEW") and db_audit.audit_report:
         try:
             audit_report = AuditReport.model_validate_json(db_audit.audit_report)
+            if not audit_report.rulebook and rb:
+                audit_report.rulebook = rb
+            if not audit_report.invoice_data and invs:
+                audit_report.invoice_data = invs
         except Exception:
             # log warning
             pass
@@ -382,13 +534,24 @@ async def get_audit_report_only(audit_id: str):
             detail=f"Audit with ID {audit_id} not found"
         )
         
-    if db_audit.status != "COMPLETE" or not db_audit.audit_report:
+    if db_audit.status not in ("COMPLETE", "PENDING_REVIEW") or not db_audit.audit_report:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Audit is in status {db_audit.status}. Report is not ready."
         )
         
-    return AuditReport.model_validate_json(db_audit.audit_report)
+    report_obj = AuditReport.model_validate_json(db_audit.audit_report)
+    if not report_obj.rulebook and db_audit.rulebook:
+        try:
+            report_obj.rulebook = json.loads(db_audit.rulebook)
+        except Exception:
+            pass
+    if not report_obj.invoice_data and db_audit.invoice_data:
+        try:
+            report_obj.invoice_data = json.loads(db_audit.invoice_data)
+        except Exception:
+            pass
+    return report_obj
 
 
 @router.get("/audit/{audit_id}/documents")
@@ -488,6 +651,52 @@ async def download_breach_pages(audit_id: str, finding_id: str):
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/audit/{audit_id}/proof/{finding_id}")
+async def get_finding_proof(audit_id: str, finding_id: str):
+    """
+    Returns exact synchronized PDF page locations, file identifiers, and vertical bounding
+    box coordinates for both Contract and Invoice for a specific discrepancy finding.
+    """
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+
+    if not db_audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Audit {audit_id} not found")
+
+    return resolve_finding_proof(db_audit, finding_id)
+
+
+@router.get("/audit/{audit_id}/proofs")
+async def get_all_finding_proofs(audit_id: str):
+    """
+    Returns proof coordinates and deep-links for all findings in an audit report,
+    enabling zero-latency instant switching in the split-screen viewer.
+    """
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+
+    if not db_audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Audit {audit_id} not found")
+
+    if not db_audit.audit_report:
+        return {"audit_id": audit_id, "proofs": {}}
+
+    report = AuditReport.model_validate_json(db_audit.audit_report)
+    proofs_map = {}
+    for d in report.discrepancies:
+        try:
+            proofs_map[d.finding_id] = resolve_finding_proof(db_audit, d.finding_id)
+        except Exception:
+            pass
+
+    return {"audit_id": audit_id, "proofs": proofs_map}
+
 
 @router.get("/audits", response_model=List[AuditListItem])
 async def list_audits():

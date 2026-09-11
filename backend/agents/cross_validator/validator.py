@@ -135,7 +135,14 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                             candidates.append(r.rule_id)
                 
                 if not candidates:
-                    unmapped_line_details.append({"line_id": item.line_id, "desc": item.raw_description})
+                    unmapped_line_details.append({
+                        "line_id": item.line_id,
+                        "desc": item.raw_description,
+                        "invoice_id": invoice.invoice_id,
+                        "charged_amount": float(item.line_total_charged),
+                        "quantity": float(item.quantity),
+                        "unit_price": float(item.unit_price_charged)
+                    })
                 else:
                     candidate_map[item.line_id] = candidates
                     matched_rule_ids.update(candidates)
@@ -180,7 +187,9 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                     rules_without_data.append({
                         "rule_id": rule.rule_id,
                         "clause_section": getattr(rule, "clause_reference", "Unknown"),
-                        "reason": f"Conditional rule has no corresponding performance data ({'sla_actual_pct' if rule.rule_type == 'sla_penalty' else 'milestone_date'}) in any invoice"
+                        "reason": f"Conditional rule has no corresponding performance data ({'sla_actual_pct' if rule.rule_type == 'sla_penalty' else 'milestone_date'}) in any invoice",
+                        "rule_description": getattr(rule, "description", None),
+                        "clause_text": getattr(rule, "clause_text", None)
                     })
                     
         # Remove rules without data from candidate_map and recalculate matched_rule_ids
@@ -237,8 +246,13 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
         for item in unmapped_line_details:
             review_flags.append({
                 "line_id": item["line_id"],
-                "reason": "no plausible contract rule found — possible out-of-contract item or extraction error",
-                "clause_text": item["desc"]
+                "invoice_id": item.get("invoice_id"),
+                "line_description": item.get("desc"),
+                "charged_amount": item.get("charged_amount"),
+                "quantity": item.get("quantity"),
+                "unit_price": item.get("unit_price"),
+                "reason": "No plausible contract rule found — possible out-of-contract item or extraction error",
+                "clause_text": item.get("desc")
             })
             
         state["review_flags"] = review_flags

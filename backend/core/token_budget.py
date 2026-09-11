@@ -55,6 +55,11 @@ class TokenBudget:
             return 0.0
         return self.total_tokens / self.max_tokens
 
+    @property
+    def utilization_pct(self) -> float:
+        """Returns budget utilization as a percentage (0.0 to 100.0+)."""
+        return round(self.utilization * 100, 1)
+
     def record(self, prompt_tokens: int = 0, completion_tokens: int = 0, agent: str = ""):
         """
         Record token usage from an LLM call.
