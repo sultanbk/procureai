@@ -25,7 +25,7 @@ def calculate_aggregate_stats(
     Returns a tuple of:
     (total_leakage, total_lines_audited, compliant_lines_count, discrepancy_count, critical_count, high_count, medium_count)
     """
-    total_leakage = abs(sum(d.delta for d in discrepancies))
+    total_leakage = sum(abs(d.delta) for d in discrepancies)
 
     physical_line_keys = {
         f"{inv.invoice_id}:{line.line_id}"

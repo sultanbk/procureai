@@ -58,6 +58,7 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
         from backend.models.audit import Contract
         
         contract_path = state.get("contract_path")
+        
         current_file_hash = None
         if contract_path and os.path.exists(contract_path):
             try:
@@ -69,6 +70,77 @@ async def run_contract_parser(state: PipelineState) -> PipelineState:
                 current_file_hash = hashlib.sha256(file_bytes).hexdigest()
             except Exception as e:
                 logger.error("Failed to calculate contract file hash", error=str(e))
+
+        from backend.core.llm_client import is_mock_llm_enabled
+        from backend.core.mock_data import MOCK_CONTRACT_RULES
+        
+        if is_mock_llm_enabled():
+            ctr_key = None
+            path_str = (contract_path or "").lower()
+            text_str = (state.get("contract_text") or "").lower()
+            combined_id = path_str + " " + text_str
+            
+            if "pcf" in combined_id or "cold foods" in combined_id or "c008" in combined_id:
+                ctr_key = "CTR-SYSCO-PCF-2026-002"
+            elif "c011" in combined_id or "apex facilities" in combined_id or "001-14920" in combined_id:
+                ctr_key = "CTR-EDGAR-AFS-2024"
+            elif "c010" in combined_id or "transnational" in combined_id or "333-219402" in combined_id:
+                ctr_key = "CTR-EDGAR-TNF-2024"
+            elif "c007" in combined_id or "ghg" in combined_id or "sysco" in combined_id:
+                ctr_key = "CTR-SYSCO-GHG-2026-001"
+            elif "c001" in combined_id or ("apex" in combined_id and "facilities" not in combined_id):
+                ctr_key = "MSA-2024-APX-001"
+            elif "techsoft" in combined_id or "c002" in combined_id:
+                ctr_key = "MSA-2024-TSS-002"
+            elif "buildright" in combined_id or "c003" in combined_id:
+                ctr_key = "MSA-2024-BRC-003"
+            elif "medisupply" in combined_id or "c004" in combined_id:
+                ctr_key = "MSA-2024-MSC-004"
+            elif "cloudhost" in combined_id or "c005" in combined_id:
+                ctr_key = "MSA-2024-CHI-005"
+            elif "proservices" in combined_id or "c006" in combined_id:
+                ctr_key = "MSA-2024-PSC-006"
+                
+            if ctr_key and ctr_key in MOCK_CONTRACT_RULES:
+                mock_rules = MOCK_CONTRACT_RULES[ctr_key]
+                await log_audit_event(
+                    audit_id,
+                    f"Mock LLM active: Resolved contract '{ctr_key}' directly from mock rulebook. Bypassing parser.",
+                    "INFO", "contract_parser"
+                )
+                state["rulebook"] = mock_rules
+                async with AsyncSessionLocal() as session:
+                    stmt_audit = select(Audit).where(Audit.id == audit_id)
+                    res_audit = await session.execute(stmt_audit)
+                    db_audit = res_audit.scalar_one_or_none()
+                    if db_audit:
+                        db_audit.rulebook = json.dumps(mock_rules)
+                        db_audit.supplier_name = mock_rules.get("supplier_name", "")
+                        db_audit.status = "CROSS_VALIDATING"
+                        await session.commit()
+                        
+                    if current_file_hash:
+                        stmt_contract = select(Contract).where(Contract.file_hash == current_file_hash)
+                        res_contract = await session.execute(stmt_contract)
+                        contract = res_contract.scalar_one_or_none()
+                        if contract:
+                            s_name = mock_rules.get("supplier_name", "")
+                            if contract.supplier_name != s_name and s_name:
+                                from sqlalchemy import func
+                                stmt_version = select(func.max(Contract.version)).where(
+                                    func.lower(Contract.supplier_name) == s_name.lower()
+                                )
+                                res_version = await session.execute(stmt_version)
+                                max_ver = res_version.scalar() or 0
+                                contract.version = max_ver + 1
+                                contract.supplier_name = s_name
+                            contract.rulebook = json.dumps(mock_rules)
+                            await session.commit()
+                        
+                from backend.services.contract_chunker import ensure_contract_chunks
+                async with AsyncSessionLocal() as session:
+                    await ensure_contract_chunks(audit_id, session)
+                return state
 
         # 1. Resolve contract by Supplier and Invoice Date (highest precedence versioning resolution)
         invoice_data = state.get("invoice_data")

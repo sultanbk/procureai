@@ -116,6 +116,7 @@ class PipelineState(TypedDict):
     # Guardrail additions
     token_usage: NotRequired[Optional[Dict]]            # Token usage & budget stats
     input_sanitization: NotRequired[Optional[Dict]]     # Sanitization warnings & flags
+    substrate_enrichment: NotRequired[Optional[Dict]]   # Context Substrate amendment & graph enrichment
 
 # --- AGENT ERROR SCHEMA ---
 
@@ -189,11 +190,17 @@ class PricingRule(BaseModel):
     # v4: Self-consistency metadata
     vote_agreement: Optional[str] = None   # "3/3", "2/3", "1/3" — how many passes agreed
 
+    # Context Substrate epistemic enrichment
+    is_superseded: Optional[bool] = False
+    superseding_clause: Optional[str] = None
+    superseding_rate: Optional[str] = None
+    original_rate: Optional[str] = None
+
 class ContractRulebook(BaseModel):
     supplier_name: str
     contract_id: str
     contract_date: Optional[str] = None        # ISO date
-    contract_currency: str = "INR"
+    contract_currency: str = "USD"
     rules: List[PricingRule]    # All extracted rules
     unextracted_sections: List[str] = Field(default_factory=list)   # Sections agent could not parse
     extraction_notes: str = ""            # Any caveats the agent wants to flag
@@ -346,6 +353,7 @@ class AuditReport(BaseModel):
     price_drifts: List[Dict] = Field(default_factory=list)       # From cross_invoice_analyzer
     rulebook: Optional[Dict] = None
     invoice_data: Optional[List[Dict]] = None
+    substrate_enrichment: Optional[Dict] = None                  # Context Substrate provenance & active supersessions
 
 # --- API REQUEST / RESPONSE SCHEMAS ---
 
@@ -369,8 +377,12 @@ class AuditStatusResponse(BaseModel):
         "PARSING_CONTRACT",
         "EXTRACTING_INVOICES",
         "CROSS_VALIDATING",
+        "ENRICHING_SUBSTRATE",
         "CHECKING_COMPLIANCE",
+        "REVERSE_SWEEPING",
+        "CROSS_INVOICE_ANALYZING",
         "GENERATING_REPORT",
+        "PENDING_REVIEW",
         "COMPLETE",
         "FAILED"
     ]

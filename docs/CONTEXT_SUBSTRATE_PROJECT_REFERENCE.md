@@ -88,6 +88,7 @@ The table below provides a comprehensive map of every file, endpoint, and compon
 | [`backend/api/routes/context_substrate.py`](file:///d:/sultan/ProcureAI/procureai/backend/api/routes/context_substrate.py) | FastAPI route controller exposing substrate REST endpoints under `/api/context-substrate`. | `get_status()`, `query_substrate()`, `get_contract_graph()`, `get_discrepancy_subgraph()`, `get_procedure_dag()`, `resolve_amendment()`, `list_providers()`, `create_provider()` |
 | [`backend/api/routes/contracts.py`](file:///d:/sultan/ProcureAI/procureai/backend/api/routes/contracts.py) | Streaming Contract Q&A assistant that enriches citations with reasoning subgraphs and pass cards. | `ask_contract_question()`, citation enrichment pipeline |
 | [`backend/services/dispute_generator.py`](file:///d:/sultan/ProcureAI/procureai/backend/services/dispute_generator.py) | Vendor dispute letter engine. Injects corporate recovery SOP DAGs from Milvus PS into formal dispute responses. | `generate_dispute_letter()`, `DisputeLetterResponse.procedure_dag` |
+| [`backend/agents/substrate_enricher/agent.py`](file:///d:/sultan/ProcureAI/procureai/backend/agents/substrate_enricher/agent.py) | In-pipeline knowledge enrichment agent (Node 3b). Resolves amendment supersessions and rate caps before compliance checking. | `run_substrate_enricher()`, `state["substrate_enrichment"]` |
 | [`context_substrate/demo-agent-ipl/`](file:///d:/sultan/ProcureAI/procureai/context_substrate/demo-agent-ipl/) | Official Prodapt Trident MCP Registered Agent SDK. Enables CLI tools and external S2S agent connectivity. | `query.py`, `query_agent/agent.py` (`QueryAgent`), `query_agent/mcp_client.py` (`SynaptMCP`), `query_agent/s2s.py` (`SecretTokenSource`, `StaticTokenSource`) |
 
 ---
@@ -98,6 +99,7 @@ The table below provides a comprehensive map of every file, endpoint, and compon
 | :--- | :--- | :--- |
 | [`frontend/src/pages/Settings.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/pages/Settings.jsx) | **Context Substrate Control Center** (Tab 3 in Settings). | Live status indicators, 4-store architecture overview, **Run Diagnostic Query** runner, and Context Provider management cards. |
 | [`frontend/src/components/ContractQADrawer.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/components/ContractQADrawer.jsx) | **Interactive Contract Q&A Assistant** (Right slide-over drawer in Contracts). | Answers grounded in live contracts; displays **View Subgraph** button and **5-Stage Pass Card** badge for every citation. |
+| [`frontend/src/components/AgentProgressBar.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/components/AgentProgressBar.jsx) | **Mission-Control Pipeline Progress Visualizer**. | Displays real-time status of **Substrate Enricher** (Node 3b) along with OCR, Invoices, Contract, and Compliance. |
 | [`frontend/src/components/EvidenceBlock.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/components/EvidenceBlock.jsx) | **Audit Finding Evidence Inspector** (In Invoice Audit finding cards). | Displays contract clause grounding with an inline **View Reasoning Subgraph** button for CFO/auditor verification. |
 | [`frontend/src/components/DisputeLetterModal.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/components/DisputeLetterModal.jsx) | **Vendor Dispute Letter Generator & Dispatcher**. | Renders formal dispute letters with a **View SOP Recovery Playbook** toggle showing step-by-step withholding rules. |
 | [`frontend/src/components/ReasoningSubgraphModal.jsx`](file:///d:/sultan/ProcureAI/procureai/frontend/src/components/ReasoningSubgraphModal.jsx) | **Interactive Visual Knowledge Graph Modal**. | SVG force-directed/radial graph viewer with glowing semantic anchors, typed edges (`SUPERSEDES`, `GOVERNED_BY`), edge-type filters, zoom/pan, and Node Inspector drawer. |
@@ -175,6 +177,27 @@ In the **Settings** $\rightarrow$ **Context Substrate** tab:
 2. **Interactive Diagnostics:** Clicking **"Run Diagnostic Query"** triggers a live multi-hop query, rendering the 5-stage Pass Card and interactive graph.
 3. **Provider Provisioning:** Clicking **"+ Create Provider"** opens the 3-step provisioning modal to create isolated knowledge namespaces.
 4. **CLI Diagnostics:** Developers can run `query.py` directly from the terminal to query live contracts through the Trident MCP protocol.
+
+---
+
+### Workflow 5: In-Pipeline Knowledge Enrichment (`substrate_enricher`)
+During live multi-agent audit execution, before any cognitive financial compliance rules run:
+
+```
+[Cross Validator Gate]
+          │
+          ▼
+1. Query Neo4j Graph      ──► client.resolve_amendment_hierarchy(contract_id, clause)
+          │
+          ▼
+2. Resolve Supersessions  ──► Discovers active SUPERSEDES edge (e.g. Sec 5.1 $5.00 supersedes Sec 4.3 $5.80)
+          │
+          ▼
+3. Inject Governing Caps  ──► Verifies and injects Section 6.2 Fuel Cap ($2,000 ceiling) into active rulebook
+          │
+          ▼
+4. Pass to Compliance     ──► Compliance Critic evaluates against true governing rates with zero false-positives
+```
 
 ---
 

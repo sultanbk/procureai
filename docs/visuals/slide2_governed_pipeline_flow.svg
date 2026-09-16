@@ -1,0 +1,286 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" style="background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161f30" />
+      <stop offset="100%" stop-color="#0f1726" />
+    </linearGradient>
+    <linearGradient id="highlightTeal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <linearGradient id="highlightIndigo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+    <linearGradient id="highlightAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#64748b" />
+    </marker>
+    <marker id="arrowTeal" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#14b8a6" />
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- Canvas Border & Title Area -->
+  <rect x="20" y="20" width="1560" height="860" rx="16" fill="#0e1422" stroke="#1e293b" stroke-width="1.5" />
+  
+  <!-- Slide Header -->
+  <g transform="translate(60, 60)">
+    <rect x="0" y="0" width="180" height="26" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1" />
+    <text x="90" y="17" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="middle" letter-spacing="1">SLIDE 2 ARCHITECTURE</text>
+    <text x="0" y="60" font-size="26" font-weight="700" fill="#ffffff">Governed Multi-Agent Pipeline (8-Stage Stateful Workflow)</text>
+    <text x="0" y="86" font-size="14" fill="#94a3b8">Autonomous contract-to-invoice compliance audit with deterministic zero-math guarantees and human sign-off.</text>
+  </g>
+
+  <!-- PIPELINE STAGES (Row 1: Stages 1 to 4) -->
+  
+  <!-- STAGE 1: Parallel Ingestion -->
+  <g transform="translate(60, 180)">
+    <rect x="0" y="0" width="320" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <!-- Header -->
+    <rect x="0" y="0" width="320" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="320" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">PARALLEL INGESTION</text>
+    <rect x="235" y="10" width="70" height="20" rx="4" fill="#0369a1" />
+    <text x="270" y="24" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">ASYNC I/O</text>
+
+    <!-- Sub-boxes -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="288" height="74" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="22" font-size="12" font-weight="600" fill="#38bdf8">Contract Parser Agent</text>
+      <text x="14" y="42" font-size="11" fill="#94a3b8">• PDF/Docx rate schedules &amp; SLAs</text>
+      <text x="14" y="60" font-size="11" fill="#94a3b8">• Hierarchical clause &amp; tier extraction</text>
+    </g>
+    <g transform="translate(16, 144)">
+      <rect x="0" y="0" width="288" height="74" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="22" font-size="12" font-weight="600" fill="#38bdf8">Invoice Extractor Agent</text>
+      <text x="14" y="42" font-size="11" fill="#94a3b8">• Gemini 3.7 Structured Output</text>
+      <text x="14" y="60" font-size="11" fill="#94a3b8">• Dual-pass temperature consistency</text>
+    </g>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <line x1="380" y1="300" x2="430" y2="300" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- STAGE 2: Deterministic Cross-Validator Gate -->
+  <g transform="translate(440, 180)">
+    <rect x="0" y="0" width="320" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <rect x="0" y="0" width="320" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="320" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">CROSS-VALIDATOR GATE</text>
+    <rect x="225" y="10" width="80" height="20" rx="4" fill="#0f766e" />
+    <text x="265" y="24" font-size="9.5" font-weight="700" fill="#5eead4" text-anchor="middle">RULE-BASED</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="288" height="162" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="24" font-size="12" font-weight="600" fill="#5eead4">Deterministic Normalization</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">✓ Fuzzy Vendor &amp; Entity Resolution</text>
+      <text x="14" y="70" font-size="11" fill="#cbd5e1">✓ Unit Alignment (Hours, Mbps, GB, Qty)</text>
+      <text x="14" y="92" font-size="11" fill="#cbd5e1">✓ Currency Conversion &amp; Baseline Lock</text>
+      <text x="14" y="114" font-size="11" fill="#cbd5e1">✓ Header &amp; Metadata Sanity Validation</text>
+      
+      <rect x="14" y="128" width="260" height="24" rx="4" fill="#0f172a" stroke="#334155" />
+      <text x="144" y="144" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="middle">Filters 100% of formatting errors</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <line x1="760" y1="300" x2="810" y2="300" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrowTeal)" />
+
+  <!-- STAGE 3: Substrate Enricher (Node 3b) [HERO HIGHLIGHT] -->
+  <g transform="translate(820, 180)">
+    <rect x="0" y="0" width="340" height="240" rx="12" fill="url(#cardGrad)" stroke="#14b8a6" stroke-width="2" />
+    <rect x="0" y="0" width="340" height="40" rx="12" fill="#134e4a" />
+    <rect x="0" y="30" width="340" height="10" fill="#134e4a" />
+    <circle cx="24" cy="20" r="10" fill="#14b8a6" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#042f2e" text-anchor="middle">3</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#ccfbf1">SUBSTRATE ENRICHER (3b)</text>
+    <rect x="235" y="10" width="90" height="20" rx="4" fill="#042f2e" />
+    <text x="280" y="24" font-size="9.5" font-weight="700" fill="#2dd4bf" text-anchor="middle">SYNAPT IP</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="308" height="162" rx="8" fill="#0f2928" stroke="#134e4a" />
+      <text x="14" y="24" font-size="12" font-weight="700" fill="#2dd4bf">Context Substrate Graph Traversal</text>
+      <text x="14" y="48" font-size="11" fill="#e2e8f0">• Queries Neo4j Concept Graph &amp; Milvus</text>
+      <text x="14" y="70" font-size="11" fill="#e2e8f0">• Resolves <tspan fill="#f59e0b" font-weight="700">SUPERSEDES</tspan> Amendment chain</text>
+      <text x="14" y="92" font-size="11" fill="#e2e8f0">• Deactivates stale/superseded rate clauses</text>
+      <text x="14" y="114" font-size="11" fill="#e2e8f0">• Attaches governing rate card + cap nodes</text>
+
+      <rect x="14" y="128" width="280" height="24" rx="4" fill="#115e59" />
+      <text x="154" y="144" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">Solves the &quot;Amendment Trap&quot; before audit</text>
+    </g>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <line x1="1160" y1="300" x2="1210" y2="300" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- STAGE 4: Compliance Critic & Reflection Loop -->
+  <g transform="translate(1220, 180)">
+    <rect x="0" y="0" width="320" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <rect x="0" y="0" width="320" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="320" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">COMPLIANCE CRITIC</text>
+    <rect x="210" y="10" width="95" height="20" rx="4" fill="#4338ca" />
+    <text x="257" y="24" font-size="9.5" font-weight="700" fill="#c7d2fe" text-anchor="middle">ZERO-MATH</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="288" height="162" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="24" font-size="12" font-weight="600" fill="#818cf8">Deterministic Math Engine</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">• Pure Python <tspan font-family="monospace" fill="#a5b4fc">Decimal</tspan> variance calc</text>
+      <text x="14" y="70" font-size="11" fill="#cbd5e1">• Evaluates tier brackets &amp; caps</text>
+      <text x="14" y="92" font-size="11" fill="#cbd5e1">• Critic reflection loop on high delta</text>
+      <text x="14" y="114" font-size="11" fill="#cbd5e1">• Flags overcharges &amp; rate mismatches</text>
+
+      <rect x="14" y="128" width="260" height="24" rx="4" fill="#312e81" />
+      <text x="144" y="144" font-size="10" font-weight="700" fill="#e0e7ff" text-anchor="middle">Zero Math Hallucination Invariant</text>
+    </g>
+  </g>
+
+  <!-- Connective Pipe from Row 1 to Row 2 -->
+  <path d="M 1380 420 L 1380 470 L 1380 500" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- PIPELINE STAGES (Row 2: Stages 5 to 8, moving right to left or continuing flow) -->
+
+  <!-- STAGE 5: Reverse Sweep Engine -->
+  <g transform="translate(1220, 520)">
+    <rect x="0" y="0" width="320" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <rect x="0" y="0" width="320" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="320" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">REVERSE SWEEP</text>
+    <rect x="215" y="10" width="90" height="20" rx="4" fill="#854d0e" />
+    <text x="260" y="24" font-size="9.5" font-weight="700" fill="#fef08a" text-anchor="middle">PROACTIVE</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="288" height="162" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="24" font-size="12" font-weight="600" fill="#fbbf24">Contract-to-Invoice Audit</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">• Hunts for promised credits vendor missed</text>
+      <text x="14" y="70" font-size="11" fill="#cbd5e1">• Unapplied cumulative volume rebates</text>
+      <text x="14" y="92" font-size="11" fill="#cbd5e1">• SLA downtime breach credit calculation</text>
+      <text x="14" y="114" font-size="11" fill="#cbd5e1">• Early payment 2% discount check</text>
+
+      <rect x="14" y="128" width="260" height="24" rx="4" fill="#451a03" />
+      <text x="144" y="144" font-size="10" font-weight="700" fill="#fef3c7" text-anchor="middle">Catches &quot;Unbilled Rebates&quot;</text>
+    </g>
+  </g>
+
+  <!-- Arrow 5 -> 6 -->
+  <line x1="1220" y1="640" x2="1170" y2="640" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- STAGE 6: Cross-Invoice Rate Drift Analyzer -->
+  <g transform="translate(830, 520)">
+    <rect x="0" y="0" width="330" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <rect x="0" y="0" width="330" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="330" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">DRIFT ANALYZER</text>
+    <rect x="235" y="10" width="80" height="20" rx="4" fill="#1e3a8a" />
+    <text x="275" y="24" font-size="9.5" font-weight="700" fill="#93c5fd" text-anchor="middle">HISTORICAL</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="298" height="162" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="24" font-size="12" font-weight="600" fill="#60a5fa">Multi-Period Price Creep</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">• Analyzes MoM unit rate progression</text>
+      <text x="14" y="70" font-size="11" fill="#cbd5e1">• Baseline drift from Month 1 to Month N</text>
+      <text x="14" y="92" font-size="11" fill="#cbd5e1">• Catches stealth margin expansion</text>
+      <text x="14" y="114" font-size="11" fill="#cbd5e1">• Anomaly detection on unindexed items</text>
+
+      <rect x="14" y="128" width="270" height="24" rx="4" fill="#172554" />
+      <text x="149" y="144" font-size="10" font-weight="700" fill="#bfdbfe" text-anchor="middle">Stops Long-Term Spend Creep</text>
+    </g>
+  </g>
+
+  <!-- Arrow 6 -> 7 -->
+  <line x1="830" y1="640" x2="780" y2="640" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- STAGE 7: Report & Dispute Package Generator -->
+  <g transform="translate(440, 520)">
+    <rect x="0" y="0" width="330" height="240" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+    <rect x="0" y="0" width="330" height="40" rx="12" fill="#1e293b" />
+    <rect x="0" y="30" width="330" height="10" fill="#1e293b" />
+    <circle cx="24" cy="20" r="10" fill="#0284c7" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#f8fafc">REPORT GENERATOR</text>
+    <rect x="235" y="10" width="80" height="20" rx="4" fill="#365314" />
+    <text x="275" y="24" font-size="9.5" font-weight="700" fill="#bef264" text-anchor="middle">CFO-READY</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="298" height="162" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="14" y="24" font-size="12" font-weight="600" fill="#a3e635">Executive Audit Artifacts</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">• Overcharge &amp; Discrepancy Breakdown</text>
+      <text x="14" y="70" font-size="11" fill="#cbd5e1">• Formal Vendor Dispute Recovery Letter</text>
+      <text x="14" y="92" font-size="11" fill="#cbd5e1">• Clause Citations with Page &amp; Section #</text>
+      <text x="14" y="114" font-size="11" fill="#cbd5e1">• Interactive Reasoning Subgraph payload</text>
+
+      <rect x="14" y="128" width="270" height="24" rx="4" fill="#14532d" />
+      <text x="149" y="144" font-size="10" font-weight="700" fill="#dcfce7" text-anchor="middle">Complete Audit Explainability</text>
+    </g>
+  </g>
+
+  <!-- Arrow 7 -> 8 -->
+  <line x1="440" y1="640" x2="390" y2="640" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)" />
+
+  <!-- STAGE 8: Human-In-The-Loop Approval Gate -->
+  <g transform="translate(60, 520)">
+    <rect x="0" y="0" width="320" height="240" rx="12" fill="url(#cardGrad)" stroke="#f59e0b" stroke-width="2" />
+    <rect x="0" y="0" width="320" height="40" rx="12" fill="#78350f" />
+    <rect x="0" y="30" width="320" height="10" fill="#78350f" />
+    <circle cx="24" cy="20" r="10" fill="#f59e0b" />
+    <text x="24" y="24" font-size="11" font-weight="700" fill="#451a03" text-anchor="middle">8</text>
+    <text x="44" y="24" font-size="13" font-weight="700" fill="#fef3c7">HUMAN IN THE LOOP</text>
+    <rect x="220" y="10" width="85" height="20" rx="4" fill="#451a03" />
+    <text x="262" y="24" font-size="9.5" font-weight="700" fill="#fbbf24" text-anchor="middle">GOVERNANCE</text>
+
+    <!-- Details -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="288" height="162" rx="8" fill="#20180f" stroke="#78350f" />
+      <text x="14" y="24" font-size="12" font-weight="700" fill="#f59e0b">Enterprise Sign-off Gate</text>
+      <text x="14" y="48" font-size="11" fill="#e2e8f0">• Interactive Review on Procurement UI</text>
+      <text x="14" y="70" font-size="11" fill="#e2e8f0">• Line-by-line Accept / Reject / Edit</text>
+      <text x="14" y="92" font-size="11" fill="#e2e8f0">• One-Click ERP Webhook Sync</text>
+      <text x="14" y="114" font-size="11" fill="#e2e8f0">• Ready-to-send dispute letter export</text>
+
+      <rect x="14" y="128" width="260" height="24" rx="4" fill="#b45309" />
+      <text x="144" y="144" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">No unverified changes sent to ERP</text>
+    </g>
+  </g>
+
+  <!-- Bottom Legend Bar -->
+  <g transform="translate(60, 785)">
+    <rect x="0" y="0" width="1480" height="50" rx="8" fill="#131b2c" stroke="#1e293b" />
+    <text x="20" y="30" font-size="12" font-weight="700" fill="#94a3b8">KEY SYSTEM GUARANTEES:</text>
+    
+    <circle cx="210" cy="26" r="5" fill="#14b8a6" />
+    <text x="222" y="30" font-size="11.5" fill="#cbd5e1"><tspan font-weight="600" fill="#5eead4">Synapt Substrate:</tspan> Epistemic graph walks prevent amendment traps</text>
+
+    <circle cx="680" cy="26" r="5" fill="#6366f1" />
+    <text x="692" y="30" font-size="11.5" fill="#cbd5e1"><tspan font-weight="600" fill="#a5b4fc">Zero-Math Engine:</tspan> Deterministic Python Decimal for all financials</text>
+
+    <circle cx="1150" cy="26" r="5" fill="#f59e0b" />
+    <text x="1162" y="30" font-size="11.5" fill="#cbd5e1"><tspan font-weight="600" fill="#fde68a">Enterprise Governance:</tspan> AP lead approves before ERP posting</text>
+  </g>
+
+</svg>

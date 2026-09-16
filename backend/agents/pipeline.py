@@ -12,6 +12,7 @@ from backend.models.schemas import PipelineState
 from backend.agents.contract_parser.agent import run_contract_parser
 from backend.agents.invoice_extractor.agent import run_invoice_extractor
 from backend.agents.cross_validator.validator import run_cross_validator
+from backend.agents.substrate_enricher.agent import run_substrate_enricher
 from backend.agents.compliance_checker.agent import run_compliance_checker
 from backend.agents.reverse_sweep.agent import run_reverse_sweep
 from backend.agents.cross_invoice_analyzer.agent import run_cross_invoice_analyzer
@@ -86,6 +87,7 @@ def build_pipeline() -> StateGraph:
     # Single node that runs both extractors in sequence (logically independent)
     graph.add_node("parallel_extractors", run_parallel_extractors)
     graph.add_node("cross_validator", run_cross_validator)
+    graph.add_node("substrate_enricher", run_substrate_enricher)
     graph.add_node("compliance_checker", run_compliance_checker)
     graph.add_node("reverse_sweep_agent", run_reverse_sweep)                  # v4: Node 5
     graph.add_node("cross_invoice_agent", run_cross_invoice_analyzer)          # v4: Node 6
@@ -101,6 +103,10 @@ def build_pipeline() -> StateGraph:
     )
     graph.add_conditional_edges(
         "cross_validator",
+        lambda s: END if s.get("halt") else "substrate_enricher"
+    )
+    graph.add_conditional_edges(
+        "substrate_enricher",
         lambda s: END if s.get("halt") else "compliance_checker"
     )
     graph.add_conditional_edges(

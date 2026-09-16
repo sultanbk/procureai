@@ -112,10 +112,10 @@ export default function DiscrepancyTable({ discrepancies, auditId, onOpenProof }
                         <button
                           type="button"
                           onClick={() => onOpenProof(d.finding_id)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition-all hover:shadow-sm"
-                          title="View Interactive Split-Screen Proof"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs transition-all hover:shadow-sm"
+                          title="Open Interactive Split-Screen Proof"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-3.5 h-3.5 text-teal-600" />
                           <span>Proof</span>
                         </button>
                       )}

@@ -83,7 +83,7 @@ async def generate_dispute_letter(
         f"Audit Date: {audit_report.summary.audit_date}\n"
         f"Billing Period: {audit_report.summary.billing_period}\n"
         f"Contract ID: {audit_report.summary.contract_id}\n"
-        f"Total Disputed Amount: INR {total_disputed:,.2f}\n\n"
+        f"Total Disputed Amount: ${total_disputed:,.2f}\n\n"
         f"=== FINDINGS SUMMARY ===\n"
         f"{json.dumps(findings_summary, indent=2)}\n"
     )
@@ -144,7 +144,7 @@ async def generate_dispute_letter(
         letter_text=filtered_text.clean_text,
         letter_html=filtered_html.clean_text,
         findings_count=len(dispute_findings),
-        total_disputed=f"INR {total_disputed:,.2f}",
+        total_disputed=f"${total_disputed:,.2f}",
         supplier_email=request.supplier_email,
         procedure_dag=procedure_dag,
     )

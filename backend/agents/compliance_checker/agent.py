@@ -112,15 +112,18 @@ def _rule_is_effective_for_invoice(rule: PricingRule, invoice: InvoiceData) -> b
 def _compute_composite_confidence(
     line_item: LineItem | None,
     rule: PricingRule,
+    rule_match_confidence: float = 0.95,
     base_eval_confidence: float = 0.95,
 ) -> float:
     """
     Computes a real confidence score from:
       mapping_confidence  × extraction_confidence × base_eval_confidence
-    instead of always returning 0.95.
+    instead of always returning 0.95 or collapsing to 0.0.
     """
-    mapping_conf = float(line_item.mapping_confidence) if line_item else 1.0
-    extraction_conf = float(rule.extraction_confidence)
+    mapping_conf = float(rule_match_confidence) if rule_match_confidence is not None else 0.95
+    if mapping_conf <= 0.0:
+        mapping_conf = float(line_item.mapping_confidence) if (line_item and line_item.mapping_confidence > 0) else 0.85
+    extraction_conf = float(rule.extraction_confidence) if (rule and rule.extraction_confidence is not None and rule.extraction_confidence > 0) else 0.95
     return round(mapping_conf * extraction_conf * base_eval_confidence, 4)
 
 # --- Local schemas for structured LLM outputs ---
@@ -175,10 +178,15 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
             
         # Parse Pydantic objects from dicts
         # Pydantic allows model_validate for parsed dicts
-        rules_map: Dict[str, PricingRule] = {
-            r["rule_id"]: PricingRule.model_validate(r)
+        rules_list: List[PricingRule] = [
+            PricingRule.model_validate(r)
             for r in rulebook_raw.get("rules", [])
-        }
+        ]
+        rules_map: Dict[str, PricingRule] = {r.rule_id: r for r in rules_list}
+        for idx, r in enumerate(rules_list, 1):
+            alias_id = f"R{idx:03d}"
+            if alias_id not in rules_map:
+                rules_map[alias_id] = r
         
         invoices: List[InvoiceData] = [
             InvoiceData.model_validate(inv) for inv in invoice_data_raw
@@ -212,7 +220,11 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
             
             # Only map lines that have candidates
             invoice_to_map = invoice.model_copy()
-            invoice_to_map.line_items = [li for li in invoice.line_items if li.line_id not in cv_unmapped and li.line_id in candidate_map]
+            def _has_cands(li_id):
+                s_key = f"{invoice.invoice_id}:{li_id}"
+                return (s_key in candidate_map and len(candidate_map[s_key]) > 0) or (li_id in candidate_map and len(candidate_map[li_id]) > 0)
+
+            invoice_to_map.line_items = [li for li in invoice.line_items if li.line_id not in cv_unmapped and _has_cands(li.line_id)]
             
             if invoice_to_map.line_items:
                 mappings = await match_invoice_rules(llm, prompt_template_match, invoice_to_map, rules_map, candidate_map, token_accumulator, budget=budget)
@@ -286,6 +298,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         continue
                         
                     applied_rule_ids.add(rule_id)
+                    applied_rule_ids.add(rule.rule_id)
                     
                     # Calculate expected total
                     try:
@@ -312,8 +325,8 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                             await log_audit_event(
                                 audit_id,
                                 f"Applying unit conversion for line {line_id}: "
-                                f"{line_item.quantity} {from_unit} @ INR {line_item.unit_price_charged} -> "
-                                f"{adjusted_line.quantity} {to_unit} @ INR {adjusted_line.unit_price_charged}",
+                                f"{line_item.quantity} {from_unit} @ ${line_item.unit_price_charged} -> "
+                                f"{adjusted_line.quantity} {to_unit} @ ${adjusted_line.unit_price_charged}",
                                 "INFO", "compliance_checker"
                             )
                             expected_total = evaluate_line_rule(adjusted_line, rule, invoice)
@@ -358,7 +371,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                             })
                             state["review_flags"] = review_flags
                             
-                        await log_audit_event(audit_id, f"Discrepancy detected on line {line_id} under rule {rule_id}. Expected: INR {expected_total}, Charged: INR {charged_total}, Delta: INR {delta}.", "INFO", "compliance_checker")
+                        await log_audit_event(audit_id, f"Discrepancy detected on line {line_id} under rule {rule_id}. Expected: ${expected_total}, Charged: ${charged_total}, Delta: ${delta}.", "INFO", "compliance_checker")
                         
                         # Step 3: Evidence Assembly (LLM)
                         # Determine discrepancy type based on rule type
@@ -376,7 +389,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         unit_expected = round_money(expected_total / qty) if qty > 0 else Decimal("0.00")
                         
                         # v4: Apply historical feedback calibration
-                        base_confidence = _compute_composite_confidence(line_item, rule)
+                        base_confidence = _compute_composite_confidence(line_item, rule, rule_match_confidence=mapping.confidence)
                         description_text = narrative.description
                         
                         historical = await lookup_feedback_history(
@@ -428,7 +441,8 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         compliant_lines.append(compliant)
                         
             # Check for unapplied whole-invoice rules (like SLA penalties and milestone delays)
-            for rule_id, rule in rules_map.items():
+            for rule in rules_list:
+                rule_id = rule.rule_id
                 if rule_id in applied_rule_ids:
                     continue
                     
@@ -496,7 +510,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                             })
                             state["review_flags"] = review_flags
 
-                        await log_audit_event(audit_id, f"Discrepancy detected for whole-invoice rule {rule_id} ({rule.rule_type}). Penalty/credit triggered: INR {expected_total}.", "INFO", "compliance_checker")
+                        await log_audit_event(audit_id, f"Discrepancy detected for whole-invoice rule {rule_id} ({rule.rule_type}). Penalty/credit triggered: ${expected_total}.", "INFO", "compliance_checker")
                         
                         narrative = await generate_evidence_narrative(
                             llm, prompt_template_narrative, dummy_line, rule, delta, invoice, token_accumulator, budget=budget
@@ -506,7 +520,7 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
                         rec = compute_recommendation(severity, discrepancy_type)
                         
                         # v4: Apply historical feedback calibration
-                        base_confidence = _compute_composite_confidence(dummy_line, rule)
+                        base_confidence = _compute_composite_confidence(dummy_line, rule, rule_match_confidence=1.0)
                         description_text = narrative.description
                         
                         historical = await lookup_feedback_history(
@@ -576,7 +590,8 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
             }
 
         # 4. Construct final DiscrepancyList Pydantic object
-        total_delta = sum(d.delta for d in discrepancies)
+        total_leakage_val = sum(abs(d.delta) for d in discrepancies)
+        total_delta = -total_leakage_val
         
         audit_metadata = {
             "note": "Checked compliance across all lines against rules. Found overcharges.",
@@ -596,22 +611,21 @@ async def run_compliance_checker(state: PipelineState) -> PipelineState:
         # 5. Write back to state
         state["discrepancies"] = discrepancy_list_obj.model_dump()
         
-        # 6. Save in database and set status to GENERATING_REPORT
+        # 6. Save in database
         async with AsyncSessionLocal() as session:
             stmt = select(Audit).where(Audit.id == audit_id)
             result = await session.execute(stmt)
             db_audit = result.scalar_one_or_none()
             if db_audit:
                 db_audit.discrepancies = json.dumps(discrepancy_list_obj.model_dump(), default=str)
-                db_audit.total_leakage = float(abs(total_delta))
-                db_audit.status = "GENERATING_REPORT"
+                db_audit.total_leakage = float(total_leakage_val)
                 await session.commit()
                 
         # Structured log audit trail for compliance checking decisions
         await log_audit_event(
             audit_id,
             f"Compliance check complete. Audited lines: {sum(len(inv.line_items) for inv in invoices)}. "
-            f"Found {len(discrepancies)} discrepancies. Total Leakage: INR {abs(total_delta)}.",
+            f"Found {len(discrepancies)} discrepancies. Total Leakage: ${total_leakage_val}.",
             "INFO",
             "compliance_checker"
         )
@@ -725,7 +739,8 @@ async def match_invoice_rules(
     # Build a minimal context of candidates
     candidate_context = {}
     for li in invoice.line_items:
-        c_ids = candidate_map.get(li.line_id, [])
+        s_key = f"{invoice.invoice_id}:{li.line_id}"
+        c_ids = candidate_map.get(s_key) or candidate_map.get(li.line_id, [])
         candidates_for_line = []
         for rid in c_ids:
             if rid in rules_map:
@@ -780,7 +795,12 @@ async def generate_evidence_narrative(
         f"=== INVOICE DETAIL ===\n"
         f"Supplier Name: {invoice.supplier_name}\n"
         f"Invoice ID: {invoice.invoice_id}\n"
+        f"Invoice Date: {invoice.invoice_date}\n"
+        f"Billing Period: {invoice.billing_period}\n"
+        f"Invoice Notes & Remarks: {invoice.notes or 'None'}\n"
+        f"Milestone / SLA Statements: {', '.join(invoice.milestone_statements) if invoice.milestone_statements else 'None'}\n"
         f"Line item description: {line_item.raw_description}\n"
+        f"Line Notes: {line_item.notes or 'None'}\n"
         f"Quantity: {line_item.quantity}\n"
         f"Charged Unit Price: {line_item.unit_price_charged}\n"
         f"Charged Line Total: {line_item.line_total_charged}\n\n"
@@ -844,7 +864,13 @@ async def verify_discrepancy_with_critic(
         f"Description: {rule.description}\n"
         f"Quoted Contract Text: {rule.clause_text}\n\n"
         f"=== INVOICE DETAIL ===\n"
+        f"Invoice ID: {invoice.invoice_id}\n"
+        f"Invoice Date: {invoice.invoice_date}\n"
+        f"Billing Period: {invoice.billing_period}\n"
+        f"Invoice Notes & Remarks (Check for payment settlement date, milestones, SLAs): {invoice.notes or 'None'}\n"
+        f"Milestone / SLA Statements: {', '.join(invoice.milestone_statements) if invoice.milestone_statements else 'None'}\n"
         f"Line item description: {line_item.raw_description}\n"
+        f"Line Notes: {line_item.notes or 'None'}\n"
         f"Quantity: {line_item.quantity}\n"
         f"Charged Line Total: {line_item.line_total_charged}\n\n"
         f"=== ARITHMETIC DISCREPANCY ===\n"

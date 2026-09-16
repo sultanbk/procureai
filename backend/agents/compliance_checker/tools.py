@@ -43,10 +43,7 @@ def compute_recommendation(severity: str, discrepancy_type: str) -> str:
     Determines the audit recommendation based on the severity and discrepancy type.
     """
     if discrepancy_type in ("overcharge", "missing_credit", "unapplied_penalty", "missed_discount"):
-        if severity in ("CRITICAL", "HIGH"):
-            return "DISPUTE"
-        if severity == "MEDIUM":
-            return "MONITOR"
+        return "DISPUTE"
     if discrepancy_type in ("period_mismatch", "incorrect_rate"):
         return "ESCALATE"
     return "MONITOR"

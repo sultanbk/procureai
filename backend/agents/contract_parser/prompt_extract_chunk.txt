@@ -22,7 +22,7 @@ PAID or CREDITED. This includes, but is not limited to:
 DO NOT extract:
 - General terms (termination clauses, liability, confidentiality, etc.)
 - Definitions sections (unless they define a pricing term used elsewhere)
-- Anything that does not affect a dollar/rupee amount on an invoice
+- Anything that does not affect a dollar amount on an invoice
 
 FOR EACH RULE YOU FIND, OUTPUT:
 - rule_id: a placeholder like "TEMP_001", "TEMP_002" (will be renumbered later)
@@ -30,7 +30,7 @@ FOR EACH RULE YOU FIND, OUTPUT:
   early_payment_discount | bundle_discount | cap_rate | annual_adjustment |
   milestone_penalty | unknown
 - description: one sentence, plain English, e.g. "Cement pricing capped at
-  ₹400 per bag regardless of quoted unit price"
+  $400 per bag regardless of quoted unit price"
 - applies_to: the item, category, or service this rule governs — be SPECIFIC
   and use the SAME WORDING as the contract (e.g. "Portland Cement (OPC 53
   Grade)" not just "cement"). If a section introduces a service in an introductory sentence

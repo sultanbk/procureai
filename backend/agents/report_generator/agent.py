@@ -198,13 +198,16 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
         schema_json = json.dumps(ReportShorthand.model_json_schema(), indent=2)
         system_prompt = prompt_template.replace("{schema}", schema_json)
         
+        currency = rulebook_raw.get("contract_currency") or "USD"
+
         input_text = (
             f"Please generate the executive summary and recommendations for the following audit findings.\n\n"
-            f"=== SUPPLIER ===\n"
+            f"=== SUPPLIER & CONTRACT ===\n"
             f"Supplier Name: {rulebook_raw.get('supplier_name')}\n"
-            f"Contract ID: {rulebook_raw.get('contract_id')}\n\n"
+            f"Contract ID: {rulebook_raw.get('contract_id')}\n"
+            f"Contract Currency: {currency}\n\n"
             f"=== METRICS ===\n"
-            f"Total Billing Leakage: INR {total_leakage}\n"
+            f"Total Billing Leakage: {currency} {total_leakage}\n"
             f"Total Lines Audited: {total_lines_audited}\n"
             f"Compliant Lines: {compliant_lines_count}\n"
             f"Discrepancies Found: {discrepancy_count} (Critical: {critical_count}, High: {high_count}, Medium: {medium_count})\n\n"
@@ -215,7 +218,7 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             input_text += (
                 f"- Finding {d.finding_id} ({d.discrepancy_type} - {d.severity}):\n"
                 f"  Invoice: {d.invoice_id}, Line: {d.line_id}\n"
-                f"  Charged Amount: INR {d.line_total_charged}, Expected: INR {d.line_total_expected}, Delta: INR {d.delta}\n"
+                f"  Charged Amount: {currency} {d.line_total_charged}, Expected: {currency} {d.line_total_expected}, Delta: {currency} {d.delta}\n"
                 f"  Rule Description: {d.description}\n"
                 f"  Clause Reference: {d.clause_reference}\n"
                 f"  Clause Text: {d.clause_text}\n\n"
@@ -324,6 +327,7 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
             price_drifts=price_drifts,
             rulebook=rulebook_raw if isinstance(rulebook_raw, dict) else None,
             invoice_data=[inv.model_dump() for inv in invoices] if invoices else None,
+            substrate_enrichment=state.get("substrate_enrichment"),
         )
         
         # 5. Write back to state
@@ -349,7 +353,7 @@ async def run_report_generator(state: PipelineState) -> PipelineState:
                     )
                 else:
                     db_audit.status = "COMPLETE"
-                    db_audit.completed_at = utc_now()
+                db_audit.completed_at = utc_now()
 
                 from backend.services.scoring import compute_score
                 score_val = compute_score(audit_report_obj)

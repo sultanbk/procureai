@@ -166,7 +166,7 @@ def enrich_pricing_rule(rule: PricingRule) -> PricingRule:
             rule.discount_pct = float(discount_match.group(1)) / 100.0
 
     if rule.rule_type in {"flat_rate", "cap_rate"}:
-        amount_matches = [value.replace(",", "") for value in re.findall(r"INR\s*([\d,]+(?:\.\d+)?)", text, re.IGNORECASE)]
+        amount_matches = [value.replace(",", "") for value in re.findall(r"(?:USD|INR|\$)\s*([\d,]+(?:\.\d+)?)", text, re.IGNORECASE)]
         if rule.rule_type == "flat_rate" and rule.flat_unit_price is None and amount_matches:
             rule.flat_unit_price = amount_matches[0]
         if rule.rule_type == "cap_rate" and rule.cap_amount is None and amount_matches:
@@ -182,7 +182,7 @@ def merge_rulebooks(rulebooks: List[ContractRulebook]) -> ContractRulebook:
     supplier_name = "Unknown"
     contract_id = "Unknown"
     contract_date = None
-    contract_currency = "INR"
+    contract_currency = "USD"
     merged_rules: List[PricingRule] = []
     unextracted = []
     notes = []
@@ -202,7 +202,7 @@ def merge_rulebooks(rulebooks: List[ContractRulebook]) -> ContractRulebook:
         if rb.contract_date and not contract_date:
             contract_date = rb.contract_date
             
-        if rb.contract_currency and rb.contract_currency != "INR":
+        if rb.contract_currency and rb.contract_currency != "USD":
             contract_currency = rb.contract_currency
             
         # Accumulate rules

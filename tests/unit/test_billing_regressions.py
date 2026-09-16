@@ -216,3 +216,101 @@ def test_vote_on_invoice_data():
     assert len(flags_mis) == 1
     assert voted_mis.line_items[0].extraction_confidence == 0.5
     assert "quantity, unit_price_charged" in flags_mis[0]["reason"]
+
+
+def test_sla_penalty_with_fraction_and_percentage_scales():
+    # Contract rule has sla_threshold_pct=0.98 (fraction) and penalty_pct=0.08
+    rule = PricingRule(
+        rule_id="R008",
+        rule_type="sla_penalty",
+        description="8% credit penalty if monthly temperature compliance rate falls below 98.0%",
+        clause_reference="Section 7.1",
+        clause_text="Guarantees temperature compliance >= 98.0%, else 8.0% credit penalty on month total.",
+        applies_to="monthly_invoice_total",
+        sla_threshold_pct=0.98,
+        penalty_pct=0.08,
+        extraction_confidence=1.0,
+    )
+    # Line item with sla_actual_pct=96.5 (percentage)
+    dummy_line = LineItem(
+        line_id="V001",
+        raw_description="monthly_invoice_total",
+        mapped_contract_item="monthly_invoice_total",
+        mapping_confidence=1.0,
+        quantity=Decimal("1"),
+        unit_price_charged=Decimal("0.00"),
+        line_total_charged=Decimal("0.00"),
+        sla_actual_pct=96.5,
+    )
+    inv = make_invoice(invoice_id="INV-PCF-202612", line_items=[dummy_line])
+    inv.invoice_total = Decimal("104200.00")
+
+    expected = evaluate_line_rule(dummy_line, rule, inv)
+    # 8% of 104,200.00 = 8,336.00 credit (negative expected cost)
+    assert expected == Decimal("-8336.00")
+
+
+def test_volume_tier_qualification():
+    from backend.models.schemas import VolumeTier
+    rule = PricingRule(
+        rule_id="R007",
+        rule_type="volume_tier",
+        description="Frozen Food cases monthly volume discount of USD 5.00 for > 10,000 cases",
+        clause_reference="Section 5.1",
+        clause_text="If volume exceeds 10,000 cases, discounted rate of USD 5.00 applies to all cases billed.",
+        applies_to="Standard Frozen Food cases",
+        tiers=[
+            VolumeTier(min_units=0, max_units=10000, unit_price=Decimal("5.80")),
+            VolumeTier(min_units=10001, max_units=None, unit_price=Decimal("5.00")),
+        ],
+        extraction_confidence=1.0,
+    )
+    line = LineItem(
+        line_id="L002",
+        raw_description="Standard Frozen Food cases (Cold Storage Bulk)",
+        mapped_contract_item="Standard Frozen Food cases (Cold Storage Bulk)",
+        mapping_confidence=1.0,
+        quantity=Decimal("11500"),
+        unit_price_charged=Decimal("5.80"),
+        line_total_charged=Decimal("66700.00"),
+    )
+    inv = make_invoice(line_items=[line])
+    expected = evaluate_line_rule(line, rule, inv)
+    # 11,500 * 5.00 = 57,500.00
+    assert expected == Decimal("57500.00")
+    # Delta should be 57,500.00 - 66,700.00 = -9,200.00 overcharge
+    assert (expected - line.line_total_charged) == Decimal("-9200.00")
+
+
+def test_composite_confidence_not_zero():
+    from backend.agents.compliance_checker.agent import _compute_composite_confidence
+    rule = PricingRule(
+        rule_id="R006",
+        rule_type="cap_rate",
+        description="Fuel surcharge cap",
+        clause_reference="Section 6.2",
+        clause_text="Max 2000",
+        applies_to="Standard Fuel Surcharge",
+        extraction_confidence=1.0,
+    )
+    line = LineItem(
+        line_id="L002",
+        raw_description="Standard Fuel Surcharge",
+        mapped_contract_item="Standard Fuel Surcharge",
+        mapping_confidence=0.0,  # uninitialized / zero
+        quantity=Decimal("1"),
+        unit_price_charged=Decimal("2500.00"),
+        line_total_charged=Decimal("2500.00"),
+    )
+    conf = _compute_composite_confidence(line, rule, rule_match_confidence=1.0)
+    assert conf > 0.8
+
+
+def test_compute_recommendation_dispute_for_overcharge():
+    from backend.agents.compliance_checker.tools import compute_recommendation
+    # Even medium severity overcharges should recommend DISPUTE
+    rec = compute_recommendation("MEDIUM", "overcharge")
+    assert rec == "DISPUTE"
+    rec_pen = compute_recommendation("MEDIUM", "unapplied_penalty")
+    assert rec_pen == "DISPUTE"
+

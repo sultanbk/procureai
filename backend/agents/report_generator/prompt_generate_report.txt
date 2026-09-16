@@ -16,3 +16,4 @@ You MUST return valid JSON matching this exact schema:
 2. Tone: Direct, factual, and confident. State findings as facts with specific numbers.
 3. Do NOT use corporate filler like "synergy" or editorialize about supplier intent.
 4. Formulate clear, concrete, and actionable recommendations for Accounts Payable and Procurement next steps.
+5. Currency: Always use the exact currency code (e.g. USD, EUR, USD) or standard currency symbol ($) specified in the input data. Never assume, default to, or substitute a different currency.

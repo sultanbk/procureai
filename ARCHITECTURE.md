@@ -74,7 +74,9 @@ flowchart TD
     A[parallel_extractors node] --> B{halt?}
     B -- no --> C[cross_validator]
     C --> D{halt?}
-    D -- no --> E[compliance_checker]
+    D -- no --> E1[substrate_enricher]
+    E1 --> E2{halt?}
+    E2 -- no --> E[compliance_checker]
     E --> F{halt?}
     F -- no --> G[reverse_sweep_agent]
     G --> H{halt?}
@@ -83,6 +85,7 @@ flowchart TD
     J -- no --> K[report_generator]
     B -- yes --> End[END]
     D -- yes --> End
+    E2 -- yes --> End
     F -- yes --> End
     H -- yes --> End
     J -- yes --> End
@@ -99,6 +102,7 @@ The `parallel_extractors` name is logical. In the current implementation, it fir
 | Invoice extractor | `backend/agents/invoice_extractor/agent.py` | Extract invoice headers, line items, totals, conditional facts, arithmetic validation |
 | Contract parser | `backend/agents/contract_parser/agent.py` | Extract `ContractRulebook` and `PricingRule` objects from contract text; supports self-consistency passes |
 | Cross validator | `backend/agents/cross_validator/validator.py` | Fuzzy candidate mapping, unmapped line detection, missing data flags |
+| Substrate enricher | `backend/agents/substrate_enricher/agent.py` | Traverses SynaptAI Context Substrate (Neo4j Concept Graph) for active `SUPERSEDES` amendment hierarchies, overrides obsolete clause rates, and injects governing caps/SLAs |
 | Compliance checker | `backend/agents/compliance_checker/agent.py` and `rule_engine.py` | Match candidate rules, compute expected charges with Python evaluators, create discrepancies, run critic annotation |
 | Reverse sweep | `backend/agents/reverse_sweep/agent.py` | Detect missing credits from contract-triggered events such as SLA, early payment, and bundle credits |
 | Cross-invoice analyzer | `backend/agents/cross_invoice_analyzer/agent.py` | Detect price drift across multiple invoices |

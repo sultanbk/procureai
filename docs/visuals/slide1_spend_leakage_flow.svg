@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" style="background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="cardGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161f30" />
+      <stop offset="100%" stop-color="#0f1726" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#991b1b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#065f46" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    
+    <!-- Arrows -->
+    <marker id="arrRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#ef4444" />
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrGray1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <!-- Border & Background -->
+  <rect x="20" y="20" width="1560" height="860" rx="16" fill="#0e1422" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Slide Header -->
+  <g transform="translate(60, 55)">
+    <rect x="0" y="0" width="180" height="26" rx="6" fill="#7f1d1d" stroke="#b91c1c" stroke-width="1" />
+    <text x="90" y="17" font-size="11" font-weight="700" fill="#fca5a5" text-anchor="middle" letter-spacing="1">SLIDE 1 PROBLEM</text>
+    <text x="0" y="58" font-size="26" font-weight="700" fill="#ffffff">Enterprise Spend Leakage: The AP Disconnect</text>
+    <text x="0" y="84" font-size="14" fill="#94a3b8">Why traditional ERP 3-Way Match misses 2%–5% of contract spend, and how ProcureAI solves it.</text>
+  </g>
+
+  <!-- TOP SECTION: TRADITIONAL FLAWED ENTERPRISE REALITY -->
+  <g transform="translate(60, 160)">
+    <rect x="0" y="0" width="1480" height="310" rx="12" fill="url(#cardGrad1)" stroke="#334155" stroke-width="1.5" />
+    
+    <!-- Section Header -->
+    <rect x="0" y="0" width="1480" height="38" rx="12" fill="#1e293b" />
+    <rect x="0" y="28" width="1480" height="10" fill="#1e293b" />
+    <text x="20" y="24" font-size="12" font-weight="700" fill="#f87171">THE TRADITIONAL SILO: WHY BILLING CREEP HAPPENS</text>
+    <rect x="1340" y="8" width="120" height="22" rx="4" fill="#450a0a" />
+    <text x="1400" y="23" font-size="10" font-weight="700" fill="#f87171" text-anchor="middle">STATUS QUO (FLAWED)</text>
+
+    <!-- Box 1: Procurement / Legal Silo -->
+    <g transform="translate(20, 55)">
+      <rect x="0" y="0" width="380" height="230" rx="8" fill="#131b2c" stroke="#1e293b" />
+      <text x="16" y="26" font-size="13" font-weight="700" fill="#38bdf8">1. Procurement &amp; Legal Silo</text>
+      <text x="16" y="50" font-size="11.5" fill="#cbd5e1">• Negotiates complex 60-page Master Contracts</text>
+      <text x="16" y="74" font-size="11.5" fill="#cbd5e1">• Creates Volume Tiers: e.g. &gt;1000 hrs = ₹950/hr</text>
+      <text x="16" y="98" font-size="11.5" fill="#cbd5e1">• Negotiates SLA credits: &lt;99.9% uptime = 5% rebate</text>
+      <text x="16" y="122" font-size="11.5" fill="#cbd5e1">• Signs Addenda &amp; Amendments over time</text>
+      
+      <rect x="16" y="148" width="348" height="64" rx="6" fill="#0f172a" stroke="#334155" />
+      <text x="26" y="172" font-size="11" font-weight="600" fill="#94a3b8">The Reality:</text>
+      <text x="26" y="194" font-size="11" fill="#fca5a5">Contracts locked away in PDF repositories / filing cabinets.</text>
+    </g>
+
+    <!-- Arrow 1 to 2 -->
+    <line x1="410" y1="170" x2="470" y2="170" stroke="#64748b" stroke-width="2" marker-end="url(#arrGray1)" />
+    <text x="440" y="155" font-size="10" fill="#94a3b8" text-anchor="middle">Silo Gap</text>
+
+    <!-- Box 2: ERP 3-Way Match -->
+    <g transform="translate(480, 55)">
+      <rect x="0" y="0" width="460" height="230" rx="8" fill="#1e1820" stroke="#7f1d1d" stroke-width="1.2" />
+      <text x="16" y="26" font-size="13" font-weight="700" fill="#f87171">2. Accounts Payable &amp; ERP 3-Way Match</text>
+      <text x="16" y="50" font-size="11.5" fill="#cbd5e1">• SAP / Oracle checks: <tspan fill="#fca5a5">PO Total == Invoice Total == Receipt</tspan></text>
+      <text x="16" y="74" font-size="11.5" fill="#cbd5e1">• <tspan font-weight="700" fill="#ef4444">CRITICAL BLIND SPOT:</tspan> ERP has NO awareness of:</text>
+      <text x="28" y="96" font-size="11" fill="#fca5a5">✗ Was a superseded 2024 rate billed instead of 2025?</text>
+      <text x="28" y="116" font-size="11" fill="#fca5a5">✗ Did volume cross into Tier 2 rebate bracket?</text>
+      <text x="28" y="136" font-size="11" fill="#fca5a5">✗ Did vendor fail to apply last month's SLA downtime credit?</text>
+      
+      <rect x="16" y="152" width="428" height="60" rx="6" fill="#350e12" stroke="#991b1b" />
+      <text x="26" y="174" font-size="11" font-weight="700" fill="#fca5a5">Manual AP Sampling covers &lt;5% of line items.</text>
+      <text x="26" y="194" font-size="10.5" fill="#e2e8f0">AP clerks process 200+ invoices/day — no time to read legal contracts.</text>
+    </g>
+
+    <!-- Arrow 2 to 3 -->
+    <line x1="950" y1="170" x2="1010" y2="170" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrRed)" />
+    <text x="980" y="155" font-size="10" font-weight="700" fill="#ef4444" text-anchor="middle">Leakage</text>
+
+    <!-- Box 3: Silent Spend Leakage -->
+    <g transform="translate(1020, 55)">
+      <rect x="0" y="0" width="440" height="230" rx="8" fill="#2d1217" stroke="#dc2626" stroke-width="1.5" />
+      <text x="16" y="26" font-size="13" font-weight="700" fill="#fca5a5">3. Silent Financial Leakage</text>
+      
+      <!-- Big Stat Banner -->
+      <rect x="16" y="42" width="408" height="60" rx="6" fill="#450a0a" stroke="#b91c1c" />
+      <text x="28" y="74" font-size="24" font-weight="800" fill="#f87171">2% to 5%</text>
+      <text x="145" y="68" font-size="11.5" font-weight="700" fill="#ffffff">of Total Procurement Spend Lost</text>
+      <text x="145" y="86" font-size="10" fill="#cbd5e1">Hackett Group &amp; Gartner Enterprise Benchmark</text>
+
+      <text x="16" y="126" font-size="11.5" fill="#fecaca">• ₹25L–₹50L lost annually per major enterprise vendor</text>
+      <text x="16" y="148" font-size="11.5" fill="#fecaca">• Unapplied volume rebates never credited back</text>
+      <text x="16" y="170" font-size="11.5" fill="#fecaca">• Stealth rate drift slips past manual spot-checks</text>
+      <text x="16" y="192" font-size="11.5" fill="#fecaca">• Obsolete rates paid for months after addendum signing</text>
+    </g>
+  </g>
+
+  <!-- BOTTOM SECTION: THE PROCUREAI SOLUTION FLOW -->
+  <g transform="translate(60, 495)">
+    <rect x="0" y="0" width="1480" height="335" rx="12" fill="url(#cardGrad1)" stroke="#0d9488" stroke-width="1.5" />
+    
+    <!-- Section Header -->
+    <rect x="0" y="0" width="1480" height="38" rx="12" fill="#134e4a" />
+    <rect x="0" y="28" width="1480" height="10" fill="#134e4a" />
+    <text x="20" y="24" font-size="12" font-weight="700" fill="#5eead4">THE PROCUREAI GUARDRAIL: CONTINUOUS 100% CONTRACT-TO-INVOICE AUDIT</text>
+    <rect x="1335" y="8" width="125" height="22" rx="4" fill="#042f2e" />
+    <text x="1397" y="23" font-size="10" font-weight="700" fill="#2dd4bf" text-anchor="middle">NEW ARCHITECTURE</text>
+
+    <!-- Step A: Continuous Ingestion -->
+    <g transform="translate(20, 55)">
+      <rect x="0" y="0" width="320" height="255" rx="8" fill="#102324" stroke="#134e4a" />
+      <text x="14" y="24" font-size="12.5" font-weight="700" fill="#2dd4bf">A. Ingest &amp; Index</text>
+      <text x="14" y="46" font-size="11" fill="#cbd5e1">• PDF Contracts + Amendments</text>
+      <text x="14" y="66" font-size="11" fill="#cbd5e1">• Monthly ERP Invoices (PDF/JSON)</text>
+      <text x="14" y="86" font-size="11" fill="#cbd5e1">• Historical Billing Ledgers</text>
+
+      <rect x="14" y="106" width="292" height="130" rx="6" fill="#091b1c" stroke="#115e59" />
+      <text x="24" y="130" font-size="11" font-weight="700" fill="#5eead4">Synapt Context Substrate:</text>
+      <text x="24" y="150" font-size="10.5" fill="#94a3b8">• Neo4j stores clause hierarchy</text>
+      <text x="24" y="170" font-size="10.5" fill="#94a3b8">• Milvus embeds rate passages</text>
+      <text x="24" y="190" font-size="10.5" fill="#94a3b8">• Resolves SUPERSEDES chain</text>
+      <text x="24" y="212" font-size="10" font-weight="600" fill="#2dd4bf">Governing active rate guaranteed</text>
+    </g>
+
+    <!-- Arrow A to B -->
+    <line x1="350" y1="180" x2="390" y2="180" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrGreen)" />
+
+    <!-- Step B: Multi-Agent Audit Core -->
+    <g transform="translate(400, 55)">
+      <rect x="0" y="0" width="410" height="255" rx="8" fill="#102324" stroke="#134e4a" />
+      <text x="14" y="24" font-size="12.5" font-weight="700" fill="#2dd4bf">B. Multi-Agent Engine</text>
+      <text x="14" y="46" font-size="11" fill="#cbd5e1">• Cross-Validator normalizes units &amp; roles</text>
+      <text x="14" y="66" font-size="11" fill="#cbd5e1">• Substrate Enricher injects active rates</text>
+      <text x="14" y="86" font-size="11" fill="#cbd5e1">• Compliance Critic runs Zero-Math checks</text>
+      
+      <rect x="14" y="106" width="382" height="130" rx="6" fill="#091b1c" stroke="#115e59" />
+      <text x="24" y="130" font-size="11" font-weight="700" fill="#5eead4">Two Industry-First Innovations:</text>
+      <text x="24" y="152" font-size="10.5" fill="#e2e8f0">• <tspan font-weight="700" fill="#fbbf24">Reverse Sweep:</tspan> Hunts missed volume rebates</text>
+      <text x="24" y="172" font-size="10.5" fill="#e2e8f0">• <tspan font-weight="700" fill="#60a5fa">Drift Analyzer:</tspan> Catches stealth rate creep MoM</text>
+      <text x="24" y="196" font-size="10" font-weight="700" fill="#34d399">100% of line items audited in &lt;90 seconds</text>
+      <text x="24" y="214" font-size="10" fill="#94a3b8">Zero manual sampling bottlenecks</text>
+    </g>
+
+    <!-- Arrow B to C -->
+    <line x1="820" y1="180" x2="860" y2="180" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrGreen)" />
+
+    <!-- Step C: Actionable Recovery -->
+    <g transform="translate(870, 55)">
+      <rect x="0" y="0" width="300" height="255" rx="8" fill="#102324" stroke="#134e4a" />
+      <text x="14" y="24" font-size="12.5" font-weight="700" fill="#2dd4bf">C. Actionable Recovery</text>
+      <text x="14" y="46" font-size="11" fill="#cbd5e1">• Formal Vendor Dispute Package</text>
+      <text x="14" y="66" font-size="11" fill="#cbd5e1">• Exact Clause Citations &amp; Page #</text>
+      <text x="14" y="86" font-size="11" fill="#cbd5e1">• Interactive Reasoning Subgraph</text>
+
+      <rect x="14" y="106" width="272" height="130" rx="6" fill="#091b1c" stroke="#115e59" />
+      <text x="24" y="130" font-size="11" font-weight="700" fill="#5eead4">Governance &amp; Trust:</text>
+      <text x="24" y="152" font-size="10.5" fill="#e2e8f0">• 5-Stage Verification Pass Card</text>
+      <text x="24" y="172" font-size="10.5" fill="#e2e8f0">• Human AP Lead One-Click Review</text>
+      <text x="24" y="194" font-size="10.5" fill="#e2e8f0">• Direct ERP Webhook Reconciliation</text>
+      <text x="24" y="214" font-size="10" font-weight="600" fill="#38bdf8">Ready-to-mail legal dispute letter</text>
+    </g>
+
+    <!-- Arrow C to D -->
+    <line x1="1180" y1="180" x2="1220" y2="180" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrGreen)" />
+
+    <!-- Step D: Quantifiable Impact Box -->
+    <g transform="translate(1230, 55)">
+      <rect x="0" y="0" width="230" height="255" rx="8" fill="#082b22" stroke="#10b981" stroke-width="1.5" />
+      <text x="14" y="26" font-size="13" font-weight="700" fill="#34d399">D. Verified Impact</text>
+      
+      <rect x="14" y="44" width="202" height="60" rx="6" fill="#064e3b" />
+      <text x="24" y="70" font-size="20" font-weight="800" fill="#6ee7b7">₹4,340</text>
+      <text x="24" y="88" font-size="10" font-weight="600" fill="#a7f3d0">Recovered on 3 Invoices</text>
+
+      <text x="14" y="126" font-size="11" font-weight="600" fill="#ecfdf5">✓ 98% Time Reduction</text>
+      <text x="24" y="142" font-size="10" fill="#a7f3d0">(5 days ➔ 90 seconds)</text>
+
+      <text x="14" y="168" font-size="11" font-weight="600" fill="#ecfdf5">✓ 100% Audit Coverage</text>
+      <text x="24" y="184" font-size="10" fill="#a7f3d0">(&lt;5% ➔ All line items)</text>
+
+      <text x="14" y="210" font-size="11" font-weight="600" fill="#ecfdf5">✓ 0% Math Hallucination</text>
+      <text x="24" y="226" font-size="10" fill="#a7f3d0">Python Decimal invariant</text>
+    </g>
+  </g>
+
+</svg>

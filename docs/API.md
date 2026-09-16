@@ -94,6 +94,8 @@ GET /api/audit/{audit_id}
 
 Returns `AuditStatusResponse`, including status, progress percentage, current agent, partial counts, and completed report when available.
 
+Status states: `PENDING`, `EXTRACTING_PDF`, `EXTRACTING_INVOICES`, `PARSING_CONTRACT`, `CROSS_VALIDATING`, `ENRICHING_SUBSTRATE`, `CHECKING_COMPLIANCE`, `REVERSE_SWEEPING`, `CROSS_INVOICE_ANALYZING`, `GENERATING_REPORT`, `PENDING_REVIEW`, `COMPLETE`, `FAILED`.
+
 ### Other Audit Endpoints
 
 | Method | Path | Purpose |

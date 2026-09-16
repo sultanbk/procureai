@@ -473,10 +473,10 @@ export default function AuditReport({ report, onBack }) {
                                 </h5>
                                 {chargedAmount !== undefined && chargedAmount !== null && (
                                   <p className="text-xs text-slate-600 mt-0.5">
-                                    Billed Amount: <span className="font-semibold text-slate-800">INR {Number(chargedAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                    Billed Amount: <span className="font-semibold text-slate-800">${Number(chargedAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                     {quantity !== undefined && quantity !== null && unitPrice !== undefined && unitPrice !== null && (
                                       <span className="text-slate-500 font-normal ml-1.5">
-                                        {" "}({quantity} units @ INR {Number(unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })})
+                                        {" "}({quantity} units @ ${Number(unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })})
                                       </span>
                                     )}
                                   </p>

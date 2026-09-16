@@ -71,6 +71,8 @@ The original seven-day build log below is historical. The current implementation
 | backend/agents/invoice_extractor/agent.py | 🟢 | Full multi-invoice extraction and mapping |
 | backend/agents/invoice_extractor/tools.py | 🟢 | Deterministic decimal arithmetic validator |
 | backend/agents/invoice_extractor/prompt.txt | 🟢 | System prompt with structured JSON and mapping instructions |
+| backend/agents/cross_validator/validator.py | 🟢 | Cross-validation gate: fuzzy matching, unit normalizer |
+| backend/agents/substrate_enricher/agent.py | 🟢 | Node 3b: Epistemic enrichment, amendment supersession, rate caps |
 | backend/agents/compliance_checker/agent.py | 🟢 | Compliance Checker agent logic & retry loops |
 | backend/agents/compliance_checker/tools.py | 🟢 | Helper tools: severity and routing calculators |
 | backend/agents/compliance_checker/rule_engine.py | 🟢 | DETERMINISTIC rule engine — all financial math here |

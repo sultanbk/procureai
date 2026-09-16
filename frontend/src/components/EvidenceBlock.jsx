@@ -81,8 +81,8 @@ export default function EvidenceBlock({ finding, auditId, onOpenProof }) {
             <button
               type="button"
               onClick={() => onOpenProof(finding_id)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200/80 transition-all hover:shadow-sm"
-              title="Open Interactive Split-Screen PDF Proof with Visual Bounding Boxes"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs transition-all hover:shadow-sm"
+              title="Open Interactive Split-Screen Side-by-Side Proof"
             >
               <Eye className="w-3.5 h-3.5 text-teal-600" />
               <span>Split-Screen Proof</span>
@@ -93,7 +93,7 @@ export default function EvidenceBlock({ finding, auditId, onOpenProof }) {
             type="button"
             onClick={handleOpenGraph}
             disabled={isLoadingGraph}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all hover:shadow-sm"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-xs transition-all hover:shadow-sm"
             title="Inspect Neo4j Concept Graph & Clause Provenance"
           >
             <Network className="w-3.5 h-3.5 text-indigo-600" />
@@ -103,36 +103,37 @@ export default function EvidenceBlock({ finding, auditId, onOpenProof }) {
       </div>
 
       {clause_text && (
-        <div className="bg-white rounded-lg p-4 border border-slate-200 relative">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 relative shadow-xs">
           <Quote className="absolute right-3 top-3 h-8 w-8 text-slate-200 stroke-[1.5]" />
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-teal-600 uppercase tracking-wide">
-              Contract: {clause_reference || 'Clause Reference'}
+            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-wide">
+              Contract Rule: {clause_reference || 'Clause Reference'}
             </p>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-mono">
-              <ShieldCheck className="w-3 h-3" /> Substrate Grounded
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Substrate Grounded
             </span>
           </div>
-          <blockquote className="text-slate-600 italic font-mono text-xs border-l-4 border-teal-500 pl-3 leading-relaxed">
+          <blockquote className="text-slate-700 italic font-mono text-xs border-l-4 border-teal-500 pl-3 leading-relaxed">
             &ldquo;{clause_text}&rdquo;
           </blockquote>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-[10px] uppercase font-semibold text-slate-400">Charged</p>
+        <div className="bg-rose-50/60 p-3.5 rounded-lg border border-rose-200 shadow-xs">
+          <span className="text-[10px] uppercase font-bold text-rose-700 tracking-wide block">Charged (Invoice)</span>
           <p className="text-xs text-slate-600 mt-1">{quantity} × ${parseFloat(unit_price_charged || 0).toFixed(2)}</p>
-          <p className="text-sm font-mono font-bold text-rose-600 mt-1">= ${parseFloat(line_total_charged || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+          <p className="text-sm font-mono font-bold text-rose-700 mt-1">= ${parseFloat(line_total_charged || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <p className="text-[10px] uppercase font-semibold text-slate-400">Expected</p>
+        <div className="bg-emerald-50/60 p-3.5 rounded-lg border border-emerald-200 shadow-xs">
+          <span className="text-[10px] uppercase font-bold text-emerald-700 tracking-wide block">Authorized (Contract)</span>
           <p className="text-xs text-slate-600 mt-1">{quantity} × ${parseFloat(unit_price_expected || 0).toFixed(2)}</p>
-          <p className="text-sm font-mono font-bold text-emerald-600 mt-1">= ${parseFloat(line_total_expected || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+          <p className="text-sm font-mono font-bold text-emerald-700 mt-1">= ${parseFloat(line_total_expected || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
         </div>
-        <div className="bg-rose-50 p-4 rounded-lg border border-rose-200">
-          <p className="text-[10px] uppercase font-semibold text-rose-600">Leakage</p>
-          <p className="text-base font-mono font-bold text-rose-700 mt-1">${parseFloat(Math.abs(delta || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+        <div className="bg-rose-100/70 p-3.5 rounded-lg border border-rose-300 shadow-xs">
+          <span className="text-[10px] uppercase font-bold text-rose-800 tracking-wide block">Overcharge (Variance)</span>
+          <p className="text-xs text-rose-700 mt-1">Discrepancy</p>
+          <p className="text-base font-mono font-extrabold text-rose-800 mt-1">-${parseFloat(Math.abs(delta || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
         </div>
       </div>
 

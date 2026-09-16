@@ -42,23 +42,25 @@ flowchart LR
     P1 --> CP[Contract Parser]
     IE --> CV[Cross Validator]
     CP --> CV
-    CV --> CC[Compliance Checker]
+    CV --> SE[Substrate Enricher]
+    SE --> CC[Compliance Checker]
     CC --> RS[Reverse Sweep]
     RS --> CI[Cross-Invoice Analyzer]
     CI --> RG[Report Generator]
     RG --> DB
     API --> LLM[Gemini Developer API / Vertex AI / Mock LLM]
     API <--> CS[Prodapt SynaptAI Context Substrate<br/>Trident MCP & 4-Store TriStore<br/>Neo4j + Milvus KS/PS/GN]
+    SE <--> CS
     CC <--> CS
 ```
 
 Important implementation notes:
 
 - `backend/main.py` registers FastAPI routes and starts the local file watcher during application lifespan.
-- `backend/agents/pipeline.py` compiles the audit graph. The implementation runs invoice extraction before contract parsing inside a single `parallel_extractors` node for state consistency, then runs cross-validation, compliance checking, reverse sweep, cross-invoice analysis, and report generation.
+- `backend/agents/pipeline.py` compiles the audit graph. The implementation runs invoice extraction before contract parsing inside a single `parallel_extractors` node for state consistency, then runs cross-validation, Substrate knowledge enrichment (resolving active amendment supersessions and rate caps), compliance checking, reverse sweep, cross-invoice analysis, and report generation.
 - **Dual-Brain Architecture**: ProcureAI strictly separates mathematical computation from epistemic contract knowledge:
   - **Deterministic Math Engine** (`backend/core/rule_engine.py`): Python `Decimal` performs 100% of monetary math (Zero-Math rule for LLMs).
-  - **SynaptAI Context Substrate** (`backend/core/context_substrate_client.py`): Connects to live TriStore (`beta.synapt.ai`, provider `procureai`) via Trident MCP and REST. Resolves amendment hierarchies (`SUPERSEDES`), retrieves corporate recovery SOP DAGs (`PRECEDES`), and provides 5-stage retrieval pass cards and visual reasoning subgraphs with resilient embedded fallback.
+  - **SynaptAI Context Substrate** (`backend/core/context_substrate_client.py` & `backend/agents/substrate_enricher/`): Connects to live TriStore (`beta.synapt.ai`, provider `procureai`) via Trident MCP and REST. Resolves amendment hierarchies (`SUPERSEDES`), injects governing caps/SLAs, retrieves corporate recovery SOP DAGs (`PRECEDES`), and provides 5-stage retrieval pass cards and visual reasoning subgraphs with resilient embedded fallback.
 - **6-Layer Enterprise Guardrails**: Defense-in-depth safety controls protecting against prompt injection in PDFs (`input_sanitizer.py`), leaking PII/PAN/Aadhaar in dispute letters (`output_filter.py`), low-confidence extraction hallucinations (Critic auto-bypass), runaway LLM token costs (`token_budget.py` hard-stop at 500k tokens), silent release of critical discrepancies (`PENDING_REVIEW` hold state), and provider API rate exhaustion (`llm_rate_limiter.py`). See [docs/GUARDRAILS.md](docs/GUARDRAILS.md).
 
 

@@ -103,13 +103,37 @@ class SLAPenaltyEvaluator(RuleEvaluator):
                 if getattr(li, "sla_actual_pct", None) is not None:
                     sla_actual = li.sla_actual_pct
                     break
+
+        if sla_actual is None:
+            notes = collect_notes(line_item, invoice)
+            m = re.search(r"(?:compliance|sla|uptime|temperature)[^%]{0,100}?(\d+(?:\.\d+)?)\s*%", notes, re.IGNORECASE)
+            if not m:
+                m = re.search(r"(\d+(?:\.\d+)?)\s*%", notes)
+            if m:
+                try:
+                    sla_actual = float(m.group(1))
+                except (ValueError, TypeError):
+                    pass
         
         if sla_actual is not None and rule.sla_threshold_pct is not None:
-            if sla_actual < rule.sla_threshold_pct:
+            actual_val = Decimal(str(sla_actual))
+            thresh_val = Decimal(str(rule.sla_threshold_pct))
+
+            # Normalize both to 0-100 scale (e.g. 0.98 -> 98.0, 96.5 stays 96.5)
+            if actual_val <= Decimal("1.0"):
+                actual_val = actual_val * Decimal("100.0")
+            if thresh_val <= Decimal("1.0"):
+                thresh_val = thresh_val * Decimal("100.0")
+
+            if actual_val < thresh_val:
                 if rule.penalty_pct is not None:
                     penalty_pct = Decimal(str(rule.penalty_pct))
+                    if penalty_pct > Decimal("1.0"):
+                        penalty_pct = penalty_pct / Decimal("100.0")
                 elif rule.tiers and len(rule.tiers) > 0:
                     penalty_pct = Decimal(str(rule.tiers[0].unit_price))
+                    if penalty_pct > Decimal("1.0"):
+                        penalty_pct = penalty_pct / Decimal("100.0")
                 else:
                     penalty_pct = Decimal("0.00")
                 

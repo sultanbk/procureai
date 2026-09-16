@@ -209,7 +209,7 @@ ProcureAI pairs its **deterministic compliance engine** with Context Substrate's
 ```
 
 1. **Zero-Math Invariant:** In strict compliance with project architecture, Context Substrate **never computes financial math**. All addition, subtraction, rate conversions, and leakage calculations occur deterministically in Python using `Decimal` precision.
-2. **Amendment Resolution:** When an invoice line item is audited, Context Substrate checks for active `SUPERSEDES` edges so the audit engine always evaluates against the latest governing rate.
+2. **In-Pipeline Amendment Resolution (`substrate_enricher`):** Prior to compliance checking, the `substrate_enricher` agent (Node 3b) queries Context Substrate for active `SUPERSEDES` edges, overrides obsolete baseline clause rates, and injects governing caps/SLAs so the compliance critic evaluates against the latest legal truth.
 3. **Dispute Playbooks (SOP as DAG):** When ProcureAI flags an overcharge, it fetches the corporate dispute recovery SOP from Milvus PS. The Dispute Letter Modal displays an interactive **Workflow Progress DAG** with sequential steps (`PRECEDES`).
 
 ---

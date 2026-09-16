@@ -19,6 +19,8 @@
 | Deployment | Partially covered | `docs/DEPLOYMENT.md` |
 | Security | Covered with caveats | `docs/SECURITY.md` |
 | Guardrails & Safety | Covered | `docs/GUARDRAILS.md` |
+| Context Substrate | Covered | `docs/CONTEXT_SUBSTRATE_GUIDE.md`, `docs/CONTEXT_SUBSTRATE_PROJECT_REFERENCE.md` |
+| Agent Guides | Covered | `docs/agents/` (`contract_parser`, `invoice_extractor`, `cross_validator`, `substrate_enricher`, `compliance_checker`, `report_generator`) |
 | User workflows | Covered | `docs/USER_GUIDE.md` |
 | Troubleshooting | Covered | `docs/TROUBLESHOOTING.md` |
 | Auto-audit watcher | Covered | `docs/USER_GUIDE.md`, `docs/API.md`, `ARCHITECTURE.md` |

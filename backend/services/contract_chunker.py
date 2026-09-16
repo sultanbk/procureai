@@ -280,7 +280,7 @@ def build_pricing_hints(query: str, rulebook: Any) -> str:
         return ""
 
     hints: list[str] = []
-    currency = _rulebook_value(rulebook, "contract_currency", "INR") or "INR"
+    currency = _rulebook_value(rulebook, "contract_currency", "USD") or "USD"
     for rule in _iter_rules(rulebook):
         tiers = _rule_value(rule, "tiers", None)
         if not tiers:
@@ -328,7 +328,7 @@ async def build_rag_context(
         "CONTRACT METADATA:\n"
         f"Supplier: {_rulebook_value(rulebook, 'supplier_name', 'Unknown')}\n"
         f"Contract ID: {_rulebook_value(rulebook, 'contract_id', 'Unknown')}\n"
-        f"Currency: {_rulebook_value(rulebook, 'contract_currency', 'INR')}\n\n"
+        f"Currency: {_rulebook_value(rulebook, 'contract_currency', 'USD')}\n\n"
         "CONTRACT PRICING RULES (structured):\n"
     )
     allowed_refs: list[str] = []

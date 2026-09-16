@@ -18,12 +18,16 @@ import {
   Check,
   Loader2,
   AlertCircle,
+  AlertTriangle,
   Hourglass,
   FileText,
   ShieldAlert,
   Sparkles,
   Layers,
   ArrowRight,
+  RotateCcw,
+  TrendingUp,
+  Network,
 } from 'lucide-react';
 
 export default function AgentProgressBar({
@@ -83,8 +87,25 @@ export default function AgentProgressBar({
       agent: 'cross_validator',
       icon: ArrowRight,
       getDetails: () => {
-        if (partialResults?.invoice_line_count !== undefined && (agentsCompleted.includes('cross_validator') || currentAgent === 'compliance_checker')) {
+        if (partialResults?.invoice_line_count !== undefined && (agentsCompleted.includes('cross_validator') || currentAgent === 'substrate_enricher' || currentAgent === 'compliance_checker')) {
           return `${partialResults.invoice_line_count} lines verified`;
+        }
+        return null;
+      }
+    },
+    {
+      id: 'substrate_enricher',
+      name: 'Substrate Enricher',
+      shortName: 'Substrate',
+      description: 'Resolves amendment hierarchies, active superseding rates, and graph anchors via Context Substrate.',
+      agent: 'substrate_enricher',
+      icon: Network,
+      getDetails: () => {
+        if (agentsCompleted.includes('substrate_enricher') || ['compliance_checker', 'reverse_sweep', 'cross_invoice_analyzer', 'report_generator'].includes(currentAgent)) {
+          return 'Rules enriched';
+        }
+        if (currentAgent === 'substrate_enricher') {
+          return 'Traversing graph';
         }
         return null;
       }
@@ -99,6 +120,34 @@ export default function AgentProgressBar({
       getDetails: () => {
         if (partialResults?.discrepancy_count !== undefined) {
           return `${partialResults.discrepancy_count} discrepancies`;
+        }
+        return null;
+      }
+    },
+    {
+      id: 'reverse_sweep',
+      name: 'Reverse Sweep',
+      shortName: 'Rev-Sweep',
+      description: 'Scans contract clauses for unapplied volume rebates, SLA penalty credits, and settlement discounts.',
+      agent: 'reverse_sweep',
+      icon: RotateCcw,
+      getDetails: () => {
+        if (agentsCompleted.includes('reverse_sweep') || currentAgent === 'cross_invoice_analyzer' || currentAgent === 'report_generator') {
+          return 'Credits swept';
+        }
+        return null;
+      }
+    },
+    {
+      id: 'cross_invoice_analyzer',
+      name: 'Rate Drift Analyzer',
+      shortName: 'Rate Drift',
+      description: 'Detects historical price drifts and line-item rate discrepancies across invoice billing periods.',
+      agent: 'cross_invoice_analyzer',
+      icon: TrendingUp,
+      getDetails: () => {
+        if (agentsCompleted.includes('cross_invoice_analyzer') || currentAgent === 'report_generator') {
+          return 'Drift verified';
         }
         return null;
       }
@@ -126,7 +175,7 @@ export default function AgentProgressBar({
       if (idx < currentIdx) return 'completed';
       return 'pending';
     }
-    if (status === 'COMPLETE') return 'completed';
+    if (status === 'COMPLETE' || status === 'PENDING_REVIEW') return 'completed';
     if (agentsCompleted.includes(step.agent)) return 'completed';
     if (currentAgent === step.agent || (step.agent === 'pdf_extractor' && (status === 'EXTRACTING_PDF' || status === 'PENDING'))) return 'active';
     return 'pending';
@@ -139,18 +188,22 @@ export default function AgentProgressBar({
       EXTRACTING_INVOICES: 'Extracting Invoice Line Items',
       PARSING_CONTRACT: 'Analyzing Contract Rulebook',
       CROSS_VALIDATING: 'Cross-Referencing Line Rates',
+      ENRICHING_SUBSTRATE: 'Enriching via Context Substrate',
       CHECKING_COMPLIANCE: 'Running Compliance Algorithms',
+      REVERSE_SWEEPING: 'Sweeping Unclaimed Rebates & Credits',
+      CROSS_INVOICE_ANALYZING: 'Analyzing Multi-Invoice Rate Drift',
       GENERATING_REPORT: 'Assembling Final Audit Report',
+      PENDING_REVIEW: 'Audit Complete (Held for Review)',
       COMPLETE: 'Audit Completed Successfully',
       FAILED: 'Pipeline Terminated with Error'
     };
-    return statusMap[rawStatus] || rawStatus.replace(/_/g, ' ');
+    return statusMap[rawStatus] || rawStatus?.replace(/_/g, ' ') || 'Processing';
   };
 
   // Derive progress percentage
   const computedProgress = (() => {
     if (typeof progressPct === 'number' && progressPct >= 0) return progressPct;
-    if (status === 'COMPLETE') return 100;
+    if (status === 'COMPLETE' || status === 'PENDING_REVIEW') return 100;
     if (status === 'FAILED') {
       const failedIdx = steps.findIndex(s => s.agent === currentAgent);
       return Math.round((Math.max(0, failedIdx) / steps.length) * 100);
@@ -183,7 +236,31 @@ export default function AgentProgressBar({
         </div>
 
         <div className="flex items-center gap-3">
-          {status !== 'COMPLETE' && status !== 'FAILED' ? (
+          {status === 'COMPLETE' ? (
+            <Badge
+              variant="success"
+              className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-3.5 py-1 font-semibold text-xs rounded-full flex items-center gap-1.5"
+            >
+              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+              Audit Complete
+            </Badge>
+          ) : status === 'PENDING_REVIEW' ? (
+            <Badge
+              variant="warning"
+              className="bg-amber-500/10 text-amber-700 border border-amber-500/20 px-3.5 py-1 font-semibold text-xs rounded-full flex items-center gap-1.5"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Review Required
+            </Badge>
+          ) : status === 'FAILED' ? (
+            <Badge
+              variant="danger"
+              className="bg-rose-500/10 text-rose-700 border border-rose-500/20 px-3.5 py-1 font-semibold text-xs rounded-full flex items-center gap-1.5"
+            >
+              <AlertCircle className="h-3.5 w-3.5" />
+              Pipeline Terminated
+            </Badge>
+          ) : (
             <Badge
               variant="brand"
               className="bg-teal-500/10 text-teal-700 border border-teal-500/20 px-3 py-1 flex items-center gap-2 font-semibold text-xs rounded-full shadow-xs"
@@ -193,22 +270,6 @@ export default function AgentProgressBar({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
               </span>
               Analyzing Documents
-            </Badge>
-          ) : status === 'COMPLETE' ? (
-            <Badge
-              variant="success"
-              className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-3.5 py-1 font-semibold text-xs rounded-full flex items-center gap-1.5"
-            >
-              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-              Audit Complete
-            </Badge>
-          ) : (
-            <Badge
-              variant="danger"
-              className="bg-rose-500/10 text-rose-700 border border-rose-500/20 px-3.5 py-1 font-semibold text-xs rounded-full flex items-center gap-1.5"
-            >
-              <AlertCircle className="h-3.5 w-3.5" />
-              Pipeline Terminated
             </Badge>
           )}
         </div>
@@ -221,7 +282,7 @@ export default function AgentProgressBar({
             className={`h-full transition-all duration-700 ease-out rounded-full ${
               status === 'FAILED'
                 ? 'bg-rose-500'
-                : status === 'COMPLETE'
+                : status === 'COMPLETE' || status === 'PENDING_REVIEW'
                 ? 'bg-emerald-500'
                 : 'bg-gradient-to-r from-teal-500 via-cyan-500 to-emerald-500'
             }`}
@@ -229,14 +290,15 @@ export default function AgentProgressBar({
           />
         </div>
         <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1.5 px-0.5">
-          <span>Stage 1: OCR & Ingestion</span>
-          <span>Stage 3: Cross-Validation</span>
-          <span>Stage 6: Report</span>
+          <span>Stage 1: Ingestion</span>
+          <span>Stage 4: Cross-Validation</span>
+          <span>Stage 6: Reverse Sweep</span>
+          <span>Stage 8: Synthesis</span>
         </div>
       </div>
 
       {/* Stepper Pipeline Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 relative">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 relative">
         {steps.map((step, idx) => {
           const state = getStepState(step, idx);
           const details = step.getDetails();

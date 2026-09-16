@@ -433,13 +433,17 @@ async def get_audit_status(audit_id: str):
     # Map status to progress percentage, current agent, completed agents
     status_map = {
         "PENDING": (5, "init", []),
-        "EXTRACTING_PDF": (15, "pdf_extractor", []),
-        "EXTRACTING_INVOICES": (30, "invoice_extractor", ["pdf_extractor"]),
-        "PARSING_CONTRACT": (50, "contract_parser", ["pdf_extractor", "invoice_extractor"]),
-        "CROSS_VALIDATING": (70, "cross_validator", ["pdf_extractor", "invoice_extractor", "contract_parser"]),
-        "CHECKING_COMPLIANCE": (80, "compliance_checker", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator"]),
-        "GENERATING_REPORT": (90, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "compliance_checker"]),
-        "COMPLETE": (100, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "compliance_checker", "report_generator"]),
+        "EXTRACTING_PDF": (12, "pdf_extractor", []),
+        "EXTRACTING_INVOICES": (25, "invoice_extractor", ["pdf_extractor"]),
+        "PARSING_CONTRACT": (40, "contract_parser", ["pdf_extractor", "invoice_extractor"]),
+        "CROSS_VALIDATING": (50, "cross_validator", ["pdf_extractor", "invoice_extractor", "contract_parser"]),
+        "ENRICHING_SUBSTRATE": (62, "substrate_enricher", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator"]),
+        "CHECKING_COMPLIANCE": (72, "compliance_checker", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher"]),
+        "REVERSE_SWEEPING": (82, "reverse_sweep", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher", "compliance_checker"]),
+        "CROSS_INVOICE_ANALYZING": (90, "cross_invoice_analyzer", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher", "compliance_checker", "reverse_sweep"]),
+        "GENERATING_REPORT": (95, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher", "compliance_checker", "reverse_sweep", "cross_invoice_analyzer"]),
+        "PENDING_REVIEW": (100, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher", "compliance_checker", "reverse_sweep", "cross_invoice_analyzer", "report_generator"]),
+        "COMPLETE": (100, "report_generator", ["pdf_extractor", "invoice_extractor", "contract_parser", "cross_validator", "substrate_enricher", "compliance_checker", "reverse_sweep", "cross_invoice_analyzer", "report_generator"]),
         "FAILED": (100, None, [])
     }
     
@@ -475,7 +479,9 @@ async def get_audit_status(audit_id: str):
             disc_data = json.loads(db_audit.discrepancies)
             disc_list = disc_data.get("discrepancies", []) if isinstance(disc_data, dict) else (disc_data if isinstance(disc_data, list) else [])
             partial_results["discrepancy_count"] = len(disc_list)
-            partial_results["potential_leakage"] = sum(float(d.get("leakage_amount", 0) or 0) for d in disc_list)
+            partial_results["potential_leakage"] = sum(
+                abs(float(d.get("delta", 0) or d.get("leakage_amount", 0) or 0)) for d in disc_list
+            )
         except Exception:
             pass
             
@@ -905,7 +911,7 @@ async def audit_websocket(websocket: WebSocket, audit_id: str):
                         "type": "status",
                         "payload": jsonable_encoder(curr_status)
                     })
-                if curr_status.status in ("COMPLETE", "FAILED"):
+                if curr_status.status in ("COMPLETE", "FAILED", "PENDING_REVIEW"):
                     break
         except Exception:
             pass

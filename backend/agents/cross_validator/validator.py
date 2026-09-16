@@ -15,6 +15,7 @@ from backend.models.audit import Audit
 from sqlalchemy import select
 
 from backend.core.unit_normalizer import extract_unit, units_are_compatible, convert_unit_price
+from backend.core.audit_logger import log_audit_event
 
 logger = structlog.get_logger()
 
@@ -32,6 +33,17 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
     - Identifies rules never billed on any invoice
     """
     state["current_agent"] = "cross_validator"
+    audit_id = state.get("audit_id")
+    await log_audit_event(audit_id, "Cross Validator agent started.", "INFO", "cross_validator")
+
+    # Update audit status in DB to CROSS_VALIDATING
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+        if db_audit:
+            db_audit.status = "CROSS_VALIDATING"
+            await session.commit()
     
     try:
         rulebook_data = state.get("rulebook")
@@ -70,13 +82,25 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                 
                 for rule in rulebook.rules:
                     # fuzzy match against applies_to and description using BOTH
-                    # raw_description (exact invoice text) and mapped_contract_item
-                    # (LLM's semantic mapping to contract terminology)
+                    # raw_description (exact invoice text) and mapped_contract_item,
+                    # as well as variants with parenthetical qualifiers removed
+                    raw_clean = re.sub(r"\(.*?\)", "", item.raw_description or "").strip()
+                    mapped_clean = re.sub(r"\(.*?\)", "", item.mapped_contract_item or "").strip()
+
                     score_raw_applies = fuzzy_score(item.raw_description, rule.applies_to)
                     score_raw_desc = fuzzy_score(item.raw_description, rule.description)
+                    score_clean_applies = fuzzy_score(raw_clean, rule.applies_to)
+                    score_clean_desc = fuzzy_score(raw_clean, rule.description)
+
                     score_mapped_applies = fuzzy_score(item.mapped_contract_item, rule.applies_to)
                     score_mapped_desc = fuzzy_score(item.mapped_contract_item, rule.description)
-                    best_score = max(score_raw_applies, score_raw_desc, score_mapped_applies, score_mapped_desc)
+                    score_mclean_applies = fuzzy_score(mapped_clean, rule.applies_to)
+
+                    best_score = max(
+                        score_raw_applies, score_raw_desc,
+                        score_clean_applies, score_clean_desc,
+                        score_mapped_applies, score_mapped_desc, score_mclean_applies
+                    )
                     
                     if best_score < 60 and rule.clause_text:
                         desc_words = set(re.findall(r"\w+", (item.raw_description or "").lower())) - {
@@ -144,7 +168,14 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                         "unit_price": float(item.unit_price_charged)
                     })
                 else:
-                    candidate_map[item.line_id] = candidates
+                    scoped_key = f"{invoice.invoice_id}:{item.line_id}"
+                    candidate_map[scoped_key] = list(candidates)
+                    if item.line_id not in candidate_map:
+                        candidate_map[item.line_id] = list(candidates)
+                    else:
+                        for c in candidates:
+                            if c not in candidate_map[item.line_id]:
+                                candidate_map[item.line_id].append(c)
                     matched_rule_ids.update(candidates)
                     
         # 2. Conditional rules without supporting data
@@ -154,6 +185,10 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
             r"(?:\b\d{4}-\d{2}-\d{2}\b)",
             re.IGNORECASE
         )
+        SLA_PATTERN = re.compile(
+            r"(?:compliance|sla|uptime|temperature)[^%]{0,100}?\d+(?:\.\d+)?\s*%",
+            re.IGNORECASE
+        )
         
         CONDITIONAL_TYPES = {"sla_penalty", "milestone_penalty"}
         for rule in rulebook.rules:
@@ -161,8 +196,11 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
                 has_data = False
                 for invoice in invoices:
                     if rule.rule_type == "sla_penalty":
-                        # Check if any line item in the invoice has SLA data
+                        # Check if any line item in the invoice has SLA data, or invoice notes has SLA data
                         if any(item.sla_actual_pct is not None for item in invoice.line_items):
+                            has_data = True
+                            break
+                        if invoice.notes and SLA_PATTERN.search(invoice.notes):
                             has_data = True
                             break
                     elif rule.rule_type == "milestone_penalty":
@@ -258,13 +296,12 @@ async def run_cross_validator(state: PipelineState) -> PipelineState:
         state["review_flags"] = review_flags
         
         audit_id = state.get("audit_id")
-        async with AsyncSessionLocal() as session:
-            stmt = select(Audit).where(Audit.id == audit_id)
-            result = await session.execute(stmt)
-            db_audit = result.scalar_one_or_none()
-            if db_audit:
-                db_audit.status = "CHECKING_COMPLIANCE"
-                await session.commit()
+        await log_audit_event(
+            audit_id,
+            f"Cross-validation complete. {len(candidate_map)} line item candidate mappings established, {len(rules_never_billed)} unbilled rules detected.",
+            "INFO",
+            "cross_validator",
+        )
         
     except Exception as e:
         logger.error(f"Cross Validator failed: {str(e)}")

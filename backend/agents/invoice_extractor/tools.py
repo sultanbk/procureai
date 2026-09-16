@@ -85,7 +85,7 @@ def validate_invoice_arithmetic(invoice: InvoiceData) -> List[str]:
     if abs(computed_total - stated_invoice_total) > Decimal("1.00"):
         errors.append(
             f"Invoice total mismatch: sum of line items ({computed_total}) "
-            f"does not match stated total ({stated_invoice_total}) within INR 1 tolerance."
+            f"does not match stated total ({stated_invoice_total}) within $1 tolerance."
         )
         
     return errors

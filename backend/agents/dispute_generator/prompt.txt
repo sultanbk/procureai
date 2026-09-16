@@ -30,7 +30,7 @@ Return ONLY valid JSON matching this schema:
 [RULES]
 - Never invent clause text — only use the exact clause_text provided
 - Never invent financial figures — only use the numbers provided
-- All amounts in INR with $ symbol
+- All amounts in USD with $ symbol
 - Professional tone throughout — this is a legal document
 - Due date must appear in the request paragraph
 - Reference number (if provided) must appear in the subject line

@@ -15,9 +15,9 @@ IMPORTANT CONSTRAINTS:
 
 FOR EACH CANDIDATE RULE, ASK:
 1. Does `applies_to` in the rule genuinely describe the SAME item/category
-   as this line item's description? Be strict — "Portland Cement OPC 53
-   Grade" and "White Cement" are NOT the same item even if both contain
-   "cement".
+   as this line item's description?
+   - Distinct commodities with different chemical/physical grades (e.g. "Portland Cement OPC 53 Grade" vs "White Cement") are NOT the same item.
+   - However, parenthetical qualifiers, packaging details, or storage/handling specifications (e.g. "Standard Frozen Food cases (Cold Storage Bulk)" vs "Standard Frozen Food cases", or "Standard Produce Boxes (Organic Harvest)" vs "Standard Produce Boxes") represent the same core contracted item and SHOULD be matched (confidence 0.9-1.0).
 2. Are there any conditions in the clause_text that would EXCLUDE this
    line item (e.g. the rule applies "only to orders placed before
    January 2024" and this invoice is from October 2024)?

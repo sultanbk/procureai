@@ -17,6 +17,9 @@ from backend.models.schemas import (
     InvoiceData,
 )
 from backend.core.audit_logger import log_audit_event
+from backend.core.db import AsyncSessionLocal
+from backend.models.audit import Audit
+from sqlalchemy import select
 from backend.core.config import PRICE_DRIFT_THRESHOLD_PCT as _CFG_PCT, PRICE_DRIFT_MIN_DELTA as _CFG_DELTA
 
 logger = structlog.get_logger()
@@ -55,6 +58,16 @@ async def run_cross_invoice_analyzer(state: PipelineState) -> PipelineState:
     """
     state["current_agent"] = "cross_invoice_analyzer"
     audit_id = state.get("audit_id", "unknown")
+    await log_audit_event(audit_id, "Cross-Invoice Analyzer agent started (price drift check).", "INFO", "cross_invoice_analyzer")
+
+    # Update audit status in DB to CROSS_INVOICE_ANALYZING
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+        if db_audit:
+            db_audit.status = "CROSS_INVOICE_ANALYZING"
+            await session.commit()
 
     try:
         invoices_data = state.get("invoice_data")
@@ -126,11 +139,16 @@ async def run_cross_invoice_analyzer(state: PipelineState) -> PipelineState:
                 else:
                     severity = "MEDIUM"
 
+                rulebook_raw = state.get("rulebook") or {}
+                currency = rulebook_raw.get("contract_currency", "USD") if isinstance(rulebook_raw, dict) else getattr(rulebook_raw, "contract_currency", "USD")
+                currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹", "CAD": "CA$", "AUD": "A$"}
+                curr_sym = currency_symbols.get((currency or "USD").upper(), f"{currency} ")
+
                 # Build timeline for description
                 timeline_parts = []
                 for e in sorted(entries, key=lambda x: x["billing_period"]):
                     timeline_parts.append(
-                        f"{e['billing_period']}: ₹{e['unit_price']} "
+                        f"{e['billing_period']}: {curr_sym}{e['unit_price']} "
                         f"(Invoice {e['invoice_id']}, Line {e['line_id']})"
                     )
                 timeline = "; ".join(timeline_parts)
@@ -147,7 +165,7 @@ async def run_cross_invoice_analyzer(state: PipelineState) -> PipelineState:
                     "severity": severity,
                     "description": (
                         f"Unit price for '{item_name}' varies by {drift_pct:.1f}% "
-                        f"across invoices (₹{min_price} → ₹{max_price}). "
+                        f"across invoices ({curr_sym}{min_price} → {curr_sym}{max_price}). "
                         f"Timeline: {timeline}"
                     ),
                 })

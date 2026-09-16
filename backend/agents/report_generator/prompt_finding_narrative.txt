@@ -6,8 +6,8 @@ in 2-4 sentences:
 1. What the contract REQUIRES for this item (in plain language, not legal
    phrasing)
 2. What was ACTUALLY CHARGED on the invoice
-3. The financial impact (the delta), stated as "overcharge of ₹X" or
-   "missing credit of ₹X" or similar — be specific about direction
+3. The financial impact (the delta), stated as "overcharge of $X" or
+   "missing credit of $X" or similar — be specific about direction
 4. What clause this is based on (cite the section number so they can
    look it up)
 

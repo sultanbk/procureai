@@ -21,6 +21,9 @@ from backend.models.schemas import (
     PricingRule,
 )
 from backend.core.audit_logger import log_audit_event
+from backend.core.db import AsyncSessionLocal
+from backend.models.audit import Audit
+from sqlalchemy import select
 
 logger = structlog.get_logger()
 
@@ -147,7 +150,7 @@ def check_bundle_trigger(rule: PricingRule, invoice: InvoiceData) -> TriggerResu
                 should_have_applied=True,
                 evidence=f"Total quantity ({total_quantity}) for '{rule.applies_to}' "
                          f"exceeds bundle threshold ({rule.bundle_threshold}). "
-                         f"Charged ₹{total_charged} but bundle price would be ₹{expected_total}. "
+                         f"Charged ${total_charged} but bundle price would be ${expected_total}. "
                          f"Lines: {', '.join(matching_lines)}.",
                 expected_credit=expected_credit,
             )
@@ -199,6 +202,16 @@ async def run_reverse_sweep(state: PipelineState) -> PipelineState:
     """
     state["current_agent"] = "reverse_sweep"
     audit_id = state.get("audit_id", "unknown")
+    await log_audit_event(audit_id, "Reverse Sweep agent started (bidirectional verification).", "INFO", "reverse_sweep")
+
+    # Update audit status in DB to REVERSE_SWEEPING
+    async with AsyncSessionLocal() as session:
+        stmt = select(Audit).where(Audit.id == audit_id)
+        result = await session.execute(stmt)
+        db_audit = result.scalar_one_or_none()
+        if db_audit:
+            db_audit.status = "REVERSE_SWEEPING"
+            await session.commit()
 
     try:
         rulebook_data = state.get("rulebook")
@@ -293,7 +306,7 @@ async def run_reverse_sweep(state: PipelineState) -> PipelineState:
                                 f"Missing credit: {rule.description}. "
                                 f"{trigger.evidence} "
                                 f"No corresponding credit/discount line found on invoice {invoice.invoice_id}."
-                                + (f" Estimated missing credit: ₹{trigger.expected_credit}." if trigger.expected_credit else "")
+                                + (f" Estimated missing credit: ${trigger.expected_credit}." if trigger.expected_credit else "")
                             ),
                         })
 

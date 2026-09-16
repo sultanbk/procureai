@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" style="background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161f30" />
+      <stop offset="100%" stop-color="#0f1726" />
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d28d9" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    
+    <!-- Arrows -->
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#14b8a6" />
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrGray" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <!-- Border & Canvas -->
+  <rect x="20" y="20" width="1560" height="860" rx="16" fill="#0e1422" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Slide Header -->
+  <g transform="translate(60, 55)">
+    <rect x="0" y="0" width="180" height="26" rx="6" fill="#134e4a" stroke="#0d9488" stroke-width="1" />
+    <text x="90" y="17" font-size="11" font-weight="700" fill="#2dd4bf" text-anchor="middle" letter-spacing="1">SLIDE 3 SYNAPT IP</text>
+    <text x="0" y="58" font-size="26" font-weight="700" fill="#ffffff">Prodapt Synapt IP: Context Substrate 4-Store Architecture</text>
+    <text x="0" y="84" font-size="14" fill="#94a3b8">Dual-loop retrieval across Neo4j graph &amp; Milvus vector stores with 5-stage verification pass cards.</text>
+  </g>
+
+  <!-- COLUMN 1: THE 4 ENTERPRISE STORES (DATA LAYER) -->
+  <g transform="translate(60, 165)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="440" height="665" rx="12" fill="url(#cardBg)" stroke="#1e293b" stroke-width="1.5" />
+    <rect x="0" y="0" width="440" height="42" rx="12" fill="#1e293b" />
+    <rect x="0" y="32" width="440" height="10" fill="#1e293b" />
+    <text x="20" y="26" font-size="13" font-weight="700" fill="#f8fafc">1. CONTEXT SUBSTRATE: 4-STORE REPOSITORY</text>
+    <rect x="340" y="10" width="85" height="22" rx="4" fill="#0f172a" />
+    <text x="382" y="25" font-size="10" font-weight="700" fill="#38bdf8" text-anchor="middle">DATA LAYER</text>
+
+    <!-- Store 1: Neo4j Concept Graph -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="408" height="136" rx="8" fill="#101a2d" stroke="#1e3a8a" stroke-width="1.2" />
+      <rect x="12" y="12" width="24" height="24" rx="4" fill="#1d4ed8" />
+      <text x="24" y="28" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">G</text>
+      <text x="44" y="28" font-size="13" font-weight="700" fill="#93c5fd">Neo4j Concept Graph</text>
+      <rect x="320" y="12" width="76" height="20" rx="4" fill="#1e293b" />
+      <text x="358" y="26" font-size="9.5" font-weight="600" fill="#60a5fa" text-anchor="middle">ONTOLOGY</text>
+
+      <text x="14" y="58" font-size="11" fill="#cbd5e1">• Nodes: <tspan fill="#38bdf8">Contract, Clause, RateCard, Amendment</tspan></text>
+      <text x="14" y="78" font-size="11" fill="#cbd5e1">• Edges: <tspan fill="#f59e0b" font-weight="600">SUPERSEDES</tspan>, <tspan fill="#34d399" font-weight="600">BILLED_ON</tspan>, <tspan fill="#a78bfa" font-weight="600">GOVERNS</tspan></text>
+      <text x="14" y="98" font-size="11" fill="#cbd5e1">• Hierarchy: Master Contract ➔ Addendum ➔ Schedule</text>
+      <text x="14" y="118" font-size="11" fill="#94a3b8">Provides deterministic clause genealogy &amp; rate inheritance</text>
+    </g>
+
+    <!-- Store 2: Milvus Knowledge Store (KS) -->
+    <g transform="translate(16, 204)">
+      <rect x="0" y="0" width="408" height="136" rx="8" fill="#0d2422" stroke="#134e4a" stroke-width="1.2" />
+      <rect x="12" y="12" width="24" height="24" rx="4" fill="#0f766e" />
+      <text x="24" y="28" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">KS</text>
+      <text x="44" y="28" font-size="13" font-weight="700" fill="#5eead4">Milvus Knowledge Store (KS)</text>
+      <rect x="320" y="12" width="76" height="20" rx="4" fill="#042f2e" />
+      <text x="358" y="26" font-size="9.5" font-weight="600" fill="#2dd4bf" text-anchor="middle">PASSAGES</text>
+
+      <text x="14" y="58" font-size="11" fill="#cbd5e1">• High-dimensional dense embeddings (OpenAI / Vertex)</text>
+      <text x="14" y="78" font-size="11" fill="#cbd5e1">• Verbatim legal definitions, warranties &amp; SLAs</text>
+      <text x="14" y="98" font-size="11" fill="#cbd5e1">• Direct text citations tied to section &amp; page numbers</text>
+      <text x="14" y="118" font-size="11" fill="#94a3b8">Source of truth for verbatim quotation in audit letters</text>
+    </g>
+
+    <!-- Store 3: Milvus Procedural Store (PS) -->
+    <g transform="translate(16, 352)">
+      <rect x="0" y="0" width="408" height="136" rx="8" fill="#22182b" stroke="#4c1d95" stroke-width="1.2" />
+      <rect x="12" y="12" width="24" height="24" rx="4" fill="#6d28d9" />
+      <text x="24" y="28" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">PS</text>
+      <text x="44" y="28" font-size="13" font-weight="700" fill="#c4b5fd">Milvus Procedural Store (PS)</text>
+      <rect x="320" y="12" width="76" height="20" rx="4" fill="#2e1065" />
+      <text x="358" y="26" font-size="9.5" font-weight="600" fill="#a78bfa" text-anchor="middle">SOP DAGs</text>
+
+      <text x="14" y="58" font-size="11" fill="#cbd5e1">• Dispute recovery workflows stored as execution DAGs</text>
+      <text x="14" y="78" font-size="11" fill="#cbd5e1">• Escalation paths: Formal Notice ➔ Credit Memo ➔ Escrow</text>
+      <text x="14" y="98" font-size="11" fill="#cbd5e1">• Vendor-specific contractual grace periods (30/60 days)</text>
+      <text x="14" y="118" font-size="11" fill="#94a3b8">Guides autonomous dispute letter &amp; claim formulation</text>
+    </g>
+
+    <!-- Store 4: Milvus Graph Node Index (GN) -->
+    <g transform="translate(16, 500)">
+      <rect x="0" y="0" width="408" height="145" rx="8" fill="#1b1c2b" stroke="#312e81" stroke-width="1.2" />
+      <rect x="12" y="12" width="24" height="24" rx="4" fill="#4338ca" />
+      <text x="24" y="28" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">GN</text>
+      <text x="44" y="28" font-size="13" font-weight="700" fill="#a5b4fc">Milvus Graph Node Index (GN)</text>
+      <rect x="320" y="12" width="76" height="20" rx="4" fill="#1e1b4b" />
+      <text x="358" y="26" font-size="9.5" font-weight="600" fill="#818cf8" text-anchor="middle">ENTRYPOINT</text>
+
+      <text x="14" y="58" font-size="11" fill="#cbd5e1">• Semantic GPS mapping invoice terms to graph nodes</text>
+      <text x="14" y="78" font-size="11" fill="#cbd5e1">• Resolves aliases: &quot;Cloud Eng II&quot; ➔ Rate Node #4021</text>
+      <text x="14" y="98" font-size="11" fill="#cbd5e1">• Sub-millisecond entry point into Neo4j subgraphs</text>
+      <text x="14" y="120" font-size="11" fill="#94a3b8">Bridges vector embedding space with symbolic graph space</text>
+    </g>
+  </g>
+
+  <!-- Connective Arrows from Store to Gateway -->
+  <line x1="500" y1="495" x2="560" y2="495" stroke="#14b8a6" stroke-width="2.5" marker-end="url(#arrTeal)" />
+
+  <!-- COLUMN 2: ORCHESTRATION & DUAL-LOOP QUERY (MIDDLE LAYER) -->
+  <g transform="translate(560, 165)">
+    <rect x="0" y="0" width="450" height="665" rx="12" fill="url(#cardBg)" stroke="#1e293b" stroke-width="1.5" />
+    <rect x="0" y="0" width="450" height="42" rx="12" fill="#1e293b" />
+    <rect x="0" y="32" width="450" height="10" fill="#1e293b" />
+    <text x="20" y="26" font-size="13" font-weight="700" fill="#f8fafc">2. TRIDENT MCP &amp; DUAL-LOOP QUERY</text>
+    <rect x="325" y="10" width="110" height="22" rx="4" fill="#0f172a" />
+    <text x="380" y="25" font-size="10" font-weight="700" fill="#2dd4bf" text-anchor="middle">REASONING CORE</text>
+
+    <!-- Trident MCP Gateway -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="418" height="100" rx="8" fill="#111c2e" stroke="#0284c7" stroke-width="1.5" />
+      <text x="14" y="26" font-size="13" font-weight="700" fill="#38bdf8">Trident MCP Interface Gateway</text>
+      <text x="14" y="48" font-size="11" fill="#cbd5e1">• Governed Model Context Protocol (MCP) tool server</text>
+      <text x="14" y="68" font-size="11" fill="#cbd5e1">• Provides tool functions: <tspan font-family="monospace" fill="#7dd3fc">query_substrate()</tspan>, <tspan font-family="monospace" fill="#7dd3fc">walk_graph()</tspan></text>
+      <text x="14" y="88" font-size="11" fill="#94a3b8">Standardized enterprise bridge between agents &amp; substrate</text>
+    </g>
+
+    <!-- Dual-Loop Engine -->
+    <g transform="translate(16, 170)">
+      <rect x="0" y="0" width="418" height="160" rx="8" fill="#132036" stroke="#1e3a8a" />
+      <text x="14" y="26" font-size="13" font-weight="700" fill="#60a5fa">Dual-Loop Query Execution</text>
+      
+      <!-- Loop A -->
+      <rect x="14" y="38" width="390" height="50" rx="6" fill="#0f172a" stroke="#1e293b" />
+      <text x="26" y="58" font-size="11.5" font-weight="700" fill="#38bdf8">Loop A (Vector Semantic):</text>
+      <text x="26" y="76" font-size="11" fill="#94a3b8">Dense embeddings + BM25 keyword matching across KS store</text>
+
+      <!-- Loop B -->
+      <rect x="14" y="96" width="390" height="54" rx="6" fill="#0f172a" stroke="#134e4a" />
+      <text x="26" y="116" font-size="11.5" font-weight="700" fill="#2dd4bf">Loop B (Epistemic Graph Walk):</text>
+      <text x="26" y="136" font-size="11" fill="#94a3b8">GN node jump ➔ Neo4j SUPERSEDES walk to find governing rate</text>
+    </g>
+
+    <!-- 5-Stage Verification Pass Card -->
+    <g transform="translate(16, 344)">
+      <rect x="0" y="0" width="418" height="300" rx="8" fill="#0f2424" stroke="#115e59" stroke-width="1.5" />
+      <rect x="14" y="14" width="390" height="30" rx="6" fill="#134e4a" />
+      <text x="209" y="34" font-size="12" font-weight="700" fill="#ccfbf1" text-anchor="middle">5-STAGE RETRIEVAL VERIFICATION PASS CARD</text>
+
+      <!-- Stage 1 to 5 Pills -->
+      <g transform="translate(14, 56)">
+        <rect x="0" y="0" width="390" height="34" rx="4" fill="#0c1d24" stroke="#164e63" />
+        <text x="12" y="22" font-size="11" font-weight="600" fill="#38bdf8">Stage 1: Dense Vector Similarity</text>
+        <text x="340" y="22" font-size="11" font-weight="700" fill="#34d399">Score: 0.94</text>
+      </g>
+      <g transform="translate(14, 98)">
+        <rect x="0" y="0" width="390" height="34" rx="4" fill="#0c1d24" stroke="#164e63" />
+        <text x="12" y="22" font-size="11" font-weight="600" fill="#38bdf8">Stage 2: BM25 Lexical Keyword Match</text>
+        <text x="340" y="22" font-size="11" font-weight="700" fill="#34d399">Score: 0.89</text>
+      </g>
+      <g transform="translate(14, 140)">
+        <rect x="0" y="0" width="390" height="34" rx="4" fill="#0c1d24" stroke="#164e63" />
+        <text x="12" y="22" font-size="11" font-weight="600" fill="#38bdf8">Stage 3: Cross-Encoder Reranking</text>
+        <text x="340" y="22" font-size="11" font-weight="700" fill="#34d399">Score: 0.96</text>
+      </g>
+      <g transform="translate(14, 182)">
+        <rect x="0" y="0" width="390" height="34" rx="4" fill="#0c1d24" stroke="#164e63" />
+        <text x="12" y="22" font-size="11" font-weight="600" fill="#38bdf8">Stage 4: Structural Graph Continuity</text>
+        <text x="340" y="22" font-size="11" font-weight="700" fill="#34d399">Verified</text>
+      </g>
+      <g transform="translate(14, 224)">
+        <rect x="0" y="0" width="390" height="34" rx="4" fill="#0c1d24" stroke="#164e63" />
+        <text x="12" y="22" font-size="11" font-weight="600" fill="#38bdf8">Stage 5: Grounding &amp; Hallucination Check</text>
+        <text x="340" y="22" font-size="11" font-weight="700" fill="#34d399">0.0% Risk</text>
+      </g>
+
+      <rect x="14" y="266" width="390" height="24" rx="4" fill="#042f2e" />
+      <text x="209" y="282" font-size="10.5" font-weight="700" fill="#2dd4bf" text-anchor="middle">OVERALL PASS SCORE: 98% GROUNDED</text>
+    </g>
+  </g>
+
+  <!-- Connective Arrows from Middle to Agent Consumer -->
+  <line x1="1010" y1="495" x2="1070" y2="495" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrBlue)" />
+
+  <!-- COLUMN 3: AGENT CONSUMERS & AUDIT VERIFICATION (OUTPUT LAYER) -->
+  <g transform="translate(1070, 165)">
+    <rect x="0" y="0" width="470" height="665" rx="12" fill="url(#cardBg)" stroke="#1e293b" stroke-width="1.5" />
+    <rect x="0" y="0" width="470" height="42" rx="12" fill="#1e293b" />
+    <rect x="0" y="32" width="470" height="10" fill="#1e293b" />
+    <text x="20" y="26" font-size="13" font-weight="700" fill="#f8fafc">3. AGENT WORKFLOW INGESTION &amp; IMPACT</text>
+    <rect x="360" y="10" width="95" height="22" rx="4" fill="#0f172a" />
+    <text x="407" y="25" font-size="10" font-weight="700" fill="#38bdf8" text-anchor="middle">CONSUMER</text>
+
+    <!-- Substrate Enricher Box -->
+    <g transform="translate(16, 56)">
+      <rect x="0" y="0" width="438" height="175" rx="8" fill="#0d2625" stroke="#14b8a6" stroke-width="1.5" />
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#14b8a6" />
+      <text x="28" y="33" font-size="13" font-weight="700" fill="#042f2e" text-anchor="middle">3b</text>
+      <text x="52" y="32" font-size="14" font-weight="700" fill="#2dd4bf">Substrate Enricher Agent</text>
+      <rect x="330" y="14" width="92" height="22" rx="4" fill="#042f2e" />
+      <text x="376" y="29" font-size="10" font-weight="700" fill="#5eead4" text-anchor="middle">ACTIVE AGENT</text>
+
+      <text x="14" y="64" font-size="11.5" fill="#e2e8f0">• Executes before compliance evaluation</text>
+      <text x="14" y="86" font-size="11.5" fill="#e2e8f0">• Calls Trident MCP ➔ fetches active rates &amp; cap definitions</text>
+      <text x="14" y="108" font-size="11.5" fill="#e2e8f0">• Overrides obsolete contract rates with governing addenda</text>
+      <text x="14" y="130" font-size="11.5" fill="#e2e8f0">• Injects verified pricing rules directly into LangGraph state</text>
+      
+      <rect x="14" y="142" width="410" height="24" rx="4" fill="#134e4a" />
+      <text x="219" y="158" font-size="10" font-weight="700" fill="#f0fdfa" text-anchor="middle">Audit state enriched with 100% legally active rates</text>
+    </g>
+
+    <!-- Arrow Down -->
+    <line x1="235" y1="235" x2="235" y2="265" stroke="#64748b" stroke-width="2" marker-end="url(#arrGray)" />
+
+    <!-- Interactive Reasoning Subgraph Output Box -->
+    <g transform="translate(16, 270)">
+      <rect x="0" y="0" width="438" height="195" rx="8" fill="#111a2e" stroke="#2563eb" stroke-width="1.2" />
+      <text x="14" y="26" font-size="13" font-weight="700" fill="#60a5fa">Interactive Reasoning Subgraph Visualizer</text>
+      
+      <!-- Mini graph schematic inside -->
+      <g transform="translate(20, 45)">
+        <rect x="0" y="0" width="110" height="40" rx="6" fill="#1e293b" stroke="#3b82f6" />
+        <text x="55" y="24" font-size="10" font-weight="600" fill="#93c5fd" text-anchor="middle">MSA Master (2024)</text>
+
+        <line x1="110" y1="20" x2="160" y2="20" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrTeal)" />
+        <text x="135" y="14" font-size="8" fill="#f59e0b" text-anchor="middle">SUPERSEDES</text>
+
+        <rect x="160" y="0" width="115" height="40" rx="6" fill="#134e4a" stroke="#14b8a6" />
+        <text x="217" y="24" font-size="10" font-weight="700" fill="#5eead4" text-anchor="middle">Addendum #2 (2025)</text>
+
+        <line x1="275" y1="20" x2="320" y2="20" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrTeal)" />
+        <text x="297" y="14" font-size="8" fill="#34d399" text-anchor="middle">BILLED_ON</text>
+
+        <rect x="320" y="0" width="80" height="40" rx="6" fill="#1e1b4b" stroke="#8b5cf6" />
+        <text x="360" y="24" font-size="10" font-weight="600" fill="#c4b5fd" text-anchor="middle">₹1,250/hr</text>
+      </g>
+
+      <text x="14" y="112" font-size="11" fill="#cbd5e1">• Complete audit trail rendered directly on Frontend UI</text>
+      <text x="14" y="132" font-size="11" fill="#cbd5e1">• Finance leaders can click every node to view exact clauses</text>
+      <text x="14" y="152" font-size="11" fill="#cbd5e1">• Displays pass card verification badge (98% Grounded)</text>
+      <text x="14" y="172" font-size="11" fill="#94a3b8">Solves the black-box AI issue with 100% legal explainability</text>
+    </g>
+
+    <!-- Why This Wins IPL Rubric -->
+    <g transform="translate(16, 480)">
+      <rect x="0" y="0" width="438" height="165" rx="8" fill="#1f180a" stroke="#d97706" stroke-width="1.2" />
+      <text x="14" y="24" font-size="13" font-weight="700" fill="#f59e0b">Prodapt IPL Rubric Winning Alignment (20%)</text>
+      <text x="14" y="48" font-size="11.5" fill="#fef3c7">✓ <tspan font-weight="600">Deep Synapt IP Integration:</tspan> Context Substrate is our knowledge spine</text>
+      <text x="14" y="72" font-size="11.5" fill="#fef3c7">✓ <tspan font-weight="600">Dual-Store Synergy:</tspan> Neo4j for hierarchy + Milvus for semantic RAG</text>
+      <text x="14" y="96" font-size="11.5" fill="#fef3c7">✓ <tspan font-weight="600">Zero Hallucination:</tspan> Grounded Pass Card ensures CFO trust</text>
+      <text x="14" y="120" font-size="11.5" fill="#fef3c7">✓ <tspan font-weight="600">Trident MCP Standard:</tspan> Reusable tool interface across Prodapt verticals</text>
+
+      <rect x="14" y="134" width="410" height="22" rx="4" fill="#451a03" />
+      <text x="219" y="149" font-size="10" font-weight="700" fill="#fde68a" text-anchor="middle">Qualifies 100% under Prodapt Synapt IP Rubric Category</text>
+    </g>
+  </g>
+
+</svg>

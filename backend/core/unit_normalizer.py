@@ -117,10 +117,10 @@ for canonical, aliases in UNIT_FAMILIES.items():
         _ALIAS_MAP[alias.lower()] = (canonical, factor)
 
 
-# Patterns to extract units from text like "₹450 per MT", "₹12/kg", "per unit"
+# Patterns to extract units from text like "$450 per MT", "$12/kg", "per unit"
 _UNIT_PATTERNS = [
     re.compile(r'(?:per|/)\s*([a-zA-Z][a-zA-Z\s\-]*?)(?:\s|$|,|\.|\))', re.IGNORECASE),
-    re.compile(r'(?:INR|Rs\.?|\$|₹|€|£)\s*[\d,\.]+\s*/\s*([a-zA-Z][a-zA-Z\s\-]*?)(?:\s|$|,|\.|\))', re.IGNORECASE),
+    re.compile(r'(?:INR|Rs\.?|\$|$|€|£)\s*[\d,\.]+\s*/\s*([a-zA-Z][a-zA-Z\s\-]*?)(?:\s|$|,|\.|\))', re.IGNORECASE),
     re.compile(r'\b(\d+)\s*(MT|kg|kgs|tonnes?|tons?|units?|pieces?|pcs?|hrs?|hours?|bags?|litres?|liters?|sqft|sqm)\b', re.IGNORECASE),
 ]
 
@@ -131,8 +131,8 @@ def extract_unit(text: str) -> Optional[str]:
     Returns the normalized alias if found, None otherwise.
 
     Examples:
-        "₹450 per MT" → "mt"
-        "₹12/kg" → "kg"
+        "$450 per MT" → "mt"
+        "$12/kg" → "kg"
         "100 pieces" → "pieces"
         "per man-day" → "man-day"
     """
@@ -200,9 +200,9 @@ def convert_unit_price(
 
     Example:
         convert_unit_price(Decimal("12"), "kg", "MT")
-        → (Decimal("12000.00"), "₹12/kg → ₹12,000/MT (1 MT = 1000 kg)")
+        → (Decimal("12000.00"), "$12/kg → $12,000/MT (1 MT = 1000 kg)")
 
-    Price conversion: if 1 kg costs ₹12, then 1 MT (= 1000 kg) costs ₹12,000.
+    Price conversion: if 1 kg costs $12, then 1 MT (= 1000 kg) costs $12,000.
     So: price_in_to_unit = price_in_from_unit * (factor_from / factor_to)
     """
     info_from = get_canonical_unit(from_unit)

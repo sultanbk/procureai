@@ -234,6 +234,10 @@ export default function AuditLogConsole({
         return 'text-indigo-400 bg-indigo-950/60 border-indigo-800/80';
       case 'compliance_checker':
         return 'text-teal-300 bg-teal-950/60 border-teal-800/80';
+      case 'reverse_sweep':
+        return 'text-fuchsia-400 bg-fuchsia-950/60 border-fuchsia-800/80';
+      case 'cross_invoice_analyzer':
+        return 'text-orange-400 bg-orange-950/60 border-orange-800/80';
       case 'report_generator':
         return 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80';
       case 'pdf_extractor':
@@ -253,6 +257,10 @@ export default function AuditLogConsole({
         return 'Cross Validator';
       case 'compliance_checker':
         return 'Compliance Critic';
+      case 'reverse_sweep':
+        return 'Reverse Sweep';
+      case 'cross_invoice_analyzer':
+        return 'Rate Drift Analyzer';
       case 'report_generator':
         return 'Report Generator';
       case 'pdf_extractor':
@@ -292,6 +300,8 @@ export default function AuditLogConsole({
     { id: 'contract_parser', name: 'Contract Parser' },
     { id: 'cross_validator', name: 'Cross Validator' },
     { id: 'compliance_checker', name: 'Compliance Critic' },
+    { id: 'reverse_sweep', name: 'Reverse Sweep' },
+    { id: 'cross_invoice_analyzer', name: 'Rate Drift Analyzer' },
     { id: 'report_generator', name: 'Report Generator' },
   ];
 

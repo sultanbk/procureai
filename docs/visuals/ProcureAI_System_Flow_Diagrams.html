@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcureAI — Presentation Flow Diagrams Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f19;
+    --surface: #111827;
+    --surface-card: #161f30;
+    --border: #1f293d;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-teal: #14b8a6;
+    --accent-blue: #38bdf8;
+    --accent-amber: #f59e0b;
+    --accent-green: #10b981;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 24px 32px 64px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .title-group h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .title-group p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .tag {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    background: rgba(20, 184, 166, 0.15);
+    color: var(--accent-teal);
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  /* Navigation Tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+  }
+  .tab-btn.active {
+    background: #1e293b;
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  /* Action Buttons */
+  .actions-group {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-action {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    text-decoration: none;
+  }
+  .btn-action:hover {
+    background: #334155;
+    color: #fff;
+  }
+  .btn-action.primary {
+    background: var(--accent-teal);
+    border-color: var(--accent-teal);
+    color: #042f2e;
+    font-weight: 700;
+  }
+  .btn-action.primary:hover {
+    background: #2dd4bf;
+  }
+
+  /* Diagram Frame Container */
+  .diagram-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .diagram-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .diagram-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+  .diagram-header .meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .canvas-container {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0b0f19;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .canvas-container img, .canvas-container object {
+    width: 100%;
+    height: auto;
+    max-height: 75vh;
+    display: block;
+  }
+
+  /* Footer Note */
+  .footer-note {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .footer-note code {
+    background: #1e293b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-blue);
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>ProcureAI Flow Diagrams <span class="tag">SLIDE-READY VECTOR</span></h1>
+      <p>Clean, realistic engineering architecture flows for Prodapt IPL presentation slides.</p>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchSlide(2)">Slide 2: Governed Architecture</button>
+      <button class="tab-btn" onclick="switchSlide(3)">Slide 3: Synapt IP Substrate</button>
+      <button class="tab-btn" onclick="switchSlide(1)">Slide 1: AP Spend Leakage</button>
+    </div>
+
+    <div class="actions-group">
+      <button class="btn-action" onclick="copySvgPath()">📋 Copy SVG Path</button>
+      <a id="downloadLink" class="btn-action primary" href="slide2_governed_pipeline_flow.svg" download="slide2_governed_pipeline_flow.svg">⬇ Download SVG</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="diagram-wrapper">
+      <div class="diagram-header">
+        <h2 id="slideTitle">Slide 2: Governed Multi-Agent Architecture (8-Stage Stateful Pipeline)</h2>
+        <span class="meta" id="slideMeta">16:9 Widescreen • Vector SVG • Zero Resolution Loss</span>
+      </div>
+
+      <div class="canvas-container">
+        <img id="diagramImage" src="slide2_governed_pipeline_flow.svg" alt="Architecture Diagram">
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <div>💡 <b>Tip for presentation:</b> You can drag and drop these <code>.svg</code> files straight into PowerPoint, Google Slides, Keynote, or Illustrator.</div>
+      <div>Source files located in <code>docs/visuals/</code></div>
+    </div>
+  </main>
+
+  <script>
+    const slides = {
+      1: {
+        title: "Slide 1: Enterprise Spend Leakage & AP Disconnect Flow",
+        file: "slide1_spend_leakage_flow.svg",
+        desc: "Contrasts ERP 3-Way Match blind spot with ProcureAI 100% contract-to-invoice automated audit."
+      },
+      2: {
+        title: "Slide 2: Governed Multi-Agent Architecture (8-Stage Stateful Pipeline)",
+        file: "slide2_governed_pipeline_flow.svg",
+        desc: "Autonomous contract-to-invoice audit with Substrate Enricher (Node 3b), Reverse Sweep, and Zero-Math engine."
+      },
+      3: {
+        title: "Slide 3: Prodapt Synapt Context Substrate 4-Store & Dual-Loop Retrieval",
+        file: "slide3_synapt_substrate_flow.svg",
+        desc: "Neo4j Concept Graph + Milvus KS/PS/GN, Trident MCP Gateway, and 5-Stage Verification Pass Card."
+      }
+    };
+
+    let currentSlide = 2;
+
+    function switchSlide(num) {
+      currentSlide = num;
+      const slide = slides[num];
+      document.getElementById('slideTitle').textContent = slide.title;
+      document.getElementById('diagramImage').src = slide.file;
+      document.getElementById('downloadLink').href = slide.file;
+      document.getElementById('downloadLink').download = slide.file;
+
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function copySvgPath() {
+      const path = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/' + slides[currentSlide].file;
+      navigator.clipboard.writeText(path).then(() => {
+        alert('File path copied to clipboard: ' + slides[currentSlide].file);
+      }).catch(err => {
+        prompt('Copy the SVG filename:', slides[currentSlide].file);
+      });
+    }
+  </script>
+</body>
+</html>

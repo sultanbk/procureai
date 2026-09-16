@@ -287,13 +287,17 @@ class SmartGenerativeModel:
                         last_error = exc
                         if attempt >= max(LLM_RETRY_ATTEMPTS, 1):
                             raise
+                        err_str = str(exc)
                         delay = LLM_RETRY_DELAY_SECONDS * (2 ** (attempt - 1))
+                        # For 429 / Resource Exhausted rate limits, give Google Cloud quota a slightly larger window to replenish
+                        if "429" in err_str or "Resource exhausted" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
+                            delay = max(delay, 3.0 * attempt)
                         logger.warning(
                             "GenerativeModel call failed; retrying with backoff.",
                             attempt=attempt,
                             max_attempts=LLM_RETRY_ATTEMPTS,
                             retry_delay=delay,
-                            error=str(exc),
+                            error=err_str,
                         )
                         time.sleep(delay)
                 raise last_error
@@ -533,6 +537,13 @@ def get_llm():
     Mock mode requires MOCK_LLM=true and ALLOW_MOCK_LLM=true.
     """
     global _llm_instance
+    if is_mock_llm_enabled():
+        logger.info("Mock LLM enabled via configuration. Returning MockLLMClient.")
+        _llm_instance = SmartGenerativeModel(
+            real_model=None,
+            provider="mock",
+            model_name="mock-gemini-2.5-flash",
+        )
     if _llm_instance is not None:
         return _llm_instance
 

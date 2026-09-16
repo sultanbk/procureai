@@ -1,389 +1,193 @@
-
-
-Listed directory procureai
-
-Viewed ONE_PAGER.md:1-80
-
-Viewed DEMO_PITCH.md:1-455
-
-Ran command: `git status -s`
-
-Ran command: `git log -n 5 --oneline`
-
-Viewed CONTEST_PITCH.md:1-277
-
-Viewed IPL_CONTEST_BRIEF.md:1-100
-
-Searched for "slide"
-
-Searched for "5-slide"
-
-Searched for "slide"
-
-Viewed IPL_CONTEST_BRIEF.md:65-160
-
-Searched for "Presentation"
-
-Ran command: `python -c "
-
-with open('IPL_CONTEST_BRIEF.md', 'r', encoding='utf-8') as f:
-
-    text = f.read()
-
-import re
-
-for m in re.finditer(r'(?:slide|presentation|deck|pitch|demo|rubric|schedule)', text, re.IGNORECASE):
-
-    start = max(0, m.start() - 60)
-
-    end = min(len(text), m.end() + 60)
-
-    print(f'Match at {m.start()}: {text[start:end]!r}')
-
-"`
-
-Ran command: `python -c "import sys; print(sys.executable)"`
-
-Ran command: `python -c "
-
-with open('backend/.env', 'r') as f:
-
-    for line in f:
-
-        k = line.split('=')[0].strip()
-
-        v = line.split('=')[1].strip() if '=' in line else ''
-
-        if 'KEY' in k.upper() or 'SECRET' in k.upper():
-
-            print(f'{k}=***MASKED***')
-
-        else:
-
-            print(f'{k}={v}')
-
-"`
-
-Ran command: `python -c "
-
-import os
-
-os.environ['MOCK_LLM'] = 'true'
-
-os.environ['ALLOW_MOCK_LLM'] = 'true'
-
-from eval.harness import run_eval
-
-print('Eval import successful')
-
-"`
-
-Ran command: `..\.venv\Scripts\python.exe -c "
-
-import os
-
-os.environ['MOCK_LLM'] = 'true'
-
-os.environ['ALLOW_MOCK_LLM'] = 'true'
-
-from eval.harness import run_eval
-
-print('Eval import successful with venv python')
-
-"`
-
-Ran command: `.venv\Scripts\python.exe -c "
-
-import sys, os
-
-os.environ['MOCK_LLM'] = 'true'
-
-os.environ['ALLOW_MOCK_LLM'] = 'true'
-
-sys.path.insert(0, os.path.abspath('.'))
-
-from backend.eval.harness import run_eval
-
-print('Eval import successful from root with sys.path')
-
-"`
-
-Used tool: manage_task
-
-Viewed harness.py:1-45
-
-Ran command: `cmd /c "set MOCK_LLM=true&& set ALLOW_MOCK_LLM=true&& set PYTHONPATH=.&& .venv\Scripts\python.exe -m backend.eval.harness"`
-
-Used tool: manage_task
-
-Used tool: manage_task
-
-
-
-Here is your **complete, battle-tested Presentation Master Guide** for tomorrow’s presentation.
-
-
-
-This guide is structured around the **Prodapt Innovation Premier League (IPL)** evaluation rubric (100 points) and provides everything you need: the **5-slide pitch script**, the **3-minute live demo playbook**, the **tough Judge Q&A defense**, and the **fail-safe technical setup checklist**.
-
-
+# ProcureAI / SupplierGuard: Complete Presentation & Demo Master Guide
+# Prepared for Prodapt Innovation Premier League (IPL) Grand Finale
 
 ---
 
-
-
-# 📑 Part 1: The 5-Slide Deck Master Plan
-
-*(Mapped directly to the official 100-point scoring rubric)*
-
-
+## 📑 Part 1: The 5-Slide Deck Master Plan
+*(Mapped directly to the official 100-point IPL scoring rubric)*
 
 ```
-
 ┌────────────────────────────────────────────────────────────────────────┐
-
-│                        IPL SCORING RUBRIC                             │
-
+│                        IPL SCORING RUBRIC                             │
 ├────────────────────────────────┬───────────────────────────────────────┤
-
-│ Customer Environment (20%)     │ Slide 1 (Problem & Enterprise Fit)    │
-
-│ IP Usage - Synapt (20%)        │ Slide 3 (Context Substrate & Trident) │
-
-│ Quantifiable Impact (20%)      │ Slide 5 (Measurable ROI & KPIs)       │
-
-│ Innovation / Differentiators (15%)│ Slide 4 (Why Not Just A Chatbot?)  │
-
+│ Customer Environment (20%)     │ Slide 1 (Problem & Enterprise Fit)    │
+│ IP Usage - Synapt (20%)        │ Slide 3 (Context Substrate & Trident) │
+│ Quantifiable Impact (20%)      │ Slide 5 (Measurable ROI & KPIs)       │
+│ Innovation / Differentiators (15%)│ Slide 4 (Why Not Just A Chatbot?)  │
 │ Scalability & Reusability (15%)│ Slide 2 & 5 (LangGraph & Cross-Domain)│
-
-│ Problem Complexity (10%)       │ Slide 1 (Multi-clause leakage)        │
-
+│ Problem Complexity (10%)       │ Slide 1 (Multi-clause leakage)        │
 └────────────────────────────────┴───────────────────────────────────────┘
-
 ```
 
-
-
 ---
-
-
 
 ### **Slide 1: The Enterprise Problem & Customer Environment**
-
 *Scores: Customer Environment Potential (20%) + Problem Complexity (10%)*
 
-
-
 * **Headline:** Enterprise Spend Leakage: The Silent Multi-Million Dollar Problem
-
 * **Visual Layout:**
-
-  * Left: Split graphic showing **60-page Master Service Agreement** vs **Hundreds of Monthly ERP Invoices**.
-
-  * Center: Red leakage arrow showing **2% to 5% loss** in unapplied volume tiers, missed SLA credits, and billing creep.
-
-  * Right: Why traditional AP fails — manual sampling only covers <5% of invoices; AP teams process invoices, but procurement teams negotiate contracts.
-
+  * Left: Split graphic showing **60-page Master Service Agreement** vs **Hundreds of Monthly ERP Invoices**.
+  * Center: Red leakage callout showing **2% to 5% loss** in unapplied volume tiers, missed SLA credits, billing creep, and obsolete rates.
+  * Right: Why traditional AP fails — manual sampling covers <5% of spend; AP teams process transactions, while procurement teams negotiate contracts.
 * **Key Talking Points (What to Say - 45s):**
-
-  > *"Every enterprise and telecom provider negotiates complex Master Service Agreements with tiered pricing, SLA penalties, and early payment discounts. However, when invoices arrive monthly in accounts payable, they are processed in silos. In fact, Hackett Group benchmarks show enterprises lose 2% to 5% of their total procurement spend to silent overcharges simply because nobody cross-checks every single invoice against contract clauses. Manual spot-checking is slow and covers less than 5% of spend. **ProcureAI (SupplierGuard)** bridges this gap by turning static PDF contracts into live, automated financial guardrails."*
-
-
+  > *"Every enterprise and telecom provider negotiates complex Master Service Agreements with tiered pricing, SLA penalties, and early payment discounts. However, when invoices arrive monthly in accounts payable, they are processed in silos. In fact, Hackett Group benchmarks show enterprises lose 2% to 5% of their total procurement spend to silent overcharges simply because nobody cross-checks every single line item against legal contract clauses. Manual spot-checking covers less than 5% of spend. **ProcureAI (SupplierGuard)** bridges this gap by turning static PDF contracts into live, automated financial guardrails."*
 
 ---
-
-
 
 ### **Slide 2: Solution Architecture & Governed Agent Workflow**
-
 *Scores: Scalability / Reusability (15%) + Customer Environment (20%)*
 
-
-
 * **Headline:** Governed Multi-Agent Pipeline: Autonomous Audit with Human in the Loop
-
 * **Visual Layout:**
-
-  * Architecture diagram: 7-node LangGraph pipeline.
-
-  * Step 1: Parallel extraction (Contract Parser + Invoice Extractor).
-
-  * Step 2: Deterministic Cross-Validator Gate.
-
-  * Step 3: Compliance Engine & Reflection.
-
-  * Step 4: Reverse Sweep (credits) & Cross-Invoice Drift.
-
-  * Step 5: Executive Dashboard + Dispute Letter Generation.
-
+  * Architecture diagram: 8-stage stateful LangGraph pipeline.
+  * Step 1: Parallel Extraction (`contract_parser` + `invoice_extractor`).
+  * Step 2: Deterministic Cross-Validator Gate (Fuzzy matching & unit normalization).
+  * **Step 3: Substrate Enricher (Node 3b)** ➔ Resolves `SUPERSEDES` amendment hierarchies & contract caps before compliance.
+  * Step 4: Compliance Critic & Reflection (LLM mapping + deterministic math).
+  * Step 5: Reverse Sweep (Contract-to-invoice missed rebate & credit detection).
+  * Step 6: Cross-Invoice Rate Drift Analyzer (Historical price creep across periods).
+  * Step 7: Executive Dashboard + Dispute Letter Generation.
 * **Key Talking Points (What to Say - 45s):**
-
-  > *"ProcureAI is not a simple chat prompt. It is a production-grade 7-node stateful LangGraph pipeline. It extracts pricing schedules and SLA commitments in parallel, normalizes units across telecom or enterprise metrics, and passes them through a deterministic validation gate. Crucially, it runs a **Reverse Sweep** — checking not just what the supplier billed, but what credits they failed to apply. The output is a CFO-ready audit report with exact contract clause citations and one-click dispute packages."*
-
-
+  > *"ProcureAI is not a simple chat prompt. It is a production-grade 8-stage stateful LangGraph pipeline. It extracts pricing schedules and SLA commitments in parallel, normalizes units across telecom and enterprise metrics, and passes them through a deterministic validation gate. Crucially, before evaluating compliance, our **Substrate Enricher** traverses the contract knowledge graph to resolve active amendments—ensuring we audit against governing rates rather than obsolete clauses. It then runs a **Reverse Sweep** to catch missed credits and prepares CFO-ready audit packages with human approval."*
 
 ---
-
-
 
 ### **Slide 3: Prodapt Synapt IP Alignment**
-
 *Scores: IP Usage (20% - Qualifier & Winning Factor)*
 
-
-
 * **Headline:** Built on Prodapt Synapt IP: Context Substrate & Trident MCP
-
 * **Visual Layout:**
-
-  * Diagram showing **Prodapt Synapt Context Substrate (4-Store TriStore)**:
-
-    * Neo4j Concept Graph (Contract clauses, SLA tiers, vendor entities).
-
-    * Milvus Vector Stores (Document chunks, dispute SOPs).
-
-    * Trident MCP Agent Gateway integration.
-
-  * Clear positioning badge: *"Live Knowledge Brain + Transactional ERP Grounding"*.
-
+  * Diagram showing **Prodapt Synapt Context Substrate (4-Store Architecture)**:
+    * **Neo4j Concept Graph:** Structural clause web, amendment hierarchy (`SUPERSEDES`), and rate card mappings (`BILLED_ON`).
+    * **Milvus Knowledge Store (KS):** Verbatim passage embeddings for grounded citations.
+    * **Milvus Procedural Store (PS):** Standard Operating Procedures represented as Directed Acyclic Graphs (DAGs) for dispute recovery.
+    * **Milvus Graph Node Index (GN):** Semantic GPS for instant graph entry.
+  * Visual Callouts: **Interactive Reasoning Subgraph** and **5-Stage Retrieval Pass Card** (Hallucination Risk %).
 * **Key Talking Points (What to Say - 45s):**
-
-  > *"We built ProcureAI with deep alignment to Prodapt’s Synapt IP. We integrate with **Synapt Context Substrate** as the queryable enterprise knowledge brain. Invoices live in transactional ERP systems, while Context Substrate manages the contract terms, procurement SOPs, and historical dispute intelligence across Neo4j and Milvus. Through the **Trident MCP interface**, our agents retrieve grounded contract clauses with verifiable reasoning subgraphs. This gives enterprise clients complete traceability and positions ProcureAI as a high-value accelerator in the Prodapt AgentHub ecosystem."*
-
-
+  > *"We built ProcureAI with deep alignment to Prodapt’s Synapt IP. We integrate with **Synapt Context Substrate** as our queryable enterprise knowledge brain. While transactional invoices live in ERPs, Context Substrate orchestrates contract clauses, amendment supersessions, and corporate dispute SOPs across Neo4j and Milvus. Through the **Trident MCP interface**, our agents retrieve verified reasoning subgraphs and 5-stage pass cards for every finding. This gives enterprise CFOs 100% audit explainability with zero math hallucination."*
 
 ---
-
-
 
 ### **Slide 4: Innovation & Defensibility: "Why Not a Chatbot?"**
-
 *Scores: Innovativeness / Differentiation (15%)*
 
-
-
 * **Headline:** Zero-Hallucination Deterministic Engine vs. Generic LLM Wrappers
-
 * **Visual Layout:** Comparison Table:
 
-
-
-| Traditional Chat / RAG | ProcureAI Architecture |
-
+| Traditional Chat / Basic RAG | ProcureAI Architecture |
 | :--- | :--- |
-
-| LLM does math (prone to hallucination) | **Pure Python `Decimal` rule engine**; LLM only extracts |
-
-| Passive: only answers user questions | **Active Reverse Sweep**: detects missed discounts/SLA penalties |
-
-| Treats each invoice in isolation | **Cross-Invoice Drift Analyzer**: catches price creep over time |
-
-| Unstructured text answers | **Structured audit artifacts**, scorecards, & formal dispute letters |
-
-
+| **LLM does arithmetic** (prone to math hallucinations) | **Strict Zero-Math Invariant:** Pure Python `Decimal` engine; LLM only extracts |
+| **The Amendment Trap:** Retrieves conflicting old and new clauses | **Epistemic Graph Traversal:** Walks `SUPERSEDES` edges to find the active rate |
+| **Passive:** Only answers questions when prompted | **Active Reverse Sweep:** Hunts for unapplied volume rebates & SLA credits |
+| **Isolated:** Audits invoices one-by-one | **Cross-Invoice Drift Analyzer:** Catches billing creep across billing cycles |
+| **Unstructured answers** | **Enterprise Artifacts:** Reasoning subgraphs, pass cards, & formal dispute packages |
 
 * **Key Talking Points (What to Say - 45s):**
-
-  > *"Judges often ask: why not just prompt ChatGPT or a standard RAG pipeline? The answer is: **Finance teams do not tolerate math hallucinations.** ProcureAI never lets an LLM perform monetary calculations. All calculations execute in a deterministic Python Decimal rule engine. Furthermore, we introduced two industry-first innovations: **Reverse Sweep**, which hunts for credits the supplier 'forgot' to grant, and **Cross-Invoice Drift Detection**, which spots gradual unit-rate inflation across multiple billing cycles."*
-
-
+  > *"Judges often ask: why not just use ChatGPT or a basic RAG pipeline? The answer is: **Finance teams do not tolerate math hallucinations.** ProcureAI enforces a strict Zero-Math rule: LLMs only extract and map; 100% of monetary calculations execute in a deterministic Python Decimal rule engine. Furthermore, we solve the 'Amendment Trap' using Context Substrate graph walks, and we introduced two industry-first innovations: **Reverse Sweep**, which detects promised credits the vendor failed to apply, and **Cross-Invoice Drift Detection**, which spots stealth rate increases over time."*
 
 ---
 
+### **Slide 5: Enterprise Business Impact & Scalability**
+*Scores: Business Impact (20%) + Scalability & Reusability (15%)*
 
-
-### **Slide 5: Quantifiable Business Impact & Scalability**
-
-*Scores: Quantifiable Business Impact (20%) + Scalability & Reusability (15%)*
-
-
-
-* **Headline:** Immediate ROI: ₹43K Found in 90s — Scalable Across Telco & Enterprise
-
+* **Headline:** Continuous Financial Governance: Scalable Across Enterprise Verticals
 * **Visual Layout:**
-
-  * Left: **Before vs. After Metrics Table**:
-
-    * Audit Cycle Time: 5 days manual spot-check ➔ **90 seconds automated** (98% reduction).
-
-    * Audit Coverage: 5% sampling ➔ **100% full audit**.
-
-    * Leakage Recovery: ₹0 caught ➔ **₹4,340 on 3 sample invoices** (~₹24-50 Lakhs annualized per enterprise vendor).
-
-  * Right: **Reusability across Verticals**: Telco Tower / Fiber Leases, IT Consulting (T&M), Cloud Infrastructure, Logistics & Facility Management.
-
-* **Key Talking Points (What to Say - 45s):**
-
-  > *"The business impact is immediate and quantifiable. In our live demo on Apex Logistics, ProcureAI identified ₹4,340 in leakage across just 3 invoices in 90 seconds. Scaled to an enterprise with 50 Tier-1 suppliers, that represents **₹25 to 50 Lakhs in direct cash recovery every year**. More importantly, the system is domain-agnostic: the same pipeline audits telecom fiber maintenance, IT consulting rate caps, and logistics fuel surcharges. It pays for itself on day one."*
-
-
+  * Left: **Strategic Transformation (Before vs. After)**:
+    * **Coverage:** From manual sample spot-checks ➔ **Comprehensive full audit coverage**.
+    * **Dispute Posture:** From subjective pushback ➔ **Legally backed, transparent dispute packages**.
+    * **Financial Posture:** From silent revenue leakage ➔ **Proactive, automated spend protection**.
+  * Right: **Horizontal Scalability Across Verticals**:
+    * **Telecom:** Tower leases, dark fiber agreements, and maintenance SLAs.
+    * **Professional Services:** IT consulting, Time & Material rate caps, and milestone billing.
+    * **Cloud & Infrastructure:** Reserved capacity commitments and data transfer tiers.
+    * **Logistics & Supply Chain:** Freight schedules, fuel indexing, and SLA delivery penalties.
+* **Key Talking Points (What to Say - 30-40s):**
+  > *"ProcureAI transforms procurement from a reactive, manual spot-check into continuous, autonomous financial governance. Instead of finance teams guessing whether supplier charges match legal agreements, every single transaction is automatically validated against active governing rules with zero math hallucination. Furthermore, the architecture is completely domain-agnostic. The exact same governed pipeline deploys seamlessly across Telecom infrastructure, IT consulting, cloud services, and supply chain logistics—delivering immediate enterprise spend protection on day one."*
 
 ---
-
-
 
 # 🎬 Part 2: The 3-Minute Live Demo Playbook
 
-
-
 Keep this open during your demo or recording.
 
-
-
 ### **Pre-Demo Sanity Setup (10 Minutes Prior):**
-
-1. Open terminal 1: Start backend (`uvicorn main:app --reload --port 8000`).
-
-2. Open terminal 2: Start frontend (`npm run dev`).
-
-3. Have your browser open at `http://localhost:5173/`.
-
-4. Open the demo folder with these ready to drag-and-drop:
-
-   - `data/synthetic/contracts/c001_apex_logistics_contract.pdf`
-
-   - `data/synthetic/invoices/c001_invoice_i001.pdf`
-
-   - `data/synthetic/invoices/c001_invoice_i002.pdf`
-
-   - `data/synthetic/invoices/c001_invoice_i003.pdf`
-
-5. Have a second browser tab pre-loaded with an already completed Apex Logistics audit report as a backup!
-
-
+1. Open terminal 1: Start services with `.\run_dev.ps1`.
+2. Browser open at `http://localhost:5173/`.
+3. Have demo files ready in a visible folder:
+   - `data/synthetic/contracts/c001_apex_logistics_contract.pdf`
+   - `data/synthetic/invoices/c001_invoice_i001.pdf`
+   - `data/synthetic/invoices/c001_invoice_i002.pdf`
+   - `data/synthetic/invoices/c001_invoice_i003.pdf`
+4. Have a second browser tab pre-loaded with an already completed Apex Logistics audit report as a backup!
 
 ---
 
-
-
 ### **Demo Script Timeline (180 Seconds)**
 
-
-
 #### **0:00 – 0:30 | The Hook (The Real Problem)**
-
-* **Action:** Open `c001_apex_logistics_contract.pdf` or show the ProcureAI upload screen.
-
+* **Action:** Show the contract PDF or open the ProcureAI upload screen.
 * **Say:**
-
-  > *"This is a standard 12-page logistics contract. Section 4.2 has volume tier discounts. Section 8.1 mandates an SLA penalty credit if delivery falls below 97%. Every month, accounts payable gets flooded with invoices. Nobody reads 12 pages of legal clauses to cross-verify every line item. Let’s see what happens when ProcureAI audits 3 months of bills."*
-
-
+  > *"This is a standard 12-page logistics contract. Section 4.2 specifies volume tier discounts. Section 8.1 mandates an SLA penalty credit if on-time delivery drops below 97%. Every month, accounts payable is flooded with invoices. Nobody reads 12 pages of legal clauses to cross-verify every single line item. Let’s see what happens when ProcureAI audits 3 months of bills in 90 seconds."*
 
 #### **0:30 – 1:00 | The Upload & Live Agent Pipeline**
-
 * **Action:**
-
-  1. Click **Upload** in sidebar.
-
-  2. Drag & drop `c001_apex_logistics_contract.pdf` into the contract dropzone.
-
-  3. Drag & drop all 3 invoices (`i001`, `i002`, `i003`).
-
-  4. Select/Type Supplier: `Apex Logistics Ltd`.
-
-  5. Click **"Run Audit"**.
-
+  1. Click **Upload** in the sidebar.
+  2. Drag & drop `c001_apex_logistics_contract.pdf` into the contract dropzone.
+  3. Drag & drop all 3 invoices (`i001`, `i002`, `i003`).
+  4. Supplier name auto-fills: `Apex Logistics Ltd`.
+  5. Click **"Run Audit"**.
 * **Say:**
+  > *"One contract, three invoices, one click. You are watching our multi-agent workflow execute live. Notice the mission-control progress bar: OCR digitizes the PDF, the Invoice Extractor parses line items with dual-pass self-consistency, Cross-Validator maps rates, and our **Substrate Enricher** traverses Synapt Context Substrate to verify active amendment terms before compliance calculations run."*
 
-  > *"One contract, three invoices, one click. You are watching our multi-agent workflow execute in real-time. The Contract Parser extracts structured rule models, the Invoice Extractor pulls line items with self-consistency, and
+#### **1:00 – 1:45 | The Audit Report & Findings**
+* **Action:** The progress bar completes and opens the **Audit Report**.
+* **Say:**
+  > *"In under 90 seconds, the audit is complete. ProcureAI audited 100% of line items and flagged ₹4,340 in recoverable leakage across 3 invoices. Let’s expand finding #1: Apex billed standard freight at ₹45/kg, but under Section 4.2, our monthly volume qualified for Tier-2 pricing at ₹38/kg. The system calculates the exact ₹1,400 delta using deterministic Python math—zero LLM arithmetic."*
+
+#### **1:45 – 2:15 | The Explainability Layer (Context Substrate)**
+* **Action:** Click **"View Subgraph"** on the finding card (opens `ReasoningSubgraphModal`).
+* **Say:**
+  > *"Enterprise CFOs will not act on black-box AI. When an auditor clicks 'View Subgraph', ProcureAI renders the exact Neo4j reasoning path traversed by Synapt Context Substrate—linking the Invoice Item to Rate Card to Governing Clause and Amendment. Beside it is our 5-Stage Retrieval Pass Card, confirming a 98% groundedness score and 0% hallucination probability."*
+
+#### **2:15 – 2:45 | Actionable Recovery: Dispute Letter & SOP DAG**
+* **Action:** Click **"Generate Dispute Letter"** in the top right.
+* **Say:**
+  > *"Findings without action don't recover cash. In one click, ProcureAI drafts a legally binding supplier dispute letter with itemized invoice deltas and contract citations. Even better: it pulls the corporate dispute recovery playbook from Context Substrate’s Milvus Procedural Store, giving the AP team an interactive step-by-step recovery DAG with withholding authorization rules."*
+
+#### **2:45 – 3:00 | The Close & Supplier Scorecard**
+* **Action:** Click **"Supplier Scorecard"** in the navigation bar.
+* **Say:**
+  > *"Finally, every audit feeds our supplier intelligence dashboard—tracking compliance scores, historical price drift, and repeat breach patterns over time. ProcureAI turns static supplier contracts into living financial controls, powered by Prodapt Synapt IP."*
+
+---
+
+# 🛡️ Part 3: Tough Judge Q&A Defense Sheet
+
+### **Q1: "Why not just write a prompt with ChatGPT or use a standard RAG tool?"**
+> **Answer:** *"Standard LLMs fail on two fatal issues in enterprise finance:
+> 1. **Math Hallucinations:** Large language models cannot guarantee arithmetic accuracy. ProcureAI enforces a strict Zero-Math Invariant: LLMs only extract and map; 100% of financial math executes in Python using `Decimal` precision.
+> 2. **The Amendment Trap:** In standard RAG, when an amendment supersedes an older clause, the vector database retrieves both chunks and either cites the wrong rate or hallucinates. Synapt Context Substrate models documents as a typed Neo4j graph with `SUPERSEDES` relationships, ensuring we always audit against active governing truth."*
+
+### **Q2: "What if the internet or remote Synapt API is offline during deployment?"**
+> **Answer:** *"ProcureAI has an automatic **Zero-Fail Fallback**. In `auto` mode, if the remote Trident MCP endpoint is unreachable, our client seamlessly fails over to an embedded in-memory 4-store engine with zero disruption to the user. The UI displays `ACTIVE (EMBEDDED)` so demos and audits never fail."*
+
+### **Q3: "How does this integrate into real enterprise ERP systems (SAP, Oracle, Coupa)?"**
+> **Answer:** *"ProcureAI is built as a non-invasive autonomous assurance layer. Invoices can be ingested via standard REST webhooks, EDI, or our background file watcher (`watched_invoices/`), while contracts reside in Context Substrate. Audits run pre-payment (blocking leakage before disbursement) or post-payment (recovery audits)."*
+
+### **Q4: "What prevents prompt injection attacks in vendor invoice PDFs?"**
+> **Answer:** *"We implement **6-layer enterprise guardrails**. Layer 1 is an input sanitizer that strips injection preambles and instruction overrides from invoice PDFs before the LLM ever sees them. Layer 2 sanitizes outgoing dispute letters to redact sensitive PII and financial account numbers."*
+
+### **Q5: "How does the system handle multi-currency or different unit metrics?"**
+> **Answer:** *"Our `cross_validator` agent includes an automated unit normalizer. It reconciles unit mismatches (such as hours vs. days in consulting, or kg vs. metric tons in logistics) using deterministic conversion factors before compliance calculations begin."*
+
+---
+
+# ⚙️ Part 4: Technical Pre-Demo Checklist
+
+- [ ] Run `.\run_dev.ps1` and verify backend starts on `http://localhost:8000` and frontend on `http://localhost:5173`.
+- [ ] Open Settings ➔ Context Substrate tab and confirm status shows `CONNECTED (LIVE)` or `ACTIVE (EMBEDDED)`.
+- [ ] Verify test files exist in `data/synthetic/`:
+  - `c001_apex_logistics_contract.pdf`
+  - `c001_invoice_i001.pdf`, `c001_invoice_i002.pdf`, `c001_invoice_i003.pdf`
+- [ ] Have a backup browser tab open with a pre-audited Apex Logistics report.
+- [ ] Set browser zoom to 110%–125% so findings and charts are easily readable on presentation screens.

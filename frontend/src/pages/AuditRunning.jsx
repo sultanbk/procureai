@@ -79,14 +79,15 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
           } catch (logErr) {
             console.error('Failed to fetch logs:', logErr);
           }
-          if (data.status === 'COMPLETE') {
+          if (data.status === 'COMPLETE' || data.status === 'PENDING_REVIEW') {
             clearInterval(intervalId);
             completeTimeoutId = setTimeout(() => {
               if (isMounted) {
                 const reportWithRulebook = {
                   ...data.audit_report,
                   rulebook: data.audit_report?.rulebook || data.partial_results?.rulebook,
-                  invoice_data: data.audit_report?.invoice_data || data.partial_results?.invoice_data
+                  invoice_data: data.audit_report?.invoice_data || data.partial_results?.invoice_data,
+                  status: data.status,
                 };
                 onComplete(reportWithRulebook);
               }
@@ -123,14 +124,15 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
           if (msg.type === 'status') {
             setAuditState(msg.payload);
             setError('');
-            if (msg.payload.status === 'COMPLETE') {
+            if (msg.payload.status === 'COMPLETE' || msg.payload.status === 'PENDING_REVIEW') {
               ws.close();
               completeTimeoutId = setTimeout(() => {
                 if (isMounted) {
                   const reportWithRulebook = {
                     ...msg.payload.audit_report,
                     rulebook: msg.payload.audit_report?.rulebook || msg.payload.partial_results?.rulebook,
-                    invoice_data: msg.payload.audit_report?.invoice_data || msg.payload.partial_results?.invoice_data
+                    invoice_data: msg.payload.audit_report?.invoice_data || msg.payload.partial_results?.invoice_data,
+                    status: msg.payload.status,
                   };
                   onComplete(reportWithRulebook);
                 }
@@ -158,7 +160,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
       };
 
       ws.onclose = () => {
-        if (isMounted && auditState?.status !== 'COMPLETE' && auditState?.status !== 'FAILED') {
+        if (isMounted && auditState?.status !== 'COMPLETE' && auditState?.status !== 'PENDING_REVIEW' && auditState?.status !== 'FAILED') {
           startPolling();
         }
       };
@@ -177,7 +179,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
 
   // Final elapsed time derived when audit has finished; otherwise dynamic seconds
   const displaySeconds = (() => {
-    if ((auditState?.status === 'COMPLETE' || auditState?.status === 'FAILED') && auditState?.created_at && auditState?.completed_at) {
+    if ((auditState?.status === 'COMPLETE' || auditState?.status === 'PENDING_REVIEW' || auditState?.status === 'FAILED') && auditState?.created_at && auditState?.completed_at) {
       const start = parseUtcDate(auditState.created_at).getTime();
       const end = parseUtcDate(auditState.completed_at).getTime();
       return Math.max(0, Math.round((end - start) / 1000));
@@ -187,7 +189,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
 
   // Live Timer Tracker synchronized with backend start timestamp
   useEffect(() => {
-    if (!auditState || auditState.status === 'COMPLETE' || auditState.status === 'FAILED') {
+    if (!auditState || auditState.status === 'COMPLETE' || auditState.status === 'PENDING_REVIEW' || auditState.status === 'FAILED') {
       return;
     }
 
@@ -235,10 +237,25 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
       desc: 'Scanning for service delivery delays, unauthorized fees, and executing AI critic reviews.',
       color: 'text-teal-600',
     },
+    REVERSE_SWEEPING: {
+      title: 'Reverse Sweeping Unclaimed Credits',
+      desc: 'Scanning contract clauses for unapplied volume rebates, SLA penalty deductions, and settlement discounts.',
+      color: 'text-fuchsia-600',
+    },
+    CROSS_INVOICE_ANALYZING: {
+      title: 'Multi-Invoice Rate Drift Analysis',
+      desc: 'Detecting historical price drifts and line-item rate discrepancies across invoice billing periods.',
+      color: 'text-orange-600',
+    },
     GENERATING_REPORT: {
       title: 'Synthesizing Executive Audit Report',
       desc: 'Aggregating financial leakage metrics, supplier scorecard ratings, and dispute arguments.',
       color: 'text-emerald-600',
+    },
+    PENDING_REVIEW: {
+      title: 'Audit Complete (Held for Review)',
+      desc: 'Verification workflow concluded with critical findings. Directing to findings report for human sign-off...',
+      color: 'text-amber-600',
     },
     COMPLETE: {
       title: 'Audit Complete',
@@ -260,6 +277,8 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
       contract_parser: 'Contract Parser',
       cross_validator: 'Cross Validator',
       compliance_checker: 'Compliance Critic',
+      reverse_sweep: 'Reverse Sweep Agent',
+      cross_invoice_analyzer: 'Rate Drift Analyzer',
       report_generator: 'Report Generator'
     };
     return labels[agent] || 'Supervisor Core';
@@ -285,7 +304,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
   }, [logs]);
 
   const handleBackClick = () => {
-    const isRunning = auditState && auditState.status !== 'COMPLETE' && auditState.status !== 'FAILED';
+    const isRunning = auditState && auditState.status !== 'COMPLETE' && auditState.status !== 'PENDING_REVIEW' && auditState.status !== 'FAILED';
     if (isRunning && !showBackConfirm) {
       setShowBackConfirm(true);
       return;
@@ -425,7 +444,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
               className={`absolute top-0 left-0 right-0 h-1.5 ${
                 auditState?.status === 'FAILED'
                   ? 'bg-rose-500'
-                  : auditState?.status === 'COMPLETE'
+                  : auditState?.status === 'COMPLETE' || auditState?.status === 'PENDING_REVIEW'
                   ? 'bg-emerald-500'
                   : 'bg-gradient-to-r from-teal-500 via-cyan-500 to-indigo-500'
               }`}
@@ -437,14 +456,14 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
                   className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs ${
                     auditState?.status === 'FAILED'
                       ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                      : auditState?.status === 'COMPLETE'
+                      : auditState?.status === 'COMPLETE' || auditState?.status === 'PENDING_REVIEW'
                       ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                       : 'bg-teal-50 text-teal-600 border border-teal-200'
                   }`}
                 >
-                  {auditState?.status !== 'COMPLETE' && auditState?.status !== 'FAILED' ? (
+                  {auditState?.status !== 'COMPLETE' && auditState?.status !== 'PENDING_REVIEW' && auditState?.status !== 'FAILED' ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : auditState?.status === 'COMPLETE' ? (
+                  ) : auditState?.status === 'COMPLETE' || auditState?.status === 'PENDING_REVIEW' ? (
                     <ShieldCheck className="h-5 w-5" />
                   ) : (
                     <AlertTriangle className="h-5 w-5" />
@@ -485,7 +504,7 @@ export default function AuditRunning({ auditId, onBack, onComplete }) {
             </div>
 
             {/* Live Activity Stream Ticker */}
-            {latestLog && auditState?.status !== 'COMPLETE' && auditState?.status !== 'FAILED' && (
+            {latestLog && auditState?.status !== 'COMPLETE' && auditState?.status !== 'PENDING_REVIEW' && auditState?.status !== 'FAILED' && (
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5 text-xs text-slate-600 bg-slate-100/50 p-2.5 rounded-lg border border-slate-200/60 font-mono">
                 <Activity className="h-3.5 w-3.5 text-teal-600 animate-pulse flex-shrink-0" />
                 <span className="text-[10px] uppercase font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 flex-shrink-0">
